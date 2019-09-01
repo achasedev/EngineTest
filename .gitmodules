@@ -1,0 +1,3 @@
+[submodule "MechroEngine"]
+	path = MechroEngine
+	url = https://github.com/MechroCat22/MechroEngine.git
