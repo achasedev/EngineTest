@@ -10,5 +10,11 @@
     <ClCompile Include="Framework\Main_Win.cpp">
       <Filter>General</Filter>
     </ClCompile>
+    <ClCompile Include="Framework\App.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Framework\App.h" />
   </ItemGroup>
 </Project>

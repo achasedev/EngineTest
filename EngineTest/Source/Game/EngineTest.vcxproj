@@ -186,12 +186,16 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Framework\App.cpp" />
     <ClCompile Include="Framework\Main_Win.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\MechroEngine\Source\Engine\MechroEngine.vcxproj">
       <Project>{f43f279e-66b9-4b72-a744-fdd7a6cc76d8}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Framework\App.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
