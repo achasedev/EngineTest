@@ -12,6 +12,7 @@
 #include "Game/Framework/App.h"
 #include "Engine/Framework/EngineCommon.h"
 #include "Engine/Framework/Window.h"
+#include "Engine/DirectX/Common.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 ///                                                             *** DEFINES ***
@@ -89,14 +90,17 @@ void App::Initialize()
 {
 	s_instance = new App();
 
-	Window::Initialize(1.777777f, "Engine Test - MechroEngine");
+	Window::Initialize((21.f / 9.f), "Engine Test - MechroEngine");
 	Window::GetInstance()->RegisterMessageHandler(AppMessageHandler);
+
+	D3D11Setup();
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void App::Shutdown()
 {
+	D3D11Cleanup();
 	Window::ShutDown();
 
 	delete s_instance;
@@ -143,5 +147,5 @@ void App::Update()
 //-------------------------------------------------------------------------------------------------
 void App::Render()
 {
-
+	RenderFrame();
 }
