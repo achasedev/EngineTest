@@ -10,9 +10,10 @@
 #define WIN32_LEAN_AND_MEAN	
 #include <windows.h>
 #include "Game/Framework/App.h"
+#include "Engine/DirectX/DX11Common.h"
+#include "Engine/DirectX/RenderContext.h"
 #include "Engine/Framework/EngineCommon.h"
 #include "Engine/Framework/Window.h"
-#include "Engine/DirectX/Common.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 ///                                                             *** DEFINES ***
@@ -93,14 +94,14 @@ void App::Initialize()
 	Window::Initialize((21.f / 9.f), "Engine Test - MechroEngine");
 	Window::GetInstance()->RegisterMessageHandler(AppMessageHandler);
 
-	D3D11Setup();
+	RenderContext::Initialize();
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void App::Shutdown()
 {
-	D3D11Cleanup();
+	RenderContext::Shutdown();
 	Window::ShutDown();
 
 	delete s_instance;
@@ -114,12 +115,14 @@ void App::RunFrame()
 	RunMessagePump();
 
 	// Begin Frames...
+	RenderContext::GetInstance()->BeginFrame();
 
 	ProcessInput();
 	Update();
 	Render();
 
 	// End Frames...
+	RenderContext::GetInstance()->EndFrame();
 }
 
 
@@ -147,5 +150,7 @@ void App::Update()
 //-------------------------------------------------------------------------------------------------
 void App::Render()
 {
-	RenderFrame();
+	RenderContext* context = RenderContext::GetInstance();
+	context->ClearScreen();
+	context->Draw(3);
 }
