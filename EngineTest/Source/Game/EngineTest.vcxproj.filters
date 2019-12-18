@@ -16,5 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\App.h" />
+    <ClInclude Include="Framework\Game.h" />
   </ItemGroup>
 </Project>

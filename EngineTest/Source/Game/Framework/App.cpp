@@ -10,6 +10,7 @@
 #define WIN32_LEAN_AND_MEAN	
 #include <windows.h>
 #include "Game/Framework/App.h"
+#include "Game/Framework/Game.h"
 #include "Engine/DirectX/DX11Common.h"
 #include "Engine/DirectX/RenderContext.h"
 #include "Engine/Framework/EngineCommon.h"
@@ -87,13 +88,26 @@ void RunMessagePump()
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
+App::App()
+{
+	m_game = new Game();
+}
+
+
+//-------------------------------------------------------------------------------------------------
+App::~App()
+{
+	SAFE_DELETE_POINTER(m_game);
+}
+
+
+//-------------------------------------------------------------------------------------------------
 void App::Initialize()
 {
 	s_instance = new App();
 
 	Window::Initialize((21.f / 9.f), "Engine Test - MechroEngine");
 	Window::GetInstance()->RegisterMessageHandler(AppMessageHandler);
-
 	RenderContext::Initialize();
 }
 
