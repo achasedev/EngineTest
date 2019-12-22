@@ -187,6 +187,7 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Framework\App.cpp" />
+    <ClCompile Include="Framework\Game.cpp" />
     <ClCompile Include="Framework\Main_Win.cpp" />
   </ItemGroup>
   <ItemGroup>

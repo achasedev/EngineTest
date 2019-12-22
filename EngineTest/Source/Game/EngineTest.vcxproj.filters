@@ -13,6 +13,9 @@
     <ClCompile Include="Framework\App.cpp">
       <Filter>General</Filter>
     </ClCompile>
+    <ClCompile Include="Framework\Game.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\App.h" />

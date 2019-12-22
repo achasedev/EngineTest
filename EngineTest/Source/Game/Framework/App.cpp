@@ -90,14 +90,12 @@ void RunMessagePump()
 //-------------------------------------------------------------------------------------------------
 App::App()
 {
-	m_game = new Game();
 }
 
 
 //-------------------------------------------------------------------------------------------------
 App::~App()
 {
-	SAFE_DELETE_POINTER(m_game);
 }
 
 
@@ -109,12 +107,16 @@ void App::Initialize()
 	Window::Initialize((21.f / 9.f), "Engine Test - MechroEngine");
 	Window::GetInstance()->RegisterMessageHandler(AppMessageHandler);
 	RenderContext::Initialize();
+
+	s_instance->m_game = new Game();
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void App::Shutdown()
 {
+	SAFE_DELETE_POINTER(s_instance->m_game);
+
 	RenderContext::Shutdown();
 	Window::ShutDown();
 
@@ -157,14 +159,15 @@ void App::ProcessInput()
 //-------------------------------------------------------------------------------------------------
 void App::Update()
 {
-
+	m_game->Update();
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void App::Render()
 {
-	RenderContext* context = RenderContext::GetInstance();
-	context->ClearScreen();
-	context->Draw(3);
+	RenderContext* renderContext = RenderContext::GetInstance();
+	renderContext->ClearScreen();
+
+	m_game->Render();
 }
