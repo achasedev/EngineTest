@@ -15,6 +15,7 @@
 #include "Engine/DirectX/RenderContext.h"
 #include "Engine/Framework/EngineCommon.h"
 #include "Engine/Framework/Window.h"
+#include "Engine/Utility/StringID.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 ///                                                             *** DEFINES ***
@@ -107,6 +108,7 @@ void App::Initialize()
 	Window::Initialize((21.f / 9.f), "Engine Test - MechroEngine");
 	Window::GetInstance()->RegisterMessageHandler(AppMessageHandler);
 	RenderContext::Initialize();
+	StringIDManager::Initialize();
 
 	s_instance->m_game = new Game();
 }
@@ -117,6 +119,7 @@ void App::Shutdown()
 {
 	SAFE_DELETE_POINTER(s_instance->m_game);
 
+	StringIDManager::Shutdown();
 	RenderContext::Shutdown();
 	Window::ShutDown();
 
