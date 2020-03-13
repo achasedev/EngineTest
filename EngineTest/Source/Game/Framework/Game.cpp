@@ -9,7 +9,10 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Framework/Game.h"
 #include "Engine/DirectX/Camera.h"
+#include "Engine/DirectX/Mesh.h"
+#include "Engine/DirectX/MeshBuilder.h"
 #include "Engine/DirectX/RenderContext.h"
+#include "Engine/DirectX/Shader.h"
 #include "Engine/Framework/EngineCommon.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -40,6 +43,29 @@
 Game::Game()
 {
 	m_gameCamera = new Camera();
+	
+	m_shader = new Shader();
+	m_shader->CreateFromFile("Data/Shader/test.shader");
+	
+	m_mesh = new Mesh();
+
+	// Meshbuild a triangle
+	MeshBuilder mb;
+	mb.BeginBuilding(true);
+
+	mb.SetColor(Color::RED);
+	mb.PushVertex(Vector3(0.0f, 0.5f, 0.0f));
+
+	mb.SetColor(Color::GREEN);
+	mb.PushVertex(Vector3(0.45f, -0.5, 0.0f));
+
+	mb.SetColor(Color::BLUE);
+	mb.PushVertex(Vector3(-0.45f, -0.5f, 0.0f));
+
+	mb.FinishBuilding();
+
+	mb.UpdateMesh<Vertex3D_PCU>(*m_mesh);
+	mb.Clear();
 }
 
 Game::~Game()
@@ -60,6 +86,6 @@ void Game::Render()
 	RenderContext* renderContext = RenderContext::GetInstance();
 
 	renderContext->BeginCamera(m_gameCamera);
-	renderContext->Draw(3);
+	renderContext->Draw(*m_mesh, *m_shader);
 	renderContext->EndCamera();
 }
