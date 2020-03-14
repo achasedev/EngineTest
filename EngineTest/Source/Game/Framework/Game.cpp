@@ -51,10 +51,10 @@ Game::Game()
 
 	// Meshbuild a triangle
 	MeshBuilder mb;
-	mb.BeginBuilding(true);
+	mb.BeginBuilding(false);
 
 	mb.SetColor(Color::RED);
-	mb.PushVertex(Vector3(0.0f, 0.5f, 0.0f));
+	uint firstIndex = mb.PushVertex(Vector3(0.0f, 0.5f, 0.0f));
 
 	mb.SetColor(Color::GREEN);
 	mb.PushVertex(Vector3(0.45f, -0.5, 0.0f));
@@ -70,6 +70,8 @@ Game::Game()
 
 Game::~Game()
 {
+	SAFE_DELETE_POINTER(m_mesh);
+	SAFE_DELETE_POINTER(m_shader);
 	SAFE_DELETE_POINTER(m_gameCamera);
 }
 

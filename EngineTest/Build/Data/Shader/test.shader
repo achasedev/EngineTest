@@ -15,7 +15,7 @@ VOut VertexFunction(float4 position : POSITION, float4 color : COLOR)
 }
 
 
-float4 PixelFunction(float4 position : SV_POSITION, float4 color : COLOR) : SV_TARGET
+float4 FragmentFunction(float4 position : SV_POSITION, float4 color : COLOR) : SV_TARGET
 {
     return color;
 }
