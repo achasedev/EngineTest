@@ -142,8 +142,6 @@ void App::RunFrame()
 
 	// End Frames...
 	RenderContext::GetInstance()->EndFrame();
-
-	Sleep(30);
 }
 
 

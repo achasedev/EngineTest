@@ -1,21 +1,32 @@
-struct VOut
+
+struct VInput
 {
-    float4 position : SV_POSITION;
-    float4 color : COLOR;
+	float3 position : POSITION;
+	float4 color : COLOR;
+	float2 uv : UV;
 };
 
-VOut VertexFunction(float4 position : POSITION, float4 color : COLOR)
+struct VOut
+{
+	float4 position : SV_POSITION;
+    float4 color : COLOR;
+    float2 uv : UV;
+};
+
+VOut VertexFunction(VInput input)
 {
     VOut output;
 
-    output.position = position;
-    output.color = color;
+    output.position = float4(input.position, 1.0f);
+    output.color = input.color;
+    output.uv = input.uv;
 
     return output;
 }
 
 
-float4 FragmentFunction(float4 position : SV_POSITION, float4 color : COLOR) : SV_TARGET
+float4 FragmentFunction(VOut output) : SV_TARGET
 {
-    return color;
+	//return output.color;
+    return float4(output.uv.x, 0.0, output.uv.y, 1.0);
 }

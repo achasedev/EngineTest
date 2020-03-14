@@ -51,16 +51,31 @@ Game::Game()
 
 	// Meshbuild a triangle
 	MeshBuilder mb;
-	mb.BeginBuilding(false);
+	mb.BeginBuilding(true);
 
 	mb.SetColor(Color::RED);
-	uint firstIndex = mb.PushVertex(Vector3(0.0f, 0.5f, 0.0f));
+	mb.SetUV(Vector2(0.f, 0.f));
+	uint firstIndex = mb.PushVertex(Vector3(-0.5f, -0.5f, 0.0f));
 
 	mb.SetColor(Color::GREEN);
-	mb.PushVertex(Vector3(0.45f, -0.5, 0.0f));
+	mb.SetUV(Vector2(0.f, 1.f));
+	mb.PushVertex(Vector3(-0.5f, 0.5f, 0.0f));
 
 	mb.SetColor(Color::BLUE);
-	mb.PushVertex(Vector3(-0.45f, -0.5f, 0.0f));
+	mb.SetUV(Vector2(1.f, 1.f));
+	mb.PushVertex(Vector3(0.5f, 0.5f, 0.0f));
+
+	mb.SetColor(Color(1.0f, 1.0f, 0.f, 1.0f));
+	mb.SetUV(Vector2(1.f, 0.f));
+	mb.PushVertex(Vector3(0.5f, -0.5f, 0.0f));
+
+	mb.PushIndex(firstIndex);
+	mb.PushIndex(firstIndex + 1);
+	mb.PushIndex(firstIndex + 2);
+
+	mb.PushIndex(firstIndex);
+	mb.PushIndex(firstIndex + 2);
+	mb.PushIndex(firstIndex + 3);
 
 	mb.FinishBuilding();
 
