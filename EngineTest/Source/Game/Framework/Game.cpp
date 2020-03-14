@@ -14,6 +14,7 @@
 #include "Engine/DirectX/RenderContext.h"
 #include "Engine/DirectX/Shader.h"
 #include "Engine/Framework/EngineCommon.h"
+#include "Engine/IO/Image.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 ///                                                             *** DEFINES ***
@@ -55,7 +56,7 @@ Game::Game()
 
 	mb.SetColor(Color::RED);
 	mb.SetUV(Vector2(0.f, 0.f));
-	uint firstIndex = mb.PushVertex(Vector3(-0.5f, -0.5f, 0.0f));
+	uint32 firstIndex = mb.PushVertex(Vector3(-0.5f, -0.5f, 0.0f));
 
 	mb.SetColor(Color::GREEN);
 	mb.SetUV(Vector2(0.f, 1.f));
@@ -81,6 +82,9 @@ Game::Game()
 
 	mb.UpdateMesh<Vertex3D_PCU>(*m_mesh);
 	mb.Clear();
+
+	m_image = new Image();
+	m_image->LoadFromFile("Data/Image/test.png");
 }
 
 Game::~Game()

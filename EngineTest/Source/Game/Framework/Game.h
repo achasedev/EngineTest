@@ -19,6 +19,7 @@
 class Camera;
 class Shader;
 class Mesh;
+class Image;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 ///                                                             *** STRUCTS ***
@@ -58,6 +59,7 @@ private:
 	Camera* m_gameCamera = nullptr;
 	Shader* m_shader = nullptr;
 	Mesh* m_mesh = nullptr;
+	Image* m_image = nullptr;
 
 };
 
