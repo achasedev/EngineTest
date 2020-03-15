@@ -20,6 +20,8 @@ class Camera;
 class Shader;
 class Mesh;
 class Image;
+class Texture2D;
+class TextureView2D;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -56,6 +58,8 @@ private:
 	Shader* m_shader = nullptr;
 	Mesh* m_mesh = nullptr;
 	Image* m_image = nullptr;
+	Texture2D* m_texture = nullptr;
+	TextureView2D* m_textureView = nullptr;
 
 };
 

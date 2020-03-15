@@ -13,6 +13,9 @@ struct VOut
     float2 uv : UV;
 };
 
+Texture2D<float4> tAlbedo : register(t0);
+SamplerState sAlbedo : register(s0);
+
 VOut VertexFunction(VInput input)
 {
     VOut output;
@@ -25,8 +28,8 @@ VOut VertexFunction(VInput input)
 }
 
 
-float4 FragmentFunction(VOut output) : SV_TARGET
+float4 FragmentFunction(VOut input) : SV_TARGET
 {
 	//return output.color;
-    return float4(output.uv.x, 0.0, output.uv.y, 1.0);
+    return tAlbedo.Sample(sAlbedo, input.uv);
 }

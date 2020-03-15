@@ -15,6 +15,8 @@
 #include "Engine/DirectX/Shader.h"
 #include "Engine/Framework/EngineCommon.h"
 #include "Engine/IO/Image.h"
+#include "Engine/DirectX/Texture2D.h"
+#include "Engine/DirectX/TextureView2D.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -50,19 +52,19 @@ Game::Game()
 	MeshBuilder mb;
 	mb.BeginBuilding(true);
 
-	mb.SetColor(Color::RED);
+	mb.SetColor(Rgba::RED);
 	mb.SetUV(Vector2(0.f, 0.f));
 	uint32 firstIndex = mb.PushVertex(Vector3(-0.5f, -0.5f, 0.0f));
 
-	mb.SetColor(Color::GREEN);
+	mb.SetColor(Rgba::GREEN);
 	mb.SetUV(Vector2(0.f, 1.f));
 	mb.PushVertex(Vector3(-0.5f, 0.5f, 0.0f));
 
-	mb.SetColor(Color::BLUE);
+	mb.SetColor(Rgba::BLUE);
 	mb.SetUV(Vector2(1.f, 1.f));
 	mb.PushVertex(Vector3(0.5f, 0.5f, 0.0f));
 
-	mb.SetColor(Color(1.0f, 1.0f, 0.f, 1.0f));
+	mb.SetColor(Rgba(1.0f, 1.0f, 0.f, 1.0f));
 	mb.SetUV(Vector2(1.f, 0.f));
 	mb.PushVertex(Vector3(0.5f, -0.5f, 0.0f));
 
@@ -81,6 +83,11 @@ Game::Game()
 
 	m_image = new Image();
 	m_image->LoadFromFile("Data/Image/test.png");
+
+	m_texture = new Texture2D();
+	m_texture->LoadFromImage(*m_image);
+
+	m_textureView = m_texture->CreateTextureView2D();
 }
 
 Game::~Game()
@@ -103,6 +110,10 @@ void Game::Render()
 	RenderContext* renderContext = RenderContext::GetInstance();
 
 	renderContext->BeginCamera(m_gameCamera);
+	renderContext->BindSampler(0, nullptr);
+	renderContext->BindTextureView(0, m_textureView);
+
 	renderContext->Draw(*m_mesh, *m_shader);
+
 	renderContext->EndCamera();
 }
