@@ -18,8 +18,10 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Camera;
 class Shader;
+class Material;
 class Mesh;
 class Image;
+class Renderable;
 class Texture2D;
 class TextureView2D;
 
@@ -60,6 +62,8 @@ private:
 	Image* m_image = nullptr;
 	Texture2D* m_texture = nullptr;
 	TextureView2D* m_textureView = nullptr;
+	Material* m_material = nullptr;
+	Renderable* m_renderable = nullptr;
 
 };
 

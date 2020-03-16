@@ -9,8 +9,10 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Framework/Game.h"
 #include "Engine/DirectX/Camera.h"
+#include "Engine/DirectX/Material.h"
 #include "Engine/DirectX/Mesh.h"
 #include "Engine/DirectX/MeshBuilder.h"
+#include "Engine/DirectX/Renderable.h"
 #include "Engine/DirectX/RenderContext.h"
 #include "Engine/DirectX/Shader.h"
 #include "Engine/Framework/EngineCommon.h"
@@ -48,7 +50,7 @@ Game::Game()
 	
 	m_mesh = new Mesh();
 
-	// Meshbuild a triangle
+	// Meshbuild a square
 	MeshBuilder mb;
 	mb.BeginBuilding(true);
 
@@ -85,13 +87,25 @@ Game::Game()
 	m_image->LoadFromFile("Data/Image/test.png");
 
 	m_texture = new Texture2D();
-	m_texture->LoadFromImage(*m_image);
+	m_texture->CreateFromImage(*m_image);
 
 	m_textureView = m_texture->CreateTextureView2D();
+
+	m_material = new Material();
+	m_material->SetShader(m_shader);
+	m_material->SetAlbedoTextureView(m_textureView);
+
+	m_renderable = new Renderable();
+	m_renderable->AddDraw(m_mesh, m_material);
 }
 
+
+//-------------------------------------------------------------------------------------------------
 Game::~Game()
 {
+	SAFE_DELETE_POINTER(m_textureView);
+	SAFE_DELETE_POINTER(m_texture);
+	SAFE_DELETE_POINTER(m_image);
 	SAFE_DELETE_POINTER(m_mesh);
 	SAFE_DELETE_POINTER(m_shader);
 	SAFE_DELETE_POINTER(m_gameCamera);
@@ -110,10 +124,8 @@ void Game::Render()
 	RenderContext* renderContext = RenderContext::GetInstance();
 
 	renderContext->BeginCamera(m_gameCamera);
-	renderContext->BindSampler(0, nullptr);
-	renderContext->BindTextureView(0, m_textureView);
 
-	renderContext->Draw(*m_mesh, *m_shader);
+	renderContext->DrawRenderable(*m_renderable);
 
 	renderContext->EndCamera();
 }
