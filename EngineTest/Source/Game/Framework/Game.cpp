@@ -50,7 +50,7 @@ Game::Game()
 	
 	m_mesh = new Mesh();
 
-	// Meshbuild a square
+	// Meshbuild a quad
 	MeshBuilder mb;
 	mb.BeginBuilding(true);
 
@@ -66,7 +66,7 @@ Game::Game()
 	mb.SetUV(Vector2(1.f, 1.f));
 	mb.PushVertex(Vector3(0.5f, 0.5f, 0.0f));
 
-	mb.SetColor(Rgba(1.0f, 1.0f, 0.f, 1.0f));
+	mb.SetColor(Rgba::WHITE);
 	mb.SetUV(Vector2(1.f, 0.f));
 	mb.PushVertex(Vector3(0.5f, -0.5f, 0.0f));
 

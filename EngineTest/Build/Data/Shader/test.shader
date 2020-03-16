@@ -27,9 +27,28 @@ VOut VertexFunction(VInput input)
     return output;
 }
 
-
-float4 FragmentFunction(VOut input) : SV_TARGET
+float4 GetAsFloats(uint byteColors)
 {
-	//return output.color;
-    return tAlbedo.Sample(sAlbedo, input.uv);
+    float4 asFloats;
+
+
+    asFloats.x = ((byteColors & 0xFF000000) >> 24) / 255.0;
+    asFloats.y = ((byteColors & 0x00FF0000) >> 16) / 255.0;
+    asFloats.z = ((byteColors & 0x0000FF00) >> 8) / 255.0;
+    asFloats.w = (byteColors & 0x000000FF) / 255.0;
+
+    return asFloats;
+}
+
+float4 FragmentFunction( VOut input ) : SV_Target0
+{
+   // First, we sample from our texture
+   float4 texColor = tAlbedo.Sample( sAlbedo, input.uv ); 
+
+   // component wise multiply to "tint" the output
+
+   float4 finalColor = texColor * input.color;
+
+   // output it; 
+   return finalColor; 
 }
