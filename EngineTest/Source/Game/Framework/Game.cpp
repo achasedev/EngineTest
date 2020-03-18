@@ -8,17 +8,17 @@
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Framework/Game.h"
-#include "Engine/DirectX/Camera.h"
-#include "Engine/DirectX/Material.h"
-#include "Engine/DirectX/Mesh.h"
-#include "Engine/DirectX/MeshBuilder.h"
-#include "Engine/DirectX/Renderable.h"
-#include "Engine/DirectX/RenderContext.h"
-#include "Engine/DirectX/Shader.h"
+#include "Engine/Render/Camera/Camera.h"
+#include "Engine/Render/Material.h"
+#include "Engine/Render/Mesh/Mesh.h"
+#include "Engine/Render/Mesh/MeshBuilder.h"
+#include "Engine/Render/Core/Renderable.h"
+#include "Engine/Render/Core/RenderContext.h"
+#include "Engine/Render/Shader.h"
 #include "Engine/Framework/EngineCommon.h"
 #include "Engine/IO/Image.h"
-#include "Engine/DirectX/Texture2D.h"
-#include "Engine/DirectX/TextureView2D.h"
+#include "Engine/Render/Texture/Texture2D.h"
+#include "Engine/Render/Texture/TextureView2D.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -54,8 +54,10 @@ Game::Game()
 	MeshBuilder mb;
 	mb.BeginBuilding(true);
 
-	mb.SetColor(Rgba::RED);
-	mb.SetUV(Vector2(0.f, 0.f));
+	mb.SetColor(Rgba::WHITE);
+	mb.PushCube(Vector3(0.f, 0.f, 1.5f), Vector3::ONES);
+
+	/*mb.SetUV(Vector2(0.f, 0.f));
 	uint32 firstIndex = mb.PushVertex(Vector3(-0.5f, -0.5f, 0.0f));
 
 	mb.SetColor(Rgba::GREEN);
@@ -76,7 +78,7 @@ Game::Game()
 
 	mb.PushIndex(firstIndex);
 	mb.PushIndex(firstIndex + 2);
-	mb.PushIndex(firstIndex + 3);
+	mb.PushIndex(firstIndex + 3);*/
 
 	mb.FinishBuilding();
 

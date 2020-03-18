@@ -11,8 +11,8 @@
 #include <windows.h>
 #include "Game/Framework/App.h"
 #include "Game/Framework/Game.h"
-#include "Engine/DirectX/DX11Common.h"
-#include "Engine/DirectX/RenderContext.h"
+#include "Engine/Render/Core/DX11Common.h"
+#include "Engine/Render/Core/RenderContext.h"
 #include "Engine/Framework/EngineCommon.h"
 #include "Engine/Framework/Window.h"
 #include "Engine/Utility/StringID.h"
