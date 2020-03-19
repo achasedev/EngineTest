@@ -44,42 +44,18 @@
 Game::Game()
 {
 	m_gameCamera = new Camera();
-	
+	m_gameCamera->SetProjectionPerspective(90.f, 0.1f, 100.f);
+	m_gameCamera->LookAt(Vector3(-1.f, 1.f, -1.f), Vector3(0.f, 0.f, 0.f));
+	Vector3 forward = m_gameCamera->GetForwardVector();
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
-	
+
 	m_mesh = new Mesh();
 
 	// Meshbuild a quad
 	MeshBuilder mb;
 	mb.BeginBuilding(true);
-
-	mb.SetColor(Rgba::WHITE);
-	mb.PushCube(Vector3(0.f, 0.f, 1.5f), Vector3::ONES);
-
-	/*mb.SetUV(Vector2(0.f, 0.f));
-	uint32 firstIndex = mb.PushVertex(Vector3(-0.5f, -0.5f, 0.0f));
-
-	mb.SetColor(Rgba::GREEN);
-	mb.SetUV(Vector2(0.f, 1.f));
-	mb.PushVertex(Vector3(-0.5f, 0.5f, 0.0f));
-
-	mb.SetColor(Rgba::BLUE);
-	mb.SetUV(Vector2(1.f, 1.f));
-	mb.PushVertex(Vector3(0.5f, 0.5f, 0.0f));
-
-	mb.SetColor(Rgba::WHITE);
-	mb.SetUV(Vector2(1.f, 0.f));
-	mb.PushVertex(Vector3(0.5f, -0.5f, 0.0f));
-
-	mb.PushIndex(firstIndex);
-	mb.PushIndex(firstIndex + 1);
-	mb.PushIndex(firstIndex + 2);
-
-	mb.PushIndex(firstIndex);
-	mb.PushIndex(firstIndex + 2);
-	mb.PushIndex(firstIndex + 3);*/
-
+	mb.PushCube(Vector3(0.f, 0.f, 0.f), Vector3::ONES);
 	mb.FinishBuilding();
 
 	mb.UpdateMesh<Vertex3D_PCU>(*m_mesh);
@@ -116,7 +92,11 @@ Game::~Game()
 //-------------------------------------------------------------------------------------------------
 void Game::Update()
 {
-	
+	static float test = 0.f;
+	test += 0.02f;
+	Matrix44 rotationMatrix = Matrix44::MakeRotation(Vector3(0.f, test, 0.f));
+
+	m_renderable->SetRenderableMatrix(rotationMatrix);
 }
 
 
@@ -126,6 +106,8 @@ void Game::Render()
 	RenderContext* renderContext = RenderContext::GetInstance();
 
 	renderContext->BeginCamera(m_gameCamera);
+	renderContext->ClearCurrentColorTargetView(Rgba::BLACK);
+	renderContext->ClearCurrentDepthStencilTargetView();
 
 	renderContext->DrawRenderable(*m_renderable);
 

@@ -16,11 +16,28 @@ struct VOut
 Texture2D<float4> tAlbedo : register(t0);
 SamplerState sAlbedo : register(s0);
 
+cbuffer cameraConstants : register(b2)
+{
+   float4x4 CAMERA;
+   float4x4 VIEW; 
+   float4x4 PROJECTION; 
+};
+
+cbuffer modelConstant : register(b3)
+{
+   float4x4 MODEL; 
+};
+
 VOut VertexFunction(VInput input)
 {
+    float4 localPos = float4(input.position, 1.0f);
+    float4 worldPos = mul( MODEL, localPos );
+    float4 viewPos = mul( VIEW, worldPos ); 
+    float4 clipPos = mul( PROJECTION, viewPos ); 
+
     VOut output;
 
-    output.position = float4(input.position, 1.0f);
+    output.position = clipPos;
     output.color = input.color;
     output.uv = input.uv;
 

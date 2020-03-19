@@ -165,8 +165,5 @@ void App::Update()
 //-------------------------------------------------------------------------------------------------
 void App::Render()
 {
-	RenderContext* renderContext = RenderContext::GetInstance();
-	renderContext->ClearScreen();
-
 	m_game->Render();
 }
