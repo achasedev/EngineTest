@@ -8,6 +8,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Engine/Math/Transform.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -63,7 +64,11 @@ private:
 	Texture2D* m_texture = nullptr;
 	TextureView2D* m_textureView = nullptr;
 	Material* m_material = nullptr;
-	Renderable* m_renderable = nullptr;
+	Renderable* m_parentRenderable = nullptr;
+	Renderable* m_childRenderable = nullptr;
+
+	Transform m_parentTransform;
+	Transform m_childTransform;
 
 };
 

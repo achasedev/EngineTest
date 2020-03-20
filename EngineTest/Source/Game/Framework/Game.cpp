@@ -45,7 +45,7 @@ Game::Game()
 {
 	m_gameCamera = new Camera();
 	m_gameCamera->SetProjectionPerspective(90.f, 0.1f, 100.f);
-	m_gameCamera->LookAt(Vector3(-1.f, 1.f, -1.f), Vector3(0.f, 0.f, 0.f));
+	m_gameCamera->LookAt(Vector3(0.f, 2.f, -2.f), Vector3(0.f, 0.f, 0.f));
 	Vector3 forward = m_gameCamera->GetForwardVector();
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
@@ -73,8 +73,17 @@ Game::Game()
 	m_material->SetShader(m_shader);
 	m_material->SetAlbedoTextureView(m_textureView);
 
-	m_renderable = new Renderable();
-	m_renderable->AddDraw(m_mesh, m_material);
+	m_parentRenderable = new Renderable();
+	m_parentRenderable->AddDraw(m_mesh, m_material);
+
+	m_childRenderable = new Renderable();
+	m_childRenderable->AddDraw(m_mesh, m_material);
+
+	m_parentTransform.SetRotation(Vector3(0.f, 30.f, 0.f));
+	m_childTransform.SetPosition(Vector3(1.0f, 0.f, 0.0f));
+	m_childTransform.scale = Vector3(0.5f);
+	m_childTransform.SetParentTransform(&m_parentTransform);
+	m_childTransform.SetRotation(Vector3(0.f, 45.f, 0.f));
 }
 
 
@@ -90,13 +99,17 @@ Game::~Game()
 }
 
 //-------------------------------------------------------------------------------------------------
+#include "Engine/Math/MathUtils.h"
 void Game::Update()
 {
 	static float test = 0.f;
-	test += 0.02f;
-	Matrix44 rotationMatrix = Matrix44::MakeRotation(Vector3(0.f, test, 0.f));
+	test += 0.005f;
 
-	m_renderable->SetRenderableMatrix(rotationMatrix);
+	m_parentTransform.SetRotation(Vector3(0.f, 0.5f * -test, 0.f));
+	m_childTransform.position = Vector3(CosDegrees(test), 0.f, SinDegrees(test));
+	m_childTransform.SetRotation(Vector3(0.f, -test, 0.f));
+	m_parentRenderable->SetRenderableMatrix(m_parentTransform.GetLocalToWorldMatrix());
+	m_childRenderable->SetRenderableMatrix(m_childTransform.GetLocalToWorldMatrix());
 }
 
 
@@ -109,7 +122,8 @@ void Game::Render()
 	renderContext->ClearCurrentColorTargetView(Rgba::BLACK);
 	renderContext->ClearCurrentDepthStencilTargetView();
 
-	renderContext->DrawRenderable(*m_renderable);
+	renderContext->DrawRenderable(*m_parentRenderable);
+	renderContext->DrawRenderable(*m_childRenderable);
 
 	renderContext->EndCamera();
 }
