@@ -7,16 +7,18 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Engine/Framework/EngineCommon.h"
 #include "Game/Framework/Game.h"
+#include "Engine/IO/Image.h"
+#include "Engine/IO/InputSystem.h"
+#include "Engine/Math/MathUtils.h"
 #include "Engine/Render/Camera/Camera.h"
+#include "Engine/Render/Core/Renderable.h"
+#include "Engine/Render/Core/RenderContext.h"
 #include "Engine/Render/Material.h"
 #include "Engine/Render/Mesh/Mesh.h"
 #include "Engine/Render/Mesh/MeshBuilder.h"
-#include "Engine/Render/Core/Renderable.h"
-#include "Engine/Render/Core/RenderContext.h"
 #include "Engine/Render/Shader.h"
-#include "Engine/Framework/EngineCommon.h"
-#include "Engine/IO/Image.h"
 #include "Engine/Render/Texture/Texture2D.h"
 #include "Engine/Render/Texture/TextureView2D.h"
 
@@ -84,6 +86,11 @@ Game::Game()
 	m_childTransform.scale = Vector3(0.5f);
 	m_childTransform.SetParentTransform(&m_parentTransform);
 	m_childTransform.SetRotation(Vector3(0.f, 45.f, 0.f));
+
+	Mouse& mouse = InputSystem::GetMouse();
+	mouse.ShowMouseCursor(false);
+	mouse.LockCursorToClient(true);
+	mouse.SetCursorMode(CURSORMODE_RELATIVE);
 }
 
 
@@ -99,7 +106,6 @@ Game::~Game()
 }
 
 //-------------------------------------------------------------------------------------------------
-#include "Engine/Math/MathUtils.h"
 void Game::Update()
 {
 	static float test = 0.f;
@@ -110,6 +116,43 @@ void Game::Update()
 	m_childTransform.SetRotation(Vector3(0.f, -test, 0.f));
 	m_parentRenderable->SetRenderableMatrix(m_parentTransform.GetLocalToWorldMatrix());
 	m_childRenderable->SetRenderableMatrix(m_childTransform.GetLocalToWorldMatrix());
+
+	// Update da camera
+	InputSystem* input = InputSystem::GetInstance();
+
+	// Translating the camera
+	Vector3 translationOffset = Vector3::ZERO;
+	if (input->IsKeyPressed('W')) { translationOffset.z += 1.f; }		// Forward
+	if (input->IsKeyPressed('S')) { translationOffset.z -= 1.f; }		// Left
+	if (input->IsKeyPressed('A')) { translationOffset.x -= 1.f; }		// Back
+	if (input->IsKeyPressed('D')) { translationOffset.x += 1.f; }		// Right
+	if (input->IsKeyPressed(InputSystem::KEYBOARD_SPACEBAR)) { translationOffset.y += 1.f; }		// Up
+	if (input->IsKeyPressed('X')) { translationOffset.y -= 1.f; }		// Down
+
+	if (input->IsKeyPressed(InputSystem::KEYBOARD_SHIFT))
+	{
+		translationOffset *= 50.f;
+	}
+
+	const float deltaTime = (1.f / 200.f); // 200 fps?
+	translationOffset *= (1.f * deltaTime);
+
+	if (translationOffset.z > 0.f)
+	{
+		int x = 0;
+		x = 5;
+	}
+
+	m_gameCamera->Translate(translationOffset);
+
+	// Rotating the camera
+	Mouse& mouse = InputSystem::GetMouse();
+	IntVector2 mouseDelta = mouse.GetMouseDelta();
+
+	Vector2 rotationOffset = Vector2((float)mouseDelta.y, (float)mouseDelta.x) * 0.12f;
+	Vector3 rotation = Vector3(rotationOffset.x * 60.f * deltaTime, rotationOffset.y * 60.f * deltaTime, 0.f);
+
+	m_gameCamera->Rotate(rotation);
 }
 
 

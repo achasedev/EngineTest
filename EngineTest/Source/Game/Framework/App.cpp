@@ -10,11 +10,12 @@
 #define WIN32_LEAN_AND_MEAN	
 #include <windows.h>
 #include "Game/Framework/App.h"
+#include "Engine/Framework/EngineCommon.h"
 #include "Game/Framework/Game.h"
+#include "Engine/Framework/Window.h"
+#include "Engine/IO/InputSystem.h"
 #include "Engine/Render/Core/DX11Common.h"
 #include "Engine/Render/Core/RenderContext.h"
-#include "Engine/Framework/EngineCommon.h"
-#include "Engine/Framework/Window.h"
 #include "Engine/Utility/StringID.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -45,16 +46,6 @@ bool AppMessageHandler(unsigned int msg, size_t wParam, size_t lParam)
 	{
 		App::GetInstance()->Quit();
 		return true;
-	}
-	case WM_KEYDOWN: // TODO: Remove
-	{
-		unsigned char asKey = (unsigned char)wParam;
-		if (asKey == VK_ESCAPE)
-		{
-			App::GetInstance()->Quit();
-			return true;
-		}
-		break;
 	}
 	}
 
@@ -104,6 +95,7 @@ void App::Initialize()
 	Window::Initialize((21.f / 9.f), "Engine Test - MechroEngine");
 	Window::GetInstance()->RegisterMessageHandler(AppMessageHandler);
 	RenderContext::Initialize();
+	InputSystem::Initialize();
 	StringIDManager::Initialize();
 
 	s_instance->m_game = new Game();
@@ -116,6 +108,7 @@ void App::Shutdown()
 	SAFE_DELETE_POINTER(s_instance->m_game);
 
 	StringIDManager::Shutdown();
+	InputSystem::Shutdown();
 	RenderContext::Shutdown();
 	Window::ShutDown();
 
@@ -131,6 +124,7 @@ void App::RunFrame()
 
 	// Begin Frames...
 	RenderContext::GetInstance()->BeginFrame();
+	InputSystem::GetInstance()->BeginFrame();
 
 	ProcessInput();
 	Update();
