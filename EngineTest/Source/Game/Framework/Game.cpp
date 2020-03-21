@@ -47,8 +47,8 @@ Game::Game()
 {
 	m_gameCamera = new Camera();
 	m_gameCamera->SetProjectionPerspective(90.f, 0.1f, 100.f);
-	m_gameCamera->LookAt(Vector3(0.f, 2.f, -2.f), Vector3(0.f, 0.f, 0.f));
-	Vector3 forward = m_gameCamera->GetForwardVector();
+	m_gameCamera->LookAt(Vector3(10.f, 0.f, 0.f), Vector3(0.f, 0.f, 0.f));
+
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
 
@@ -137,12 +137,6 @@ void Game::Update()
 	const float deltaTime = (1.f / 200.f); // 200 fps?
 	translationOffset *= (1.f * deltaTime);
 
-	if (translationOffset.z > 0.f)
-	{
-		int x = 0;
-		x = 5;
-	}
-
 	m_gameCamera->Translate(translationOffset);
 
 	// Rotating the camera
@@ -150,7 +144,7 @@ void Game::Update()
 	IntVector2 mouseDelta = mouse.GetMouseDelta();
 
 	Vector2 rotationOffset = Vector2((float)mouseDelta.y, (float)mouseDelta.x) * 0.12f;
-	Vector3 rotation = Vector3(rotationOffset.x * 60.f * deltaTime, rotationOffset.y * 60.f * deltaTime, 0.f);
+	Vector3 rotation = Vector3(rotationOffset.x * 200.f * deltaTime, rotationOffset.y * 200.f * deltaTime, 0.f);
 
 	m_gameCamera->Rotate(rotation);
 }
