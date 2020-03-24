@@ -38,6 +38,7 @@ App* App::s_instance = nullptr;
 //-------------------------------------------------------------------------------------------------
 bool AppMessageHandler(unsigned int msg, size_t wParam, size_t lParam)
 {
+	UNUSED(wParam);
 	UNUSED(lParam);
 
 	switch (msg)
@@ -96,7 +97,7 @@ void App::Initialize()
 	Window::GetInstance()->RegisterMessageHandler(AppMessageHandler);
 	RenderContext::Initialize();
 	InputSystem::Initialize();
-	StringIDManager::Initialize();
+	DebugSIDSystem::Initialize();
 
 	s_instance->m_game = new Game();
 }
@@ -107,7 +108,7 @@ void App::Shutdown()
 {
 	SAFE_DELETE_POINTER(s_instance->m_game);
 
-	StringIDManager::Shutdown();
+	DebugSIDSystem::Shutdown();
 	InputSystem::Shutdown();
 	RenderContext::Shutdown();
 	Window::ShutDown();

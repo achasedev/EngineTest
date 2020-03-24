@@ -21,6 +21,8 @@
 #include "Engine/Render/Shader.h"
 #include "Engine/Render/Texture/Texture2D.h"
 #include "Engine/Render/Texture/TextureView2D.h"
+#include "Engine/Utility/NamedProperties.h"
+#include "Engine/Utility/StringID.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -91,6 +93,22 @@ Game::Game()
 	mouse.ShowMouseCursor(false);
 	mouse.LockCursorToClient(true);
 	mouse.SetCursorMode(CURSORMODE_RELATIVE);
+
+
+	NamedProperties prop;
+
+	prop.Set("Health", 5.0f);
+	prop.Set("Age", 4);
+
+	std::string name = "Name";
+	std::string dimensions = "Dimensions";
+
+	prop.Set(name, "Andrew");
+	prop.Set(dimensions, Vector2(3.4f, 7.8f));
+
+	prop.Set(SID("Health"), 7.0f);
+
+	DebuggerPrintf("%s", prop.ToString().c_str());
 }
 
 
