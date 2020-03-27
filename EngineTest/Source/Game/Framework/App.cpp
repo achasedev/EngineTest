@@ -10,13 +10,14 @@
 #define WIN32_LEAN_AND_MEAN	
 #include <windows.h>
 #include "Game/Framework/App.h"
-#include "Engine/Framework/EngineCommon.h"
 #include "Game/Framework/Game.h"
+#include "Engine/Framework/EngineCommon.h"
 #include "Engine/Framework/Window.h"
 #include "Engine/IO/InputSystem.h"
 #include "Engine/Job/JobSystem.h"
 #include "Engine/Render/Core/DX11Common.h"
 #include "Engine/Render/Core/RenderContext.h"
+#include "Engine/Time/Clock.h"
 #include "Engine/Utility/StringID.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -96,6 +97,7 @@ void App::Initialize()
 
 	Window::Initialize((21.f / 9.f), "Engine Test - MechroEngine");
 	Window::GetInstance()->RegisterMessageHandler(AppMessageHandler);
+	Clock::ResetMaster();
 	RenderContext::Initialize();
 	InputSystem::Initialize();
 	DebugSIDSystem::Initialize();
@@ -124,6 +126,7 @@ void App::Shutdown()
 //-------------------------------------------------------------------------------------------------
 void App::RunFrame()
 {
+	Clock::BeginMasterFrame();
 	RunMessagePump();
 
 	// Begin Frames...
@@ -136,6 +139,7 @@ void App::RunFrame()
 
 	// End Frames...
 	RenderContext::GetInstance()->EndFrame();
+	Sleep(15);
 }
 
 

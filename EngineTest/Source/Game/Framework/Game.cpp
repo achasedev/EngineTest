@@ -23,6 +23,7 @@
 #include "Engine/Render/Shader.h"
 #include "Engine/Render/Texture/Texture2D.h"
 #include "Engine/Render/Texture/TextureView2D.h"
+#include "Engine/Time/Clock.h"
 #include "Engine/Utility/NamedProperties.h"
 #include "Engine/Utility/StringID.h"
 
@@ -91,10 +92,10 @@ Game::Game()
 	m_childTransform.SetParentTransform(&m_parentTransform);
 	m_childTransform.SetRotation(Vector3(0.f, 45.f, 0.f));
 
-	Mouse& mouse = InputSystem::GetMouse();
-	mouse.ShowMouseCursor(false);
-	mouse.LockCursorToClient(true);
-	mouse.SetCursorMode(CURSORMODE_RELATIVE);
+	//Mouse& mouse = InputSystem::GetMouse();
+	//mouse.ShowMouseCursor(false);
+	//mouse.LockCursorToClient(true);
+	//mouse.SetCursorMode(CURSORMODE_RELATIVE);
 
 
 	NamedProperties prop;
@@ -111,6 +112,8 @@ Game::Game()
 	prop.Set(SID("Health"), 7.0f);
 
 	DebuggerPrintf("%s", prop.ToString().c_str());
+
+	m_gameClock = new Clock(nullptr);
 }
 
 
@@ -167,20 +170,22 @@ void Game::Update()
 	Vector3 rotation = Vector3(rotationOffset.x * 200.f * deltaTime, rotationOffset.y * 200.f * deltaTime, 0.f);
 
 	m_gameCamera->Rotate(rotation);
+
+	DebuggerPrintf("Frame: %.5f | Total: %.5f | FPS: %.2f\n", m_gameClock->GetDeltaSeconds(), m_gameClock->GetTotalSeconds(), 1.0f / m_gameClock->GetDeltaSeconds());
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void Game::Render()
 {
-	//RenderContext* renderContext = RenderContext::GetInstance();
+	RenderContext* renderContext = RenderContext::GetInstance();
 
-	//renderContext->BeginCamera(m_gameCamera);
-	//renderContext->ClearCurrentColorTargetView(Rgba::BLACK);
-	//renderContext->ClearCurrentDepthStencilTargetView();
+	renderContext->BeginCamera(m_gameCamera);
+	renderContext->ClearCurrentColorTargetView(Rgba::BLACK);
+	renderContext->ClearCurrentDepthStencilTargetView();
 
-	//renderContext->DrawRenderable(*m_parentRenderable);
-	//renderContext->DrawRenderable(*m_childRenderable);
+	renderContext->DrawRenderable(*m_parentRenderable);
+	renderContext->DrawRenderable(*m_childRenderable);
 
-	//renderContext->EndCamera();
+	renderContext->EndCamera();
 }

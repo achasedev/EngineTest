@@ -18,11 +18,12 @@
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Camera;
-class Shader;
+class Clock;
+class Image;
 class Material;
 class Mesh;
-class Image;
 class Renderable;
+class Shader;
 class Texture2D;
 class TextureView2D;
 
@@ -69,6 +70,8 @@ private:
 
 	Transform m_parentTransform;
 	Transform m_childTransform;
+
+	Clock* m_gameClock = nullptr;
 
 };
 
