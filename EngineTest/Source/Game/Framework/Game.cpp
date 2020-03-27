@@ -7,10 +7,12 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-#include "Engine/Framework/EngineCommon.h"
 #include "Game/Framework/Game.h"
+#include "Game/Framework/GameJobs.h"
+#include "Engine/Framework/EngineCommon.h"
 #include "Engine/IO/Image.h"
 #include "Engine/IO/InputSystem.h"
+#include "Engine/Job/JobSystem.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Render/Camera/Camera.h"
 #include "Engine/Render/Core/Renderable.h"
@@ -171,14 +173,14 @@ void Game::Update()
 //-------------------------------------------------------------------------------------------------
 void Game::Render()
 {
-	RenderContext* renderContext = RenderContext::GetInstance();
+	//RenderContext* renderContext = RenderContext::GetInstance();
 
-	renderContext->BeginCamera(m_gameCamera);
-	renderContext->ClearCurrentColorTargetView(Rgba::BLACK);
-	renderContext->ClearCurrentDepthStencilTargetView();
+	//renderContext->BeginCamera(m_gameCamera);
+	//renderContext->ClearCurrentColorTargetView(Rgba::BLACK);
+	//renderContext->ClearCurrentDepthStencilTargetView();
 
-	renderContext->DrawRenderable(*m_parentRenderable);
-	renderContext->DrawRenderable(*m_childRenderable);
+	//renderContext->DrawRenderable(*m_parentRenderable);
+	//renderContext->DrawRenderable(*m_childRenderable);
 
-	renderContext->EndCamera();
+	//renderContext->EndCamera();
 }

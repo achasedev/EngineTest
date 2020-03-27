@@ -14,6 +14,7 @@
 #include "Game/Framework/Game.h"
 #include "Engine/Framework/Window.h"
 #include "Engine/IO/InputSystem.h"
+#include "Engine/Job/JobSystem.h"
 #include "Engine/Render/Core/DX11Common.h"
 #include "Engine/Render/Core/RenderContext.h"
 #include "Engine/Utility/StringID.h"
@@ -98,6 +99,7 @@ void App::Initialize()
 	RenderContext::Initialize();
 	InputSystem::Initialize();
 	DebugSIDSystem::Initialize();
+	JobSystem::Initialize();
 
 	s_instance->m_game = new Game();
 }
@@ -108,6 +110,7 @@ void App::Shutdown()
 {
 	SAFE_DELETE_POINTER(s_instance->m_game);
 
+	JobSystem::Shutdown();
 	DebugSIDSystem::Shutdown();
 	InputSystem::Shutdown();
 	RenderContext::Shutdown();

@@ -16,9 +16,13 @@
     <ClCompile Include="Framework\Game.cpp">
       <Filter>General</Filter>
     </ClCompile>
+    <ClCompile Include="Framework\GameJobs.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\App.h" />
     <ClInclude Include="Framework\Game.h" />
+    <ClInclude Include="Framework\GameJobs.h" />
   </ItemGroup>
 </Project>
