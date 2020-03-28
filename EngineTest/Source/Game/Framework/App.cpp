@@ -127,7 +127,7 @@ void App::Shutdown()
 	DebugSIDSystem::Shutdown();
 	InputSystem::Shutdown();
 	RenderContext::Shutdown();
-	Window::ShutDown();
+	Window::Shutdown();
 
 	SAFE_DELETE_POINTER(g_app);
 }
