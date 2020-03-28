@@ -92,10 +92,10 @@ Game::Game()
 	m_childTransform.SetParentTransform(&m_parentTransform);
 	m_childTransform.SetRotation(Vector3(0.f, 45.f, 0.f));
 
-	//Mouse& mouse = InputSystem::GetMouse();
-	//mouse.ShowMouseCursor(false);
-	//mouse.LockCursorToClient(true);
-	//mouse.SetCursorMode(CURSORMODE_RELATIVE);
+	Mouse& mouse = InputSystem::GetMouse();
+	mouse.ShowMouseCursor(false);
+	mouse.LockCursorToClient(true);
+	mouse.SetCursorMode(CURSORMODE_RELATIVE);
 
 
 	NamedProperties prop;
@@ -141,18 +141,17 @@ void Game::Update()
 	m_childRenderable->SetRenderableMatrix(m_childTransform.GetLocalToWorldMatrix());
 
 	// Update da camera
-	InputSystem* input = InputSystem::GetInstance();
 
 	// Translating the camera
 	Vector3 translationOffset = Vector3::ZERO;
-	if (input->IsKeyPressed('W')) { translationOffset.z += 1.f; }		// Forward
-	if (input->IsKeyPressed('S')) { translationOffset.z -= 1.f; }		// Left
-	if (input->IsKeyPressed('A')) { translationOffset.x -= 1.f; }		// Back
-	if (input->IsKeyPressed('D')) { translationOffset.x += 1.f; }		// Right
-	if (input->IsKeyPressed(InputSystem::KEYBOARD_SPACEBAR)) { translationOffset.y += 1.f; }		// Up
-	if (input->IsKeyPressed('X')) { translationOffset.y -= 1.f; }		// Down
+	if (g_inputSystem->IsKeyPressed('W'))								{ translationOffset.z += 1.f; }		// Forward
+	if (g_inputSystem->IsKeyPressed('S'))								{ translationOffset.z -= 1.f; }		// Left
+	if (g_inputSystem->IsKeyPressed('A'))								{ translationOffset.x -= 1.f; }		// Back
+	if (g_inputSystem->IsKeyPressed('D'))								{ translationOffset.x += 1.f; }		// Right
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_SPACEBAR))	{ translationOffset.y += 1.f; }		// Up
+	if (g_inputSystem->IsKeyPressed('X'))								{ translationOffset.y -= 1.f; }		// Down
 
-	if (input->IsKeyPressed(InputSystem::KEYBOARD_SHIFT))
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_SHIFT))
 	{
 		translationOffset *= 50.f;
 	}
@@ -178,14 +177,12 @@ void Game::Update()
 //-------------------------------------------------------------------------------------------------
 void Game::Render()
 {
-	RenderContext* renderContext = RenderContext::GetInstance();
+	g_renderContext->BeginCamera(m_gameCamera);
+	g_renderContext->ClearCurrentColorTargetView(Rgba::BLACK);
+	g_renderContext->ClearCurrentDepthStencilTargetView();
 
-	renderContext->BeginCamera(m_gameCamera);
-	renderContext->ClearCurrentColorTargetView(Rgba::BLACK);
-	renderContext->ClearCurrentDepthStencilTargetView();
+	g_renderContext->DrawRenderable(*m_parentRenderable);
+	g_renderContext->DrawRenderable(*m_childRenderable);
 
-	renderContext->DrawRenderable(*m_parentRenderable);
-	renderContext->DrawRenderable(*m_childRenderable);
-
-	renderContext->EndCamera();
+	g_renderContext->EndCamera();
 }

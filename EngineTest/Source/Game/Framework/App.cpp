@@ -11,6 +11,7 @@
 #include <windows.h>
 #include "Game/Framework/App.h"
 #include "Game/Framework/Game.h"
+#include "Game/Framework/GameCommon.h"
 #include "Engine/Framework/EngineCommon.h"
 #include "Engine/Framework/Window.h"
 #include "Engine/IO/InputSystem.h"
@@ -31,7 +32,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-App* App::s_instance = nullptr;
+App* g_app = nullptr;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// C FUNCTIONS
@@ -47,8 +48,18 @@ bool AppMessageHandler(unsigned int msg, size_t wParam, size_t lParam)
 	{
 	case WM_CLOSE: // App close requested via "X" button, "Close Window" on task bar, or "Close" from system menu, or Alt-F4
 	{
-		App::GetInstance()->Quit();
+		g_app->Quit();
 		return true;
+	}
+	case WM_KEYDOWN:
+	{
+		unsigned char asKey = (unsigned char)wParam;
+		if (asKey == VK_ESCAPE)
+		{
+			g_app->Quit();
+			return true;
+		}
+		break;
 	}
 	}
 
@@ -93,24 +104,24 @@ App::~App()
 //-------------------------------------------------------------------------------------------------
 void App::Initialize()
 {
-	s_instance = new App();
+	g_app = new App();
 
 	Window::Initialize((21.f / 9.f), "Engine Test - MechroEngine");
-	Window::GetInstance()->RegisterMessageHandler(AppMessageHandler);
+	g_window->RegisterMessageHandler(AppMessageHandler);
 	Clock::ResetMaster();
 	RenderContext::Initialize();
 	InputSystem::Initialize();
 	DebugSIDSystem::Initialize();
 	JobSystem::Initialize();
 
-	s_instance->m_game = new Game();
+	g_app->m_game = new Game();
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void App::Shutdown()
 {
-	SAFE_DELETE_POINTER(s_instance->m_game);
+	SAFE_DELETE_POINTER(g_app->m_game);
 
 	JobSystem::Shutdown();
 	DebugSIDSystem::Shutdown();
@@ -118,8 +129,7 @@ void App::Shutdown()
 	RenderContext::Shutdown();
 	Window::ShutDown();
 
-	delete s_instance;
-	s_instance = nullptr;
+	SAFE_DELETE_POINTER(g_app);
 }
 
 
@@ -130,15 +140,15 @@ void App::RunFrame()
 	RunMessagePump();
 
 	// Begin Frames...
-	RenderContext::GetInstance()->BeginFrame();
-	InputSystem::GetInstance()->BeginFrame();
+	g_renderContext->BeginFrame();
+	g_inputSystem->BeginFrame();
 
 	ProcessInput();
 	Update();
 	Render();
 
 	// End Frames...
-	RenderContext::GetInstance()->EndFrame();
+	g_renderContext->EndFrame();
 	Sleep(15);
 }
 

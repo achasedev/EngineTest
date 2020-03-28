@@ -24,5 +24,6 @@
     <ClInclude Include="Framework\App.h" />
     <ClInclude Include="Framework\Game.h" />
     <ClInclude Include="Framework\GameJobs.h" />
+    <ClInclude Include="Framework\GameCommon.h" />
   </ItemGroup>
 </Project>

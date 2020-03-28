@@ -199,6 +199,7 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
   <ItemGroup>
     <ClInclude Include="Framework\App.h" />
     <ClInclude Include="Framework\Game.h" />
+    <ClInclude Include="Framework\GameCommon.h" />
     <ClInclude Include="Framework\GameJobs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
