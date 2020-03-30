@@ -143,6 +143,7 @@ void App::RunFrame()
 	g_renderContext->BeginFrame();
 	g_inputSystem->BeginFrame();
 
+	// Game Frame
 	ProcessInput();
 	Update();
 	Render();

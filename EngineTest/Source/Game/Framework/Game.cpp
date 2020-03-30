@@ -25,6 +25,7 @@
 #include "Engine/Render/Texture/TextureView2D.h"
 #include "Engine/Time/Clock.h"
 #include "Engine/Utility/NamedProperties.h"
+#include "Engine/Utility/SmartPointer.h"
 #include "Engine/Utility/StringID.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -74,6 +75,9 @@ Game::Game()
 	m_texture = new Texture2D();
 	m_texture->CreateFromImage(*m_image);
 
+	Texture2D* testTexture = new Texture2D();
+	testTexture->CreateFromImage(*m_image);
+
 	m_textureView = m_texture->CreateTextureView2D();
 
 	m_material = new Material();
@@ -114,6 +118,10 @@ Game::Game()
 	DebuggerPrintf("%s", prop.ToString().c_str());
 
 	m_gameClock = new Clock(nullptr);
+
+	SmartPointer<Texture> sp(m_texture);	
+	SmartPointer<Texture> afourth(testTexture);
+	sp = afourth;
 }
 
 
