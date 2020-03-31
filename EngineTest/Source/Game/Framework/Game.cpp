@@ -119,9 +119,8 @@ Game::Game()
 
 	m_gameClock = new Clock(nullptr);
 
-	SmartPointer<Texture> sp(m_texture);	
-	SmartPointer<Texture> afourth(testTexture);
-	sp = afourth;
+	R<Texture> sp(m_texture);	
+	R<Texture> sp2(m_texture);
 }
 
 
@@ -129,7 +128,7 @@ Game::Game()
 Game::~Game()
 {
 	SAFE_DELETE_POINTER(m_textureView);
-	SAFE_DELETE_POINTER(m_texture);
+	//SAFE_DELETE_POINTER(m_texture);
 	SAFE_DELETE_POINTER(m_image);
 	SAFE_DELETE_POINTER(m_mesh);
 	SAFE_DELETE_POINTER(m_shader);
