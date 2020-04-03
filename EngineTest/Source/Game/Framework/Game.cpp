@@ -22,8 +22,8 @@
 #include "Engine/Render/Mesh/MeshBuilder.h"
 #include "Engine/Render/Shader.h"
 #include "Engine/Render/Texture/Texture2D.h"
-#include "Engine/Render/Texture/TextureView2D.h"
 #include "Engine/Time/Clock.h"
+#include "Engine/Time/Time.h"
 #include "Engine/Utility/NamedProperties.h"
 #include "Engine/Utility/SmartPointer.h"
 #include "Engine/Utility/StringID.h"
@@ -47,6 +47,15 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// CLASS IMPLEMENTATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+
+void AFunction(const R<Texture2D>& hello)
+{
+
+	UNUSED(hello);
+	int x = 0;
+	x = 5;
+}
+
 
 //-------------------------------------------------------------------------------------------------
 Game::Game()
@@ -78,7 +87,7 @@ Game::Game()
 	Texture2D* testTexture = new Texture2D();
 	testTexture->CreateFromImage(*m_image);
 
-	m_textureView = m_texture->CreateTextureView2D();
+	m_textureView = m_texture->CreateOrGetShaderResourceView();
 
 	m_material = new Material();
 	m_material->SetShader(m_shader);
@@ -119,8 +128,25 @@ Game::Game()
 
 	m_gameClock = new Clock(nullptr);
 
-	R<Texture> sp(m_texture);	
-	R<Texture> sp2(m_texture);
+	R<Texture2D> sp = m_texture;
+
+	if (sp == nullptr)
+	{
+		int x = 0;
+		x = 5;
+	}
+	
+	uint64 startHPC = GetPerformanceCounter();
+	Vector3 myVectorTest = Vector3(5.f, 5.f, 4.f);
+
+	for (int i = 0; i < 100000; ++i)
+	{
+		AFunction(sp);
+	}
+	g_renderContext->BindShaderResourceView(0, m_textureView);
+	uint64 endHPC = GetPerformanceCounter();
+	float milliseconds = (float)TimeSystem::PerformanceCountToSeconds(endHPC - startHPC) * 1000.f;
+	DebuggerPrintf("\n\nTook %.3f milliseconds\n\n", milliseconds);
 }
 
 
@@ -185,8 +211,8 @@ void Game::Update()
 void Game::Render()
 {
 	g_renderContext->BeginCamera(m_gameCamera);
-	g_renderContext->ClearCurrentColorTargetView(Rgba::BLACK);
-	g_renderContext->ClearCurrentDepthStencilTargetView();
+	g_renderContext->ClearScreen(Rgba::BLACK);
+	g_renderContext->ClearDepth();
 
 	g_renderContext->DrawRenderable(*m_parentRenderable);
 	g_renderContext->DrawRenderable(*m_childRenderable);

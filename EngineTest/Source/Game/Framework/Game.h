@@ -24,8 +24,8 @@ class Material;
 class Mesh;
 class Renderable;
 class Shader;
+class ShaderResourceView;
 class Texture2D;
-class TextureView2D;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -63,7 +63,7 @@ private:
 	Mesh* m_mesh = nullptr;
 	Image* m_image = nullptr;
 	Texture2D* m_texture = nullptr;
-	TextureView2D* m_textureView = nullptr;
+	ShaderResourceView* m_textureView = nullptr;
 	Material* m_material = nullptr;
 	Renderable* m_parentRenderable = nullptr;
 	Renderable* m_childRenderable = nullptr;
