@@ -10,10 +10,12 @@
 #include "Game/Framework/Game.h"
 #include "Game/Framework/GameJobs.h"
 #include "Engine/Framework/EngineCommon.h"
+#include "Engine/Framework/Window.h"
 #include "Engine/IO/Image.h"
 #include "Engine/IO/InputSystem.h"
 #include "Engine/Job/JobSystem.h"
 #include "Engine/Math/MathUtils.h"
+#include "Engine/Math/OBB2.h"
 #include "Engine/Render/Camera/Camera.h"
 #include "Engine/Render/Core/Renderable.h"
 #include "Engine/Render/Core/RenderContext.h"
@@ -27,6 +29,8 @@
 #include "Engine/Utility/NamedProperties.h"
 #include "Engine/Utility/SmartPointer.h"
 #include "Engine/Utility/StringID.h"
+#include "Engine/UI/Canvas.h"
+#include "Engine/UI/Panel.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -63,6 +67,9 @@ Game::Game()
 	m_gameCamera = new Camera();
 	m_gameCamera->SetProjectionPerspective(90.f, 0.1f, 100.f);
 	m_gameCamera->LookAt(Vector3(10.f, 0.f, 0.f), Vector3(0.f, 0.f, 0.f));
+
+	m_uiCamera = new Camera();
+	m_uiCamera->SetProjectionOrtho(1080.f);
 
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
@@ -105,10 +112,10 @@ Game::Game()
 	m_childTransform.SetParentTransform(&m_parentTransform);
 	m_childTransform.SetRotation(Vector3(0.f, 45.f, 0.f));
 
-	Mouse& mouse = InputSystem::GetMouse();
-	mouse.ShowMouseCursor(false);
-	mouse.LockCursorToClient(true);
-	mouse.SetCursorMode(CURSORMODE_RELATIVE);
+	//Mouse& mouse = InputSystem::GetMouse();
+	//mouse.ShowMouseCursor(false);
+	//mouse.LockCursorToClient(true);
+	//mouse.SetCursorMode(CURSORMODE_RELATIVE);
 
 
 	NamedProperties prop;
@@ -147,6 +154,31 @@ Game::Game()
 	uint64 endHPC = GetPerformanceCounter();
 	float milliseconds = (float)TimeSystem::PerformanceCountToSeconds(endHPC - startHPC) * 1000.f;
 	DebuggerPrintf("\n\nTook %.3f milliseconds\n\n", milliseconds);
+
+	m_canvas = new Canvas();
+	m_canvas->SetReferenceDimensions(1080.f, g_window->GetClientAspect());
+
+	Panel* panel = new Panel();
+	panel->SetCanvas(m_canvas);
+	panel->m_transform.SetAnchors(AnchorPreset::TOP_RIGHT);
+	panel->m_transform.SetPivot(Vector2(1.0f, 1.0f));
+	panel->m_transform.SetPosition(m_canvas->GetReferenceBounds().GetTopRight());
+	panel->m_transform.SetDimensions(Vector2(1000.f));
+
+	AABB2 bounds = panel->m_transform.GetBounds();
+
+	mb.Clear();
+	mb.BeginBuilding(true);
+
+	mb.PushQuad2D(bounds);
+	mb.FinishBuilding();
+	Mesh* mesh = mb.CreateMesh<Vertex3D_PCU>();
+
+	Renderable* panelRend = new Renderable();
+	panelRend->AddDraw(mesh, m_material);
+	panel->SetRenderable(panelRend);
+
+	m_canvas->AddElement(panel);
 }
 
 
@@ -216,6 +248,9 @@ void Game::Render()
 
 	g_renderContext->DrawRenderable(*m_parentRenderable);
 	g_renderContext->DrawRenderable(*m_childRenderable);
+
+	g_renderContext->BeginCamera(m_uiCamera);
+	m_canvas->Render();
 
 	g_renderContext->EndCamera();
 }

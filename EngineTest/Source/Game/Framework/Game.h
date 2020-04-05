@@ -18,6 +18,7 @@
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Camera;
+class Canvas;
 class Clock;
 class Image;
 class Material;
@@ -59,6 +60,7 @@ private:
 	//-----Private Data-----
 
 	Camera* m_gameCamera = nullptr;
+	Camera* m_uiCamera = nullptr;
 	Shader* m_shader = nullptr;
 	Mesh* m_mesh = nullptr;
 	Image* m_image = nullptr;
@@ -70,6 +72,8 @@ private:
 
 	Transform m_parentTransform;
 	Transform m_childTransform;
+
+	Canvas* m_canvas = nullptr;
 
 	Clock* m_gameClock = nullptr;
 
