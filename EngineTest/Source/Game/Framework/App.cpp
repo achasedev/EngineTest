@@ -12,6 +12,7 @@
 #include "Game/Framework/App.h"
 #include "Game/Framework/Game.h"
 #include "Game/Framework/GameCommon.h"
+#include "Engine/Event/EventSystem.h"
 #include "Engine/Framework/EngineCommon.h"
 #include "Engine/Framework/Window.h"
 #include "Engine/IO/InputSystem.h"
@@ -106,6 +107,7 @@ void App::Initialize()
 {
 	g_app = new App();
 
+	EventSystem::Initialize();
 	Window::Initialize((21.f / 9.f), "Engine Test - MechroEngine");
 	g_window->RegisterMessageHandler(AppMessageHandler);
 	Clock::ResetMaster();
@@ -128,6 +130,7 @@ void App::Shutdown()
 	InputSystem::Shutdown();
 	RenderContext::Shutdown();
 	Window::Shutdown();
+	EventSystem::Shutdown();
 
 	SAFE_DELETE_POINTER(g_app);
 }

@@ -156,16 +156,17 @@ Game::Game()
 	DebuggerPrintf("\n\nTook %.3f milliseconds\n\n", milliseconds);
 
 	m_canvas = new Canvas();
-	m_canvas->SetReferenceDimensions(1080.f, g_window->GetClientAspect());
+	m_canvas->SetBounds(1080.f, g_window->GetClientAspect());
 
-	Panel* panel = new Panel();
+	Panel* panel = new Panel(m_canvas);
 	panel->SetCanvas(m_canvas);
 	panel->m_transform.SetAnchors(AnchorPreset::TOP_RIGHT);
 	panel->m_transform.SetPivot(Vector2(1.0f, 1.0f));
-	panel->m_transform.SetPosition(m_canvas->GetReferenceBounds().GetTopRight());
+	panel->m_transform.SetPosition(m_canvas->GetBounds().GetTopRight());
 	panel->m_transform.SetDimensions(Vector2(1000.f));
+	m_canvas->AddChild(panel);
 
-	AABB2 bounds = panel->m_transform.GetBounds();
+	AABB2 bounds = panel->GetBounds();
 
 	mb.Clear();
 	mb.BeginBuilding(true);
@@ -178,7 +179,6 @@ Game::Game()
 	panelRend->AddDraw(mesh, m_material);
 	panel->SetRenderable(panelRend);
 
-	m_canvas->AddElement(panel);
 }
 
 
