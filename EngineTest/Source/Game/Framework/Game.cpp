@@ -164,14 +164,14 @@ Game::Game()
 	m_panel1->m_transform.SetAnchors(AnchorPreset::BOTTOM_LEFT);
 	m_panel1->m_transform.SetPivot(Vector2(0.f, 0.0f));
 	m_panel1->m_transform.SetPosition(Vector2::ZERO);
-	m_panel1->m_transform.SetDimensions(Vector2(512.f * g_window->GetClientAspect(), 512.f));
+	m_panel1->m_transform.SetDimensions(Vector2(512.f, 512.f));
 
 	m_panel2 = new Panel(m_canvas);
 	m_panel2->SetCanvas(m_canvas);
 	m_panel2->m_transform.SetAnchors(AnchorPreset::TOP_RIGHT);
-	m_panel2->m_transform.SetPivot(Vector2::ONES);
+	m_panel2->m_transform.SetPivot(Vector2(0.5f));
 	m_panel2->m_transform.SetPosition(Vector2::ZERO);
-	m_panel2->m_transform.SetDimensions(Vector2(256.f * g_window->GetClientAspect(), 256.f));
+	m_panel2->m_transform.SetDimensions(Vector2(256.f, 256.f));
 
 
 	//panel->m_transform.SetHorizontalPadding(0.f, 300.f);
@@ -179,12 +179,12 @@ Game::Game()
 	m_canvas->AddChild(m_panel1);
 	m_panel1->AddChild(m_panel2);
 
-	AABB2 bounds = m_panel1->GetBounds();
+
 
 	mb.Clear();
 	mb.BeginBuilding(true);
 
-	mb.PushQuad2D(bounds);
+	mb.PushQuad2D(AABB2::ZERO_TO_ONE);
 	mb.FinishBuilding();
 	Mesh* mesh = mb.CreateMesh<Vertex3D_PCU>();
 
@@ -199,7 +199,6 @@ Game::Game()
 Game::~Game()
 {
 	SAFE_DELETE_POINTER(m_textureView);
-	//SAFE_DELETE_POINTER(m_texture);
 	SAFE_DELETE_POINTER(m_image);
 	SAFE_DELETE_POINTER(m_mesh);
 	SAFE_DELETE_POINTER(m_shader);
@@ -251,7 +250,8 @@ void Game::Update()
 	DebuggerPrintf("Frame: %.5f | Total: %.5f | FPS: %.2f\n", m_gameClock->GetDeltaSeconds(), m_gameClock->GetTotalSeconds(), 1.0f / m_gameClock->GetDeltaSeconds());
 
 	m_panel1->m_transform.SetXPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
-	m_panel2->m_transform.SetYPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
+	//m_panel2->m_transform.SetYPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
+	m_panel2->m_transform.SetOrientation(m_gameClock->GetTotalSeconds() * 90.f);
 }
 
 
