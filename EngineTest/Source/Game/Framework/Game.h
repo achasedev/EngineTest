@@ -23,6 +23,7 @@ class Clock;
 class Image;
 class Material;
 class Mesh;
+class Panel;
 class Renderable;
 class Shader;
 class ShaderResourceView;
@@ -74,6 +75,8 @@ private:
 	Transform m_childTransform;
 
 	Canvas* m_canvas = nullptr;
+	Panel* m_panel1 = nullptr;
+	Panel* m_panel2 = nullptr;
 
 	Clock* m_gameClock = nullptr;
 

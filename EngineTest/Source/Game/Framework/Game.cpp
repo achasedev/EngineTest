@@ -69,7 +69,8 @@ Game::Game()
 	m_gameCamera->LookAt(Vector3(10.f, 0.f, 0.f), Vector3(0.f, 0.f, 0.f));
 
 	m_uiCamera = new Camera();
-	m_uiCamera->SetProjectionOrtho(1080.f);
+	m_uiCamera->SetDepthStencilTargetView(nullptr, false);
+	m_uiCamera->SetProjectionOrthographic(1080.f, 2.33f);
 
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
@@ -156,17 +157,29 @@ Game::Game()
 	DebuggerPrintf("\n\nTook %.3f milliseconds\n\n", milliseconds);
 
 	m_canvas = new Canvas();
-	m_canvas->SetBounds(1080.f, g_window->GetClientAspect());
+	m_canvas->Initialize(m_uiCamera, Vector2(1080.f * g_window->GetClientAspect(), 1080.f), SCREEN_MATCH_WIDTH_OR_HEIGHT);
 
-	Panel* panel = new Panel(m_canvas);
-	panel->SetCanvas(m_canvas);
-	panel->m_transform.SetAnchors(AnchorPreset::TOP_RIGHT);
-	panel->m_transform.SetPivot(Vector2(1.0f, 1.0f));
-	panel->m_transform.SetPosition(m_canvas->GetBounds().GetTopRight());
-	panel->m_transform.SetDimensions(Vector2(1000.f));
-	m_canvas->AddChild(panel);
+	m_panel1 = new Panel(m_canvas);
+	m_panel1->SetCanvas(m_canvas);
+	m_panel1->m_transform.SetAnchors(AnchorPreset::BOTTOM_LEFT);
+	m_panel1->m_transform.SetPivot(Vector2(0.f, 0.0f));
+	m_panel1->m_transform.SetPosition(Vector2::ZERO);
+	m_panel1->m_transform.SetDimensions(Vector2(512.f * g_window->GetClientAspect(), 512.f));
 
-	AABB2 bounds = panel->GetBounds();
+	m_panel2 = new Panel(m_canvas);
+	m_panel2->SetCanvas(m_canvas);
+	m_panel2->m_transform.SetAnchors(AnchorPreset::TOP_RIGHT);
+	m_panel2->m_transform.SetPivot(Vector2::ONES);
+	m_panel2->m_transform.SetPosition(Vector2::ZERO);
+	m_panel2->m_transform.SetDimensions(Vector2(256.f * g_window->GetClientAspect(), 256.f));
+
+
+	//panel->m_transform.SetHorizontalPadding(0.f, 300.f);
+	//panel->m_transform.SetVerticalPadding(0.f, 300.f);
+	m_canvas->AddChild(m_panel1);
+	m_panel1->AddChild(m_panel2);
+
+	AABB2 bounds = m_panel1->GetBounds();
 
 	mb.Clear();
 	mb.BeginBuilding(true);
@@ -177,8 +190,8 @@ Game::Game()
 
 	Renderable* panelRend = new Renderable();
 	panelRend->AddDraw(mesh, m_material);
-	panel->SetRenderable(panelRend);
-
+	m_panel1->SetRenderable(panelRend);
+	m_panel2->SetRenderable(panelRend);
 }
 
 
@@ -236,6 +249,9 @@ void Game::Update()
 	m_gameCamera->Rotate(rotation);
 
 	DebuggerPrintf("Frame: %.5f | Total: %.5f | FPS: %.2f\n", m_gameClock->GetDeltaSeconds(), m_gameClock->GetTotalSeconds(), 1.0f / m_gameClock->GetDeltaSeconds());
+
+	m_panel1->m_transform.SetXPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
+	m_panel2->m_transform.SetYPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
 }
 
 
