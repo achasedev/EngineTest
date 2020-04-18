@@ -100,15 +100,19 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)../MechroEngine/Source/;$(SolutionDir)Source/</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)../MechroEngine/Source/;$(SolutionDir)Source/</AdditionalLibraryDirectories>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>del "$(SolutionDir)Build\$(ProjectName)_$(PlatformName).exe"
-xcopy /Y /F /I "$(TargetPath)" "$(SolutionDir)Build"
-ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying $(TargetFileName) to Build folder as "$(ProjectName)_$(PlatformName).exe"</Message>
@@ -122,15 +126,19 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)../MechroEngine/Source/;$(SolutionDir)Source/</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)../MechroEngine/Source/;$(SolutionDir)Source/</AdditionalLibraryDirectories>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>del "$(SolutionDir)Build\$(ProjectName)_$(PlatformName).exe"
-xcopy /Y /F /I "$(TargetPath)" "$(SolutionDir)Build"
-ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying $(TargetFileName) to Build folder as "$(ProjectName)_$(PlatformName).exe"</Message>
@@ -151,6 +159,7 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)../MechroEngine/Source/;$(SolutionDir)Source/</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>del "$(SolutionDir)Build\$(ProjectName)_$(PlatformName).exe"
@@ -177,6 +186,7 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)../MechroEngine/Source/;$(SolutionDir)Source/</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>del "$(SolutionDir)Build\$(ProjectName)_$(PlatformName).exe"

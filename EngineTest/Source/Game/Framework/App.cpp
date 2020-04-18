@@ -19,6 +19,7 @@
 #include "Engine/Job/JobSystem.h"
 #include "Engine/Render/Core/DX11Common.h"
 #include "Engine/Render/Core/RenderContext.h"
+#include "Engine/Render/Font/FontLoader.h"
 #include "Engine/Time/Clock.h"
 #include "Engine/Utility/StringID.h"
 
@@ -115,6 +116,7 @@ void App::Initialize()
 	InputSystem::Initialize();
 	DebugSIDSystem::Initialize();
 	JobSystem::Initialize();
+	FontLoader::Initialize();
 
 	g_app->m_game = new Game();
 }
@@ -125,6 +127,7 @@ void App::Shutdown()
 {
 	SAFE_DELETE_POINTER(g_app->m_game);
 
+	FontLoader::Shutdown();
 	JobSystem::Shutdown();
 	DebugSIDSystem::Shutdown();
 	InputSystem::Shutdown();
@@ -153,7 +156,6 @@ void App::RunFrame()
 
 	// End Frames...
 	g_renderContext->EndFrame();
-	Sleep(15);
 }
 
 

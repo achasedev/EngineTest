@@ -19,6 +19,8 @@
 #include "Engine/Render/Camera/Camera.h"
 #include "Engine/Render/Core/Renderable.h"
 #include "Engine/Render/Core/RenderContext.h"
+#include "Engine/Render/Font/Font.h"
+#include "Engine/Render/Font/FontLoader.h"
 #include "Engine/Render/Material.h"
 #include "Engine/Render/Mesh/Mesh.h"
 #include "Engine/Render/Mesh/MeshBuilder.h"
@@ -166,18 +168,9 @@ Game::Game()
 	m_panel1->m_transform.SetPosition(Vector2::ZERO);
 	m_panel1->m_transform.SetDimensions(Vector2(512.f, 512.f));
 
-	m_panel2 = new Panel(m_canvas);
-	m_panel2->SetCanvas(m_canvas);
-	m_panel2->m_transform.SetAnchors(AnchorPreset::TOP_RIGHT);
-	m_panel2->m_transform.SetPivot(Vector2(0.5f));
-	m_panel2->m_transform.SetPosition(Vector2::ZERO);
-	m_panel2->m_transform.SetDimensions(Vector2(256.f, 256.f));
-
-
 	//panel->m_transform.SetHorizontalPadding(0.f, 300.f);
 	//panel->m_transform.SetVerticalPadding(0.f, 300.f);
 	m_canvas->AddChild(m_panel1);
-	m_panel1->AddChild(m_panel2);
 
 
 
@@ -191,7 +184,24 @@ Game::Game()
 	Renderable* panelRend = new Renderable();
 	panelRend->AddDraw(mesh, m_material);
 	m_panel1->SetRenderable(panelRend);
-	m_panel2->SetRenderable(panelRend);
+
+	Font* face = g_ftFontSystem->LoadFontFace("Data/Fonts/test.ttf", 0);
+	//Texture2D* letter = face->CreateOrGetTextureForGlyph('A');
+
+	m_panel2 = new Panel(m_canvas);
+	m_panel2->SetCanvas(m_canvas);
+	m_panel2->m_transform.SetAnchors(AnchorPreset::TOP_LEFT);
+	m_panel2->m_transform.SetPivot(Vector2(0.f, 1.0f));
+	m_panel2->m_transform.SetPosition(Vector2::ZERO);
+	m_panel2->m_transform.SetDimensions(Vector2(15.f));
+	Renderable* panel2Rend = new Renderable();
+
+	Material* testMat = new Material();
+	testMat->SetShader(m_shader);
+	//testMat->SetAlbedoTextureView(letter->CreateOrGetShaderResourceView());
+	panel2Rend->AddDraw(mesh, testMat);
+	m_panel2->SetRenderable(panel2Rend);
+	//m_canvas->AddChild(m_panel2);
 }
 
 
@@ -251,7 +261,7 @@ void Game::Update()
 
 	m_panel1->m_transform.SetXPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
 	//m_panel2->m_transform.SetYPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
-	m_panel2->m_transform.SetOrientation(m_gameClock->GetTotalSeconds() * 90.f);
+	//m_panel2->m_transform.SetOrientation(m_gameClock->GetTotalSeconds() * 90.f);
 }
 
 
