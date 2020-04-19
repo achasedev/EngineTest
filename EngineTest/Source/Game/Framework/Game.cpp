@@ -20,6 +20,7 @@
 #include "Engine/Render/Core/Renderable.h"
 #include "Engine/Render/Core/RenderContext.h"
 #include "Engine/Render/Font/Font.h"
+#include "Engine/Render/Font/FontAtlas.h"
 #include "Engine/Render/Font/FontLoader.h"
 #include "Engine/Render/Material.h"
 #include "Engine/Render/Mesh/Mesh.h"
@@ -185,23 +186,31 @@ Game::Game()
 	panelRend->AddDraw(mesh, m_material);
 	m_panel1->SetRenderable(panelRend);
 
-	Font* face = g_ftFontSystem->LoadFontFace("Data/Fonts/test.ttf", 0);
-	//Texture2D* letter = face->CreateOrGetTextureForGlyph('A');
+	Font* font = g_FontLoader->LoadFont("Data/Fonts/test.ttf", 0);
+	FontAtlas* atlas = font->CreateOrGetAtlasForPixelHeight(4U);
+	AABB2 glyphUVs = atlas->CreateOrGetUVsForGlyph('A');
 
 	m_panel2 = new Panel(m_canvas);
 	m_panel2->SetCanvas(m_canvas);
 	m_panel2->m_transform.SetAnchors(AnchorPreset::TOP_LEFT);
 	m_panel2->m_transform.SetPivot(Vector2(0.f, 1.0f));
 	m_panel2->m_transform.SetPosition(Vector2::ZERO);
-	m_panel2->m_transform.SetDimensions(Vector2(15.f));
+	m_panel2->m_transform.SetDimensions(Vector2(150.f * glyphUVs.GetAspect(), 150.f));
 	Renderable* panel2Rend = new Renderable();
+
+	mb.Clear();
+	mb.BeginBuilding(true);
+
+	mb.PushQuad2D(AABB2::ZERO_TO_ONE, glyphUVs);
+	mb.FinishBuilding();
+	Mesh* mesh2 = mb.CreateMesh<Vertex3D_PCU>();
 
 	Material* testMat = new Material();
 	testMat->SetShader(m_shader);
-	//testMat->SetAlbedoTextureView(letter->CreateOrGetShaderResourceView());
-	panel2Rend->AddDraw(mesh, testMat);
+	testMat->SetAlbedoTextureView(atlas->GetTexture()->CreateOrGetShaderResourceView());
+	panel2Rend->AddDraw(mesh2, testMat);
 	m_panel2->SetRenderable(panel2Rend);
-	//m_canvas->AddChild(m_panel2);
+	m_canvas->AddChild(m_panel2);
 }
 
 
