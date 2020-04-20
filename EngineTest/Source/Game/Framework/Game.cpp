@@ -72,8 +72,6 @@ Game::Game()
 	m_gameCamera->LookAt(Vector3(10.f, 0.f, 0.f), Vector3(0.f, 0.f, 0.f));
 
 	m_uiCamera = new Camera();
-	m_uiCamera->SetDepthStencilTargetView(nullptr, false);
-	m_uiCamera->SetProjectionOrthographic(1080.f, 2.33f);
 
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
@@ -138,29 +136,9 @@ Game::Game()
 	DebuggerPrintf("%s", prop.ToString().c_str());
 
 	m_gameClock = new Clock(nullptr);
-
-	R<Texture2D> sp = m_texture;
-
-	if (sp == nullptr)
-	{
-		int x = 0;
-		x = 5;
-	}
 	
-	uint64 startHPC = GetPerformanceCounter();
-	Vector3 myVectorTest = Vector3(5.f, 5.f, 4.f);
-
-	for (int i = 0; i < 100000; ++i)
-	{
-		AFunction(sp);
-	}
-	g_renderContext->BindShaderResourceView(0, m_textureView);
-	uint64 endHPC = GetPerformanceCounter();
-	float milliseconds = (float)TimeSystem::PerformanceCountToSeconds(endHPC - startHPC) * 1000.f;
-	DebuggerPrintf("\n\nTook %.3f milliseconds\n\n", milliseconds);
-
 	m_canvas = new Canvas();
-	m_canvas->Initialize(m_uiCamera, Vector2(1080.f * g_window->GetClientAspect(), 1080.f), SCREEN_MATCH_WIDTH_OR_HEIGHT);
+	m_canvas->Initialize(g_renderContext->GetDefaultRenderTarget(), Vector2(1080.f * g_window->GetClientAspect(), 1080.f), SCREEN_MATCH_EXPAND_TO_FILL);
 
 	m_panel1 = new Panel(m_canvas);
 	m_panel1->SetCanvas(m_canvas);
@@ -284,6 +262,8 @@ void Game::Render()
 	g_renderContext->DrawRenderable(*m_parentRenderable);
 	g_renderContext->DrawRenderable(*m_childRenderable);
 
+	m_uiCamera->SetRenderTarget(m_canvas->GetOutputTexture(), false);
+	m_uiCamera->SetProjection(CAMERA_PROJECTION_ORTHOGRAPHIC, m_canvas->GenerateOrtho());
 	g_renderContext->BeginCamera(m_uiCamera);
 	m_canvas->Render();
 
