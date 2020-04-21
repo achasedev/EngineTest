@@ -165,14 +165,19 @@ Game::Game()
 	m_panel1->SetRenderable(panelRend);
 
 	Font* font = g_FontLoader->LoadFont("Data/Fonts/test.ttf", 0);
-	FontAtlas* atlas = font->CreateOrGetAtlasForPixelHeight(4U);
-	AABB2 glyphUVs = atlas->CreateOrGetUVsForGlyph('A');
+	m_atlas = font->CreateOrGetAtlasForPixelHeight(72U);
+
+	for (int i = 0; i < 255; ++i)
+	{
+		m_atlas->CreateOrGetUVsForGlyph((char)i);
+	}
 
 	m_panel2 = new Panel(m_canvas);
 	m_panel2->SetCanvas(m_canvas);
 	m_panel2->m_transform.SetAnchors(AnchorPreset::TOP_LEFT);
 	m_panel2->m_transform.SetPivot(Vector2(0.f, 1.0f));
 	m_panel2->m_transform.SetPosition(Vector2::ZERO);
+	AABB2 glyphUVs = m_atlas->CreateOrGetUVsForGlyph('A');
 	m_panel2->m_transform.SetDimensions(Vector2(150.f * glyphUVs.GetAspect(), 150.f));
 	Renderable* panel2Rend = new Renderable();
 
@@ -185,7 +190,7 @@ Game::Game()
 
 	Material* testMat = new Material();
 	testMat->SetShader(m_shader);
-	testMat->SetAlbedoTextureView(atlas->GetTexture()->CreateOrGetShaderResourceView());
+	testMat->SetAlbedoTextureView(m_atlas->GetTexture()->CreateOrGetShaderResourceView());
 	panel2Rend->AddDraw(mesh2, testMat);
 	m_panel2->SetRenderable(panel2Rend);
 	m_canvas->AddChild(m_panel2);
@@ -244,7 +249,7 @@ void Game::Update()
 
 	m_gameCamera->Rotate(rotation);
 
-	DebuggerPrintf("Frame: %.5f | Total: %.5f | FPS: %.2f\n", m_gameClock->GetDeltaSeconds(), m_gameClock->GetTotalSeconds(), 1.0f / m_gameClock->GetDeltaSeconds());
+	//DebuggerPrintf("Frame: %.5f | Total: %.5f | FPS: %.2f\n", m_gameClock->GetDeltaSeconds(), m_gameClock->GetTotalSeconds(), 1.0f / m_gameClock->GetDeltaSeconds());
 
 	m_panel1->m_transform.SetXPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
 	//m_panel2->m_transform.SetYPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
@@ -268,4 +273,19 @@ void Game::Render()
 	m_canvas->Render();
 
 	g_renderContext->EndCamera();
+
+	static bool test = false;
+	static bool test2 = false;
+
+	if (!test2)
+	{
+		if (test)
+		{
+			test = true;
+			g_renderContext->SaveTextureToImage(m_atlas->GetTexture(), "Data/Fonts/Test.png");
+			test2 = true;
+		}
+
+		test = true;
+	}
 }

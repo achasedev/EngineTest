@@ -20,6 +20,7 @@
 class Camera;
 class Canvas;
 class Clock;
+class FontAtlas;
 class Image;
 class Material;
 class Mesh;
@@ -77,6 +78,7 @@ private:
 	Canvas* m_canvas = nullptr;
 	Panel* m_panel1 = nullptr;
 	Panel* m_panel2 = nullptr;
+	FontAtlas* m_atlas = nullptr;
 
 	Clock* m_gameClock = nullptr;
 
