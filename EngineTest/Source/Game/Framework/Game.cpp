@@ -34,6 +34,7 @@
 #include "Engine/Utility/StringID.h"
 #include "Engine/UI/Canvas.h"
 #include "Engine/UI/Panel.h"
+#include "Engine/UI/UIText.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -138,7 +139,7 @@ Game::Game()
 	m_gameClock = new Clock(nullptr);
 	
 	m_canvas = new Canvas();
-	m_canvas->Initialize(g_renderContext->GetDefaultRenderTarget(), Vector2(1080.f * g_window->GetClientAspect(), 1080.f), SCREEN_MATCH_EXPAND_TO_FILL);
+	m_canvas->Initialize(g_renderContext->GetDefaultRenderTarget(), Vector2(1080.f * g_window->GetClientAspect(), 1080.f), SCREEN_MATCH_WIDTH_OR_HEIGHT);
 
 	m_panel1 = new Panel(m_canvas);
 	m_panel1->SetCanvas(m_canvas);
@@ -164,36 +165,15 @@ Game::Game()
 	panelRend->AddDraw(mesh, m_material);
 	m_panel1->SetRenderable(panelRend);
 
-	Font* font = g_FontLoader->LoadFont("Data/Fonts/test.ttf", 0);
-	m_atlas = font->CreateOrGetAtlasForPixelHeight(72U);
-
-	for (int i = 0; i < 255; ++i)
-	{
-		m_atlas->CreateOrGetUVsForGlyph((char)i);
-	}
-
-	m_panel2 = new Panel(m_canvas);
-	m_panel2->SetCanvas(m_canvas);
-	m_panel2->m_transform.SetAnchors(AnchorPreset::TOP_LEFT);
-	m_panel2->m_transform.SetPivot(Vector2(0.f, 1.0f));
-	m_panel2->m_transform.SetPosition(Vector2::ZERO);
-	AABB2 glyphUVs = m_atlas->CreateOrGetUVsForGlyph('A');
-	m_panel2->m_transform.SetDimensions(Vector2(150.f * glyphUVs.GetAspect(), 150.f));
-	Renderable* panel2Rend = new Renderable();
-
-	mb.Clear();
-	mb.BeginBuilding(true);
-
-	mb.PushQuad2D(AABB2::ZERO_TO_ONE, glyphUVs);
-	mb.FinishBuilding();
-	Mesh* mesh2 = mb.CreateMesh<Vertex3D_PCU>();
-
-	Material* testMat = new Material();
-	testMat->SetShader(m_shader);
-	testMat->SetAlbedoTextureView(m_atlas->GetTexture()->CreateOrGetShaderResourceView());
-	panel2Rend->AddDraw(mesh2, testMat);
-	m_panel2->SetRenderable(panel2Rend);
-	m_canvas->AddChild(m_panel2);
+	Font* font = g_FontLoader->LoadFont("Data/Fonts/LeagueGothic-Regular.otf", 0);
+	m_uiText = new UIText(m_canvas);
+	m_uiText->SetText("Andrew Makenzie Chase 0123456789");
+	m_uiText->SetFont(font, m_shader);
+	m_uiText->m_transform.SetAnchors(AnchorPreset::TOP_LEFT);
+	m_uiText->m_transform.SetPosition(Vector2::ZERO);
+	m_uiText->m_transform.SetDimensions(Vector2(500.f, 50.f));
+	m_uiText->m_transform.SetPivot(Vector2(0.f, 1.0f));
+	m_canvas->AddChild(m_uiText);
 }
 
 
@@ -235,7 +215,7 @@ void Game::Update()
 		translationOffset *= 50.f;
 	}
 
-	const float deltaTime = (1.f / 200.f); // 200 fps?
+	const float deltaTime = (1.f / m_gameClock->GetDeltaSeconds());
 	translationOffset *= (1.f * deltaTime);
 
 	m_gameCamera->Translate(translationOffset);
@@ -268,24 +248,9 @@ void Game::Render()
 	g_renderContext->DrawRenderable(*m_childRenderable);
 
 	m_uiCamera->SetRenderTarget(m_canvas->GetOutputTexture(), false);
-	m_uiCamera->SetProjection(CAMERA_PROJECTION_ORTHOGRAPHIC, m_canvas->GenerateOrtho());
+	m_uiCamera->SetProjection(CAMERA_PROJECTION_ORTHOGRAPHIC, m_canvas->GenerateOrthoMatrix());
 	g_renderContext->BeginCamera(m_uiCamera);
 	m_canvas->Render();
 
 	g_renderContext->EndCamera();
-
-	static bool test = false;
-	static bool test2 = false;
-
-	if (!test2)
-	{
-		if (test)
-		{
-			test = true;
-			g_renderContext->SaveTextureToImage(m_atlas->GetTexture(), "Data/Fonts/Test.png");
-			test2 = true;
-		}
-
-		test = true;
-	}
 }
