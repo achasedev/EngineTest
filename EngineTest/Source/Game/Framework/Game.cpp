@@ -165,9 +165,9 @@ Game::Game()
 	panelRend->AddDraw(mesh, m_material);
 	m_panel1->SetRenderable(panelRend);
 
-	Font* font = g_FontLoader->LoadFont("Data/Fonts/LeagueGothic-Regular.otf", 0);
+	Font* font = g_FontLoader->LoadFont("Data/Fonts/Pacifico.ttf", 0);
 	m_uiText = new UIText(m_canvas);
-	m_uiText->SetText("Andrew Makenzie Chase 0123456789");
+	m_uiText->SetText("This is a test sentence!");
 	m_uiText->SetFont(font, m_shader);
 	m_uiText->m_transform.SetAnchors(AnchorPreset::TOP_LEFT);
 	m_uiText->m_transform.SetPosition(Vector2::ZERO);
