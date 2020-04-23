@@ -117,10 +117,10 @@ Game::Game()
 	m_childTransform.SetParentTransform(&m_parentTransform);
 	m_childTransform.SetRotation(Vector3(0.f, 45.f, 0.f));
 
-	Mouse& mouse = InputSystem::GetMouse();
-	mouse.ShowMouseCursor(false);
-	mouse.LockCursorToClient(true);
-	mouse.SetCursorMode(CURSORMODE_RELATIVE);
+	//Mouse& mouse = InputSystem::GetMouse();
+	//mouse.ShowMouseCursor(false);
+	//mouse.LockCursorToClient(true);
+	//mouse.SetCursorMode(CURSORMODE_RELATIVE);
 
 
 	NamedProperties prop;
