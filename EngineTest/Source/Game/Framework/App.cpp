@@ -143,11 +143,11 @@ void App::Shutdown()
 void App::RunFrame()
 {
 	Clock::BeginMasterFrame();
+	g_inputSystem->BeginFrame();
 	RunMessagePump();
 
 	// Begin Frames...
 	g_renderContext->BeginFrame();
-	g_inputSystem->BeginFrame();
 
 	// Game Frame
 	ProcessInput();

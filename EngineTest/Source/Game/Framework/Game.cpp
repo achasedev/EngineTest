@@ -71,11 +71,13 @@ Game::Game()
 	m_gameCamera = new Camera();
 	m_gameCamera->SetProjectionPerspective(90.f, 0.1f, 100.f);
 	m_gameCamera->LookAt(Vector3(10.f, 0.f, 0.f), Vector3(0.f, 0.f, 0.f));
+	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
 
 	m_uiCamera = new Camera();
 
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
+	m_shader->SetBlend(BLEND_PRESET_ALPHA);
 
 	m_mesh = new Mesh();
 
@@ -115,10 +117,10 @@ Game::Game()
 	m_childTransform.SetParentTransform(&m_parentTransform);
 	m_childTransform.SetRotation(Vector3(0.f, 45.f, 0.f));
 
-	//Mouse& mouse = InputSystem::GetMouse();
-	//mouse.ShowMouseCursor(false);
-	//mouse.LockCursorToClient(true);
-	//mouse.SetCursorMode(CURSORMODE_RELATIVE);
+	Mouse& mouse = InputSystem::GetMouse();
+	mouse.ShowMouseCursor(false);
+	mouse.LockCursorToClient(true);
+	mouse.SetCursorMode(CURSORMODE_RELATIVE);
 
 
 	NamedProperties prop;
@@ -152,8 +154,6 @@ Game::Game()
 	//panel->m_transform.SetVerticalPadding(0.f, 300.f);
 	m_canvas->AddChild(m_panel1);
 
-
-
 	mb.Clear();
 	mb.BeginBuilding(true);
 
@@ -167,7 +167,7 @@ Game::Game()
 
 	Font* font = g_FontLoader->LoadFont("Data/Fonts/Pacifico.ttf", 0);
 	m_uiText = new UIText(m_canvas);
-	m_uiText->SetText("This is a test sentence!");
+	m_uiText->SetText("Hello there, this is a pretty fancy font!");
 	m_uiText->SetFont(font, m_shader);
 	m_uiText->m_transform.SetAnchors(AnchorPreset::TOP_LEFT);
 	m_uiText->m_transform.SetPosition(Vector2::ZERO);
@@ -215,8 +215,8 @@ void Game::Update()
 		translationOffset *= 50.f;
 	}
 
-	const float deltaTime = (1.f / m_gameClock->GetDeltaSeconds());
-	translationOffset *= (1.f * deltaTime);
+	const float deltaTime = m_gameClock->GetDeltaSeconds();
+	translationOffset *= deltaTime;
 
 	m_gameCamera->Translate(translationOffset);
 
@@ -224,8 +224,8 @@ void Game::Update()
 	Mouse& mouse = InputSystem::GetMouse();
 	IntVector2 mouseDelta = mouse.GetMouseDelta();
 
-	Vector2 rotationOffset = Vector2((float)mouseDelta.y, (float)mouseDelta.x) * 0.12f;
-	Vector3 rotation = Vector3(rotationOffset.x * 200.f * deltaTime, rotationOffset.y * 200.f * deltaTime, 0.f);
+	Vector2 rotationOffset = Vector2((float)mouseDelta.y, (float)mouseDelta.x);
+	Vector3 rotation = Vector3(rotationOffset.x * 90.f * deltaTime, rotationOffset.y * 90.f * deltaTime, 0.f);
 
 	m_gameCamera->Rotate(rotation);
 
@@ -234,6 +234,11 @@ void Game::Update()
 	m_panel1->m_transform.SetXPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
 	//m_panel2->m_transform.SetYPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
 	//m_panel2->m_transform.SetOrientation(m_gameClock->GetTotalSeconds() * 90.f);
+
+	if (g_inputSystem->WasKeyJustPressed('I'))
+	{
+		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), "Data/Screenshots/Font.png");
+	}
 }
 
 
