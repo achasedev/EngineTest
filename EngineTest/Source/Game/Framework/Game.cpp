@@ -35,6 +35,7 @@
 #include "Engine/UI/Canvas.h"
 #include "Engine/UI/Panel.h"
 #include "Engine/UI/UIText.h"
+#include "Engine/Voxel/QEFLoader.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -73,8 +74,6 @@ Game::Game()
 	m_gameCamera->LookAt(Vector3(10.f, 0.f, 0.f), Vector3(0.f, 0.f, 0.f));
 	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
 
-	m_uiCamera = new Camera();
-
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
 	m_shader->SetBlend(BLEND_PRESET_ALPHA);
@@ -90,90 +89,29 @@ Game::Game()
 	mb.UpdateMesh<Vertex3D_PCU>(*m_mesh);
 	mb.Clear();
 
-	m_image = new Image();
-	m_image->LoadFromFile("Data/Image/test.png");
+	m_image = new Image(IntVector2(2));
 
 	m_texture = new Texture2D();
 	m_texture->CreateFromImage(*m_image);
-
-	Texture2D* testTexture = new Texture2D();
-	testTexture->CreateFromImage(*m_image);
-
 	m_textureView = m_texture->CreateOrGetShaderResourceView();
 
 	m_material = new Material();
 	m_material->SetShader(m_shader);
 	m_material->SetAlbedoTextureView(m_textureView);
 
-	m_parentRenderable = new Renderable();
-	m_parentRenderable->AddDraw(m_mesh, m_material);
-
-	m_childRenderable = new Renderable();
-	m_childRenderable->AddDraw(m_mesh, m_material);
-
-	m_parentTransform.SetRotation(Vector3(0.f, 30.f, 0.f));
-	m_childTransform.SetPosition(Vector3(1.0f, 0.f, 0.0f));
-	m_childTransform.scale = Vector3(0.5f);
-	m_childTransform.SetParentTransform(&m_parentTransform);
-	m_childTransform.SetRotation(Vector3(0.f, 45.f, 0.f));
-
-	//Mouse& mouse = InputSystem::GetMouse();
-	//mouse.ShowMouseCursor(false);
-	//mouse.LockCursorToClient(true);
-	//mouse.SetCursorMode(CURSORMODE_RELATIVE);
-
-
-	NamedProperties prop;
-
-	prop.Set("Health", 5.0f);
-	prop.Set("Age", 4);
-
-	std::string name = "Name";
-	std::string dimensions = "Dimensions";
-
-	prop.Set(name, "Andrew");
-	prop.Set(dimensions, Vector2(3.4f, 7.8f));
-
-	prop.Set(SID("Health"), 7.0f);
-
-	DebuggerPrintf("%s", prop.ToString().c_str());
+	Mouse& mouse = InputSystem::GetMouse();
+	mouse.ShowMouseCursor(false);
+	mouse.LockCursorToClient(true);
+	mouse.SetCursorMode(CURSORMODE_RELATIVE);
 
 	m_gameClock = new Clock(nullptr);
 	
-	m_canvas = new Canvas();
-	m_canvas->Initialize(g_renderContext->GetDefaultRenderTarget(), Vector2(1080.f * g_window->GetClientAspect(), 1080.f), SCREEN_MATCH_WIDTH_OR_HEIGHT);
+	QEFLoader loader;
+	loader.LoadFile("Data/Mesh/test.qef");
+	Mesh* mesh = loader.CreateMesh();
 
-	m_panel1 = new Panel(m_canvas);
-	m_panel1->SetCanvas(m_canvas);
-	m_panel1->m_transform.SetAnchors(AnchorPreset::BOTTOM_LEFT);
-	m_panel1->m_transform.SetPivot(Vector2(0.f, 0.0f));
-	m_panel1->m_transform.SetPosition(Vector2::ZERO);
-	m_panel1->m_transform.SetDimensions(Vector2(512.f, 512.f));
-
-	//panel->m_transform.SetHorizontalPadding(0.f, 300.f);
-	//panel->m_transform.SetVerticalPadding(0.f, 300.f);
-	m_canvas->AddChild(m_panel1);
-
-	mb.Clear();
-	mb.BeginBuilding(true);
-
-	mb.PushQuad2D(AABB2::ZERO_TO_ONE);
-	mb.FinishBuilding();
-	Mesh* mesh = mb.CreateMesh<Vertex3D_PCU>();
-
-	Renderable* panelRend = new Renderable();
-	panelRend->AddDraw(mesh, m_material);
-	m_panel1->SetRenderable(panelRend);
-
-	Font* font = g_FontLoader->LoadFont("Data/Fonts/Pacifico.ttf", 0);
-	m_uiText = new UIText(m_canvas);
-	m_uiText->SetText("Hello there, this is a pretty fancy font!");
-	m_uiText->SetFont(font, m_shader);
-	m_uiText->m_transform.SetAnchors(AnchorPreset::TOP_LEFT);
-	m_uiText->m_transform.SetPosition(Vector2::ZERO);
-	m_uiText->m_transform.SetDimensions(Vector2(500.f, 50.f));
-	m_uiText->m_transform.SetPivot(Vector2(0.f, 1.0f));
-	m_canvas->AddChild(m_uiText);
+	m_voxelRenderable = new Renderable();
+	m_voxelRenderable->AddDraw(mesh, m_material);
 }
 
 
@@ -190,15 +128,6 @@ Game::~Game()
 //-------------------------------------------------------------------------------------------------
 void Game::Update()
 {
-	static float test = 0.f;
-	test += 0.005f;
-
-	m_parentTransform.SetRotation(Vector3(0.f, 0.5f * -test, 0.f));
-	m_childTransform.position = Vector3(CosDegrees(test), 0.f, SinDegrees(test));
-	m_childTransform.SetRotation(Vector3(0.f, -test, 0.f));
-	m_parentRenderable->SetRenderableMatrix(m_parentTransform.GetLocalToWorldMatrix());
-	m_childRenderable->SetRenderableMatrix(m_childTransform.GetLocalToWorldMatrix());
-
 	// Update da camera
 
 	// Translating the camera
@@ -225,15 +154,8 @@ void Game::Update()
 	IntVector2 mouseDelta = mouse.GetMouseDelta();
 
 	Vector2 rotationOffset = Vector2((float)mouseDelta.y, (float)mouseDelta.x);
-	Vector3 rotation = Vector3(rotationOffset.x * 90.f * deltaTime, rotationOffset.y * 90.f * deltaTime, 0.f);
-
-	m_gameCamera->Rotate(rotation);
-
-	//DebuggerPrintf("Frame: %.5f | Total: %.5f | FPS: %.2f\n", m_gameClock->GetDeltaSeconds(), m_gameClock->GetTotalSeconds(), 1.0f / m_gameClock->GetDeltaSeconds());
-
-	m_panel1->m_transform.SetXPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
-	//m_panel2->m_transform.SetYPosition(500.f * (SinDegrees(m_gameClock->GetTotalSeconds() * 90.f) + 1.0f));
-	//m_panel2->m_transform.SetOrientation(m_gameClock->GetTotalSeconds() * 90.f);
+	Vector3 deltaRotation = Vector3(rotationOffset.x * 90.f * deltaTime, rotationOffset.y * 90.f * deltaTime, 0.f);
+	m_gameCamera->SetRotation(m_gameCamera->GetRotation() + deltaRotation);
 
 	if (g_inputSystem->WasKeyJustPressed('I'))
 	{
@@ -249,13 +171,7 @@ void Game::Render()
 	g_renderContext->ClearScreen(Rgba::BLACK);
 	g_renderContext->ClearDepth();
 
-	g_renderContext->DrawRenderable(*m_parentRenderable);
-	g_renderContext->DrawRenderable(*m_childRenderable);
-
-	m_uiCamera->SetRenderTarget(m_canvas->GetOutputTexture(), false);
-	m_uiCamera->SetProjection(CAMERA_PROJECTION_ORTHOGRAPHIC, m_canvas->GenerateOrthoMatrix());
-	g_renderContext->BeginCamera(m_uiCamera);
-	m_canvas->Render();
+	g_renderContext->DrawRenderable(*m_voxelRenderable);
 
 	g_renderContext->EndCamera();
 }

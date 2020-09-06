@@ -63,23 +63,13 @@ private:
 	//-----Private Data-----
 
 	Camera* m_gameCamera = nullptr;
-	Camera* m_uiCamera = nullptr;
 	Shader* m_shader = nullptr;
 	Mesh* m_mesh = nullptr;
 	Image* m_image = nullptr;
 	Texture2D* m_texture = nullptr;
 	ShaderResourceView* m_textureView = nullptr;
 	Material* m_material = nullptr;
-	Renderable* m_parentRenderable = nullptr;
-	Renderable* m_childRenderable = nullptr;
-
-	Transform m_parentTransform;
-	Transform m_childTransform;
-
-	Canvas* m_canvas = nullptr;
-	Panel* m_panel1 = nullptr;
-	
-	UIText* m_uiText = nullptr;
+	Renderable* m_voxelRenderable = nullptr;
 
 	Clock* m_gameClock = nullptr;
 
