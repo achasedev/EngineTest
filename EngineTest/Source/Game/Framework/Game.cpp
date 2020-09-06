@@ -77,6 +77,7 @@ Game::Game()
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
 	m_shader->SetBlend(BLEND_PRESET_ALPHA);
+	m_shader->SetFillMode(FILL_MODE_WIREFRAME);
 
 	m_mesh = new Mesh();
 
