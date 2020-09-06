@@ -71,7 +71,7 @@ Game::Game()
 {
 	m_gameCamera = new Camera();
 	m_gameCamera->SetProjectionPerspective(90.f, 0.1f, 100.f);
-	m_gameCamera->LookAt(Vector3(10.f, 0.f, 0.f), Vector3(0.f, 0.f, 0.f));
+	m_gameCamera->LookAt(Vector3(0.f, 10.f, -10.f), Vector3(0.f, 0.f, 0.f));
 	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
 
 	m_shader = new Shader();
