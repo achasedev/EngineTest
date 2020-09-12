@@ -8,7 +8,9 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Engine/Framework/Rgba.h"
 #include "Engine/Math/Transform.h"
+#include <vector>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -25,6 +27,7 @@ class Image;
 class Material;
 class Mesh;
 class Panel;
+class Polygon2D;
 class Renderable;
 class Shader;
 class ShaderResourceView;
@@ -63,6 +66,8 @@ private:
 	//-----Private Data-----
 
 	Camera* m_gameCamera = nullptr;
+	Camera* m_uiCamera = nullptr;
+	Canvas* m_canvas = nullptr;
 	Shader* m_shader = nullptr;
 	Mesh* m_mesh = nullptr;
 	Image* m_image = nullptr;
@@ -71,8 +76,12 @@ private:
 	Material* m_material = nullptr;
 	Renderable* m_voxelRenderable = nullptr;
 
+	Polygon2D* m_first = nullptr;
+	Polygon2D* m_second = nullptr;
+	Rgba m_polygonColor;
 	Clock* m_gameClock = nullptr;
 
+	std::vector<Polygon2D*> m_polys;
 };
 
 

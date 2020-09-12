@@ -16,6 +16,8 @@
 #include "Engine/Job/JobSystem.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Math/OBB2.h"
+#include "Engine/Math/Polygon2D.h"
+#include "Engine/Physics/Collision2D.h"
 #include "Engine/Render/Camera/Camera.h"
 #include "Engine/Render/Core/Renderable.h"
 #include "Engine/Render/Core/RenderContext.h"
@@ -74,10 +76,40 @@ Game::Game()
 	m_gameCamera->LookAt(Vector3(0.f, 10.f, -10.f), Vector3(0.f, 0.f, 0.f));
 	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
 
+	m_uiCamera = new Camera();
+	float aspect = g_window->GetClientAspect();
+	m_uiCamera->SetProjectionOrthographic(1000.f, g_window->GetClientAspect());
+
+	m_first = new Polygon2D();
+
+	for (int i = 0; i < 20; ++i)
+	{
+		float degrees = ((360.f / 20.f) * (float)i);
+		const float radius = 50.f;
+		m_first->AddVertex(50.f * Vector2(CosDegrees(degrees), SinDegrees(degrees)));
+	}
+
+	m_second = new Polygon2D();
+	m_second->AddVertex(Vector2(300.f, 400.f));
+	m_second->AddVertex(Vector2(300.f, 500.f));
+	m_second->AddVertex(Vector2(600.f, 600.f));
+	m_second->AddVertex(Vector2(700.f, 500.f));
+	m_second->AddVertex(Vector2(700.f, 400.f));
+
+	for (int i = 0; i < 100; ++i)
+	{
+		Polygon2D* newPoly = new Polygon2D();
+		*newPoly = *m_second;
+
+		newPoly->Translate(Vector2(GetRandomFloatInRange(-500.f, 500.f), GetRandomFloatInRange(-500.f, 500.f)));
+
+		m_polys.push_back(newPoly);
+	}
+
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
 	m_shader->SetBlend(BLEND_PRESET_ALPHA);
-	m_shader->SetFillMode(FILL_MODE_WIREFRAME);
+	//m_shader->SetFillMode(FILL_MODE_WIREFRAME);
 
 	m_mesh = new Mesh();
 
@@ -108,7 +140,7 @@ Game::Game()
 	m_gameClock = new Clock(nullptr);
 	
 	QEFLoader loader;
-	loader.LoadFile("Data/Mesh/test.qef");
+	loader.LoadFile("Data/Mesh/andrew_2.qef");
 	Mesh* mesh = loader.CreateMesh();
 
 	m_voxelRenderable = new Renderable();
@@ -129,6 +161,14 @@ Game::~Game()
 //-------------------------------------------------------------------------------------------------
 void Game::Update()
 {
+	if (g_inputSystem->WasKeyJustPressed(InputSystem::KEYBOARD_F1))
+	{
+		Mouse& mouse = InputSystem::GetMouse();
+		mouse.ShowMouseCursor(!mouse.IsCursorShown());
+		mouse.LockCursorToClient(!mouse.IsCursorLocked());
+		mouse.SetCursorMode(mouse.GetCursorMode() == CURSORMODE_RELATIVE ? CURSORMODE_ABSOLUTE : CURSORMODE_RELATIVE);
+	}
+
 	// Update da camera
 
 	// Translating the camera
@@ -146,7 +186,7 @@ void Game::Update()
 	}
 
 	const float deltaTime = m_gameClock->GetDeltaSeconds();
-	translationOffset *= deltaTime;
+	translationOffset *= deltaTime * 10.f;
 
 	m_gameCamera->Translate(translationOffset);
 
@@ -162,6 +202,26 @@ void Game::Update()
 	{
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), "Data/Screenshots/Font.png");
 	}
+
+	// Translate polygon
+	Vector2 polyTranslation = Vector2::ZERO;
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_UP_ARROW)) { polyTranslation.y += 1.f; }		// Forward
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_DOWN_ARROW)) { polyTranslation.y -= 1.f; }		// Back
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_LEFT_ARROW)) { polyTranslation.x -= 1.f; }		// Left
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_RIGHT_ARROW)) { polyTranslation.x += 1.f; }		// Right
+
+	m_first->Translate(polyTranslation * 200.f * deltaTime);
+
+	// Check for collision
+
+	m_polygonColor = Rgba::WHITE;
+	for (int i = 0; i < 100; ++i)
+	{
+		if (Physics2D::ArePolygonsColliding(*m_first, *m_polys[i]))
+		{
+			m_polygonColor = Rgba::RED;
+		}
+	}
 }
 
 
@@ -174,5 +234,12 @@ void Game::Render()
 
 	g_renderContext->DrawRenderable(*m_voxelRenderable);
 
+	g_renderContext->BeginCamera(m_uiCamera);
+	g_renderContext->DrawPolygon2D(*m_first, m_material, m_polygonColor);
+	for (int i = 0; i < 100; ++i)
+	{
+		g_renderContext->DrawPolygon2D(*m_polys[i], m_material, m_polygonColor);
+	}	
+	
 	g_renderContext->EndCamera();
 }
