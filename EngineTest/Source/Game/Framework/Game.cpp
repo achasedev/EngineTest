@@ -77,7 +77,6 @@ Game::Game()
 	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
 
 	m_uiCamera = new Camera();
-	float aspect = g_window->GetClientAspect();
 	m_uiCamera->SetProjectionOrthographic(1000.f, g_window->GetClientAspect());
 
 	m_first = new Polygon2D();
@@ -109,7 +108,7 @@ Game::Game()
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
 	m_shader->SetBlend(BLEND_PRESET_ALPHA);
-	//m_shader->SetFillMode(FILL_MODE_WIREFRAME);
+	m_shader->SetFillMode(FILL_MODE_WIREFRAME);
 
 	m_mesh = new Mesh();
 
@@ -215,12 +214,11 @@ void Game::Update()
 	// Check for collision
 
 	m_polygonColor = Rgba::WHITE;
-	for (int i = 0; i < 100; ++i)
+	CollisionResult2D result = Physics2D::CheckCollision(*m_second, *m_first);
+	if (result.m_intersectionFound)
 	{
-		if (Physics2D::ArePolygonsColliding(*m_first, *m_polys[i]))
-		{
-			m_polygonColor = Rgba::RED;
-		}
+		m_polygonColor = Rgba::RED;
+		m_first->Translate(result.m_normal * result.m_penetrationDistance);
 	}
 }
 
@@ -235,11 +233,8 @@ void Game::Render()
 	g_renderContext->DrawRenderable(*m_voxelRenderable);
 
 	g_renderContext->BeginCamera(m_uiCamera);
-	g_renderContext->DrawPolygon2D(*m_first, m_material, m_polygonColor);
-	for (int i = 0; i < 100; ++i)
-	{
-		g_renderContext->DrawPolygon2D(*m_polys[i], m_material, m_polygonColor);
-	}	
+	g_renderContext->DrawPolygon2D(*m_first, m_material, m_polygonColor);	
+	g_renderContext->DrawPolygon2D(*m_second, m_material, m_polygonColor);	
 	
 	g_renderContext->EndCamera();
 }

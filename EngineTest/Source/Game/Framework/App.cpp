@@ -109,7 +109,7 @@ void App::Initialize()
 	g_app = new App();
 
 	EventSystem::Initialize();
-	Window::Initialize((21.f / 9.f), "Engine Test - MechroEngine");
+	Window::Initialize((21.f / 9.f), "Hello");
 	g_window->RegisterMessageHandler(AppMessageHandler);
 	Clock::ResetMaster();
 	RenderContext::Initialize();
