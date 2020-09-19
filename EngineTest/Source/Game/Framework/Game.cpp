@@ -81,12 +81,18 @@ Game::Game()
 
 	m_first = new Polygon2D();
 
-	for (int i = 0; i < 20; ++i)
-	{
-		float degrees = ((360.f / 20.f) * (float)i);
-		const float radius = 50.f;
-		m_first->AddVertex(50.f * Vector2(CosDegrees(degrees), SinDegrees(degrees)));
-	}
+	//for (int i = 0; i < 20; ++i)
+	//{
+	//	float degrees = ((360.f / 20.f) * (float)i);
+	//	const float radius = 50.f;
+	//	m_first->AddVertex(50.f * Vector2(CosDegrees(degrees), SinDegrees(degrees)));
+	//}
+
+	m_first->AddVertex(Vector2(800.f, 400.f));
+	m_first->AddVertex(Vector2(800.f, 500.f));
+	m_first->AddVertex(Vector2(1100.f, 600.f));
+	m_first->AddVertex(Vector2(1200.f, 500.f));
+	m_first->AddVertex(Vector2(1200.f, 400.f));
 
 	m_second = new Polygon2D();
 	m_second->AddVertex(Vector2(300.f, 400.f));
@@ -218,7 +224,7 @@ void Game::Update()
 	if (result.m_intersectionFound)
 	{
 		m_polygonColor = Rgba::RED;
-		m_first->Translate(result.m_normal * result.m_penetrationDistance);
+		m_first->Translate(result.m_penNormal * result.m_penDistance);
 	}
 }
 
