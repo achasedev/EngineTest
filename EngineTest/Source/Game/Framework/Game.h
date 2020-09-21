@@ -10,6 +10,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Engine/Framework/Rgba.h"
 #include "Engine/Math/Transform.h"
+#include "Engine/Physics/RigidBody2D.h"
 #include <vector>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -33,6 +34,7 @@ class Shader;
 class ShaderResourceView;
 class Texture2D;
 class UIText;
+class PhysicsScene2D;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -67,21 +69,19 @@ private:
 
 	Camera* m_gameCamera = nullptr;
 	Camera* m_uiCamera = nullptr;
-	Canvas* m_canvas = nullptr;
 	Shader* m_shader = nullptr;
-	Mesh* m_mesh = nullptr;
 	Image* m_image = nullptr;
 	Texture2D* m_texture = nullptr;
 	ShaderResourceView* m_textureView = nullptr;
 	Material* m_material = nullptr;
-	Renderable* m_voxelRenderable = nullptr;
 
 	Polygon2D* m_first = nullptr;
 	Polygon2D* m_second = nullptr;
-	Rgba m_polygonColor;
 	Clock* m_gameClock = nullptr;
 
-	std::vector<Polygon2D*> m_polys;
+	PhysicsScene2D* m_physicsScene = nullptr;
+	RigidBodyID m_id1;
+	RigidBodyID m_id2;
 };
 
 

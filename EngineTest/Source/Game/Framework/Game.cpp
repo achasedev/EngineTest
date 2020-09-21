@@ -38,6 +38,7 @@
 #include "Engine/UI/Panel.h"
 #include "Engine/UI/UIText.h"
 #include "Engine/Voxel/QEFLoader.h"
+#include "Engine/Physics/Arbiter2D.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -79,53 +80,37 @@ Game::Game()
 	m_uiCamera = new Camera();
 	m_uiCamera->SetProjectionOrthographic(1000.f, g_window->GetClientAspect());
 
+	// Pentagon/Triangle edge case on hypotenuse
+	//m_first = new Polygon2D();
+	//m_first->AddVertex(Vector2(-100.f, -100.f));
+	//m_first->AddVertex(Vector2(-100.f, 100.f));
+	//m_first->AddVertex(Vector2(0.f, 150.f));
+	//m_first->AddVertex(Vector2(100.f, 100.f));
+	//m_first->AddVertex(Vector2(100.f, -100.f));
+
+	//m_second = new Polygon2D();
+	//m_second->AddVertex(Vector2(186.6f, 123.2f));
+	//m_second->AddVertex(Vector2(123.3f, -186.6f));
+	//m_second->AddVertex(Vector2(-186.6f, -123.3f));
+
 	m_first = new Polygon2D();
-
-	//for (int i = 0; i < 20; ++i)
-	//{
-	//	float degrees = ((360.f / 20.f) * (float)i);
-	//	const float radius = 50.f;
-	//	m_first->AddVertex(50.f * Vector2(CosDegrees(degrees), SinDegrees(degrees)));
-	//}
-
-	m_first->AddVertex(Vector2(800.f, 400.f));
-	m_first->AddVertex(Vector2(800.f, 500.f));
-	m_first->AddVertex(Vector2(1100.f, 600.f));
-	m_first->AddVertex(Vector2(1200.f, 500.f));
-	m_first->AddVertex(Vector2(1200.f, 400.f));
+	m_first->AddVertex(Vector2(-100.f, -100.f));
+	m_first->AddVertex(Vector2(-100.f, 100.f));
+	m_first->AddVertex(Vector2(0.f, 150.f));
+	m_first->AddVertex(Vector2(100.f, 100.f));
+	m_first->AddVertex(Vector2(100.f, -100.f));
 
 	m_second = new Polygon2D();
-	m_second->AddVertex(Vector2(300.f, 400.f));
-	m_second->AddVertex(Vector2(300.f, 500.f));
-	m_second->AddVertex(Vector2(600.f, 600.f));
-	m_second->AddVertex(Vector2(700.f, 500.f));
+	m_second->AddVertex(Vector2(400.f, 200.f));
+	m_second->AddVertex(Vector2(400.f, 300.f));
 	m_second->AddVertex(Vector2(700.f, 400.f));
-
-	for (int i = 0; i < 100; ++i)
-	{
-		Polygon2D* newPoly = new Polygon2D();
-		*newPoly = *m_second;
-
-		newPoly->Translate(Vector2(GetRandomFloatInRange(-500.f, 500.f), GetRandomFloatInRange(-500.f, 500.f)));
-
-		m_polys.push_back(newPoly);
-	}
-
+	m_second->AddVertex(Vector2(800.f, 300.f));
+	m_second->AddVertex(Vector2(800.f, 200.f));
+	
 	m_shader = new Shader();
 	m_shader->CreateFromFile("Data/Shader/test.shader");
 	m_shader->SetBlend(BLEND_PRESET_ALPHA);
 	m_shader->SetFillMode(FILL_MODE_WIREFRAME);
-
-	m_mesh = new Mesh();
-
-	// Meshbuild a quad
-	MeshBuilder mb;
-	mb.BeginBuilding(true);
-	mb.PushCube(Vector3(0.f, 0.f, 0.f), Vector3::ONES);
-	mb.FinishBuilding();
-
-	mb.UpdateMesh<Vertex3D_PCU>(*m_mesh);
-	mb.Clear();
 
 	m_image = new Image(IntVector2(2));
 
@@ -143,13 +128,16 @@ Game::Game()
 	mouse.SetCursorMode(CURSORMODE_RELATIVE);
 
 	m_gameClock = new Clock(nullptr);
-	
-	QEFLoader loader;
-	loader.LoadFile("Data/Mesh/andrew_2.qef");
-	Mesh* mesh = loader.CreateMesh();
 
-	m_voxelRenderable = new Renderable();
-	m_voxelRenderable->AddDraw(mesh, m_material);
+	m_physicsScene = new PhysicsScene2D();
+	m_id1 = m_physicsScene->AddBody(m_first);
+	m_id2 = m_physicsScene->AddBody(m_second);
+
+	RigidBody2D* firstBody = m_physicsScene->GetBody(m_id1);
+	RigidBody2D* secondBody = m_physicsScene->GetBody(m_id2);
+
+	firstBody->SetPosition(g_window->GetClientBounds().GetCenter() - Vector2(0.f, 300.f));
+	secondBody->SetPosition(g_window->GetClientBounds().GetCenter());
 }
 
 
@@ -158,7 +146,6 @@ Game::~Game()
 {
 	SAFE_DELETE_POINTER(m_textureView);
 	SAFE_DELETE_POINTER(m_image);
-	SAFE_DELETE_POINTER(m_mesh);
 	SAFE_DELETE_POINTER(m_shader);
 	SAFE_DELETE_POINTER(m_gameCamera);
 }
@@ -211,21 +198,15 @@ void Game::Update()
 	// Translate polygon
 	Vector2 polyTranslation = Vector2::ZERO;
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_UP_ARROW)) { polyTranslation.y += 1.f; }		// Forward
-	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_DOWN_ARROW)) { polyTranslation.y -= 1.f; }		// Back
-	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_LEFT_ARROW)) { polyTranslation.x -= 1.f; }		// Left
-	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_RIGHT_ARROW)) { polyTranslation.x += 1.f; }		// Right
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_DOWN_ARROW)) { polyTranslation.y -= 1.f; }	// Back
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_LEFT_ARROW)) { polyTranslation.x -= 1.f; }	// Left
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_RIGHT_ARROW)) { polyTranslation.x += 1.f; }	// Right
 
-	m_first->Translate(polyTranslation * 200.f * deltaTime);
+	RigidBody2D* firstBody = m_physicsScene->GetBody(m_id1);
 
-	// Check for collision
+	firstBody->SetPosition(firstBody->GetPosition() + Vector2(polyTranslation * 200.f * deltaTime));
 
-	m_polygonColor = Rgba::WHITE;
-	CollisionResult2D result = Physics2D::CheckCollision(*m_second, *m_first);
-	if (result.m_intersectionFound)
-	{
-		m_polygonColor = Rgba::RED;
-		m_first->Translate(result.m_penNormal * result.m_penDistance);
-	}
+	m_physicsScene->FrameStep();
 }
 
 
@@ -236,11 +217,34 @@ void Game::Render()
 	g_renderContext->ClearScreen(Rgba::BLACK);
 	g_renderContext->ClearDepth();
 
-	g_renderContext->DrawRenderable(*m_voxelRenderable);
-
 	g_renderContext->BeginCamera(m_uiCamera);
-	g_renderContext->DrawPolygon2D(*m_first, m_material, m_polygonColor);	
-	g_renderContext->DrawPolygon2D(*m_second, m_material, m_polygonColor);	
+
+	Polygon2D firstPoly, secondPoly;
+	m_physicsScene->GetBody(m_id1)->GetWorldShape(firstPoly);
+	m_physicsScene->GetBody(m_id2)->GetWorldShape(secondPoly);
+
+	g_renderContext->DrawPolygon2D(firstPoly, m_material);
+	g_renderContext->DrawPolygon2D(secondPoly, m_material);	
 	
+	Arbiter2D* arb = m_physicsScene->GetThatArbiter();
+	if (arb != nullptr)
+	{
+		const Contact2D* contacts = arb->GetContacts();
+		uint32 numContacts = arb->GetNumContacts();
+
+		ASSERT_OR_DIE(numContacts > 0, "Um hello?");
+
+		for (uint32 i = 0; i < numContacts; ++i)
+		{
+			const Contact2D& currContact = contacts[i];
+
+			g_renderContext->DrawPoint2D(currContact.m_position, 10.f, m_material, Rgba::RED);
+			g_renderContext->DrawLine2D(currContact.m_referenceEdge.m_vertex1, currContact.m_referenceEdge.m_vertex2, m_material, Rgba::RED);
+
+
+			g_renderContext->DrawLine2D(currContact.m_position, currContact.m_position + (currContact.m_normal * currContact.m_separation), m_material, Rgba::CYAN);
+		}
+	}
+
 	g_renderContext->EndCamera();
 }
