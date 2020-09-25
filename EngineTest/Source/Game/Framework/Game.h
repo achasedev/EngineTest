@@ -65,23 +65,33 @@ private:
 
 
 private:
+	//-----Private Methods-----
+
+	void SetupFramework();
+	void SetupRendering();
+	void SetupObjects();
+
+
+private:
 	//-----Private Data-----
 
-	Camera* m_gameCamera = nullptr;
-	Camera* m_uiCamera = nullptr;
-	Shader* m_shader = nullptr;
-	Image* m_image = nullptr;
-	Texture2D* m_texture = nullptr;
+	// Rendering
+	Camera*				m_gameCamera = nullptr;
+	Camera*				m_uiCamera = nullptr;
+	Shader*				m_shader = nullptr;
+	Image*				m_image = nullptr;
+	Texture2D*			m_texture = nullptr;
 	ShaderResourceView* m_textureView = nullptr;
-	Material* m_material = nullptr;
+	Material*			m_material = nullptr;
 
-	Polygon2D* m_first = nullptr;
-	Polygon2D* m_second = nullptr;
+	// Framework
 	Clock* m_gameClock = nullptr;
 
+	// Objects
 	PhysicsScene2D* m_physicsScene = nullptr;
-	RigidBodyID m_id1;
-	RigidBodyID m_id2;
+	GameObject* m_obj1 = nullptr;
+	GameObject* m_obj2 = nullptr;
+
 };
 
 
