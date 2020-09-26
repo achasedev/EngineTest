@@ -185,8 +185,16 @@ void Game::Render()
 			const Contact2D& currContact = contacts[i];
 
 			g_renderContext->DrawPoint2D(currContact.m_position, 10.f, m_material, Rgba::RED);
+
+			// Reference edge
 			g_renderContext->DrawLine2D(currContact.m_referenceEdge.m_vertex1, currContact.m_referenceEdge.m_vertex2, m_material, Rgba::RED);
+
+			// Contact normal/depth
 			g_renderContext->DrawLine2D(currContact.m_position, currContact.m_position + (currContact.m_normal * currContact.m_separation), m_material, Rgba::CYAN);
+
+			// Radius (center of masses to contact)
+			g_renderContext->DrawLine2D(currContact.m_position - currContact.m_r1, currContact.m_position, m_material, Rgba::MAGENTA);
+			g_renderContext->DrawLine2D(currContact.m_position - currContact.m_r2, currContact.m_position, m_material, Rgba::YELLOW);
 		}
 	}
 
