@@ -124,8 +124,8 @@ void Game::Update()
 		translationOffset *= 50.f;
 	}
 
-	const float deltaTime = m_gameClock->GetDeltaSeconds();
-	translationOffset *= deltaTime * 10.f;
+	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
+	translationOffset *= deltaSeconds * 10.f;
 
 	m_gameCamera->Translate(translationOffset);
 
@@ -134,7 +134,7 @@ void Game::Update()
 	IntVector2 mouseDelta = mouse.GetMouseDelta();
 
 	Vector2 rotationOffset = Vector2((float)mouseDelta.y, (float)mouseDelta.x);
-	Vector3 deltaRotation = Vector3(rotationOffset.x * 90.f * deltaTime, rotationOffset.y * 90.f * deltaTime, 0.f);
+	Vector3 deltaRotation = Vector3(rotationOffset.x * 90.f * deltaSeconds, rotationOffset.y * 90.f * deltaSeconds, 0.f);
 	m_gameCamera->SetRotation(m_gameCamera->GetRotation() + deltaRotation);
 
 	if (g_inputSystem->WasKeyJustPressed('I'))
@@ -149,10 +149,10 @@ void Game::Update()
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_LEFT_ARROW)) { polyTranslation.x -= 1.f; }	// Left
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_RIGHT_ARROW)) { polyTranslation.x += 1.f; }	// Right
 
-	m_obj1->m_transform.position += Vector3(polyTranslation * 200.f * deltaTime, 0.f);
+	m_obj1->m_transform.position += Vector3(polyTranslation * 200.f * deltaSeconds, 0.f);
 
 	// Do the physics step
-	m_physicsScene->FrameStep();
+	m_physicsScene->FrameStep(deltaSeconds);
 }
 
 
