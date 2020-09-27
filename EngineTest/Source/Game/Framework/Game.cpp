@@ -172,26 +172,30 @@ void Game::Render()
 	g_renderContext->DrawPolygon2D(firstPoly, m_material);
 	g_renderContext->DrawPolygon2D(secondPoly, m_material);	
 	
-	Arbiter2D* arb = m_physicsScene->GetThatArbiter();
-	if (arb != nullptr)
+	g_renderContext->DrawPoint2D(m_obj1->GetRigidBody2D()->GetCenterOfMassWs(), 10.f, m_material);
+	g_renderContext->DrawPoint2D(m_obj2->GetRigidBody2D()->GetCenterOfMassWs(), 10.f, m_material);
+
+	Arbiter2D arb;
+	bool arbFound = m_physicsScene->GetThatArbiter(&arb);
+	if (arbFound)
 	{
-		const Contact2D* contacts = arb->GetContacts();
-		uint32 numContacts = arb->GetNumContacts();
-
+		const Contact2D* contacts = arb.GetContacts();
+		uint32 numContacts = arb.GetNumContacts();
+	
 		ASSERT_OR_DIE(numContacts > 0, "Um hello?");
-
+	
 		for (uint32 i = 0; i < numContacts; ++i)
 		{
 			const Contact2D& currContact = contacts[i];
-
+	
 			g_renderContext->DrawPoint2D(currContact.m_position, 10.f, m_material, Rgba::RED);
-
+	
 			// Reference edge
 			g_renderContext->DrawLine2D(currContact.m_referenceEdge.m_vertex1, currContact.m_referenceEdge.m_vertex2, m_material, Rgba::RED);
-
+	
 			// Contact normal/depth
 			g_renderContext->DrawLine2D(currContact.m_position, currContact.m_position + (currContact.m_normal * currContact.m_separation), m_material, Rgba::CYAN);
-
+	
 			// Radius (center of masses to contact)
 			g_renderContext->DrawLine2D(currContact.m_position - currContact.m_r1, currContact.m_position, m_material, Rgba::MAGENTA);
 			g_renderContext->DrawLine2D(currContact.m_position - currContact.m_r2, currContact.m_position, m_material, Rgba::YELLOW);
@@ -254,26 +258,29 @@ void Game::SetupObjects()
 	Polygon2D* poly1 = new Polygon2D();
 	poly1->AddVertex(Vector2(-100.f, -100.f));
 	poly1->AddVertex(Vector2(-100.f, 100.f));
-	poly1->AddVertex(Vector2(0.f, 150.f));
 	poly1->AddVertex(Vector2(100.f, 100.f));
 	poly1->AddVertex(Vector2(100.f, -100.f));
 
 	Polygon2D* poly2 = new Polygon2D();
-	poly2->AddVertex(Vector2(400.f, 200.f));
-	poly2->AddVertex(Vector2(400.f, 300.f));
-	poly2->AddVertex(Vector2(700.f, 400.f));
-	poly2->AddVertex(Vector2(800.f, 300.f));
-	poly2->AddVertex(Vector2(800.f, 200.f));
+	poly2->AddVertex(Vector2(-300.f, -50.f));
+	poly2->AddVertex(Vector2(-300.f, 50.f));
+	poly2->AddVertex(Vector2(300.f, 50.f));
+	poly2->AddVertex(Vector2(300.f, -50.f));
+
 
 	m_obj1 = new GameObject();
 	m_obj2 = new GameObject();
 
-	m_obj1->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() - Vector2(0.f, 300.f), 0.f);
-	m_obj2->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter(), 0.f);
+	m_obj1->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() + Vector2(0.f, 100.f), 0.f);
+	m_obj1->m_transform.SetRotation(Vector3(0.f, 0.f, 30.f));
+	m_obj2->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() - Vector2(0.f, 100.f), 0.f);
 
 	m_obj1->SetShape(poly1);
 	m_obj2->SetShape(poly2);
 
 	m_physicsScene->AddGameObject(m_obj1);
 	m_physicsScene->AddGameObject(m_obj2);
+
+	m_obj1->GetRigidBody2D()->SetMassProperties(1.f);
+	m_obj2->GetRigidBody2D()->SetAffectedByGravity(false);
 }
