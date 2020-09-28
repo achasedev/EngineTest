@@ -92,6 +92,7 @@ private:
 	GameObject* m_obj1 = nullptr;
 	GameObject* m_obj2 = nullptr;
 
+	GameObject* m_objects[10];
 };
 
 

@@ -83,6 +83,11 @@ Game::Game()
 //-------------------------------------------------------------------------------------------------
 Game::~Game()
 {
+	for (int i = 0; i < 10; ++i)
+	{
+		SAFE_DELETE_POINTER(m_objects[i]);
+	}
+
 	SAFE_DELETE_POINTER(m_obj2);
 	SAFE_DELETE_POINTER(m_obj1);
 
@@ -106,6 +111,18 @@ void Game::Update()
 		mouse.ShowMouseCursor(!mouse.IsCursorShown());
 		mouse.LockCursorToClient(!mouse.IsCursorLocked());
 		mouse.SetCursorMode(mouse.GetCursorMode() == CURSORMODE_RELATIVE ? CURSORMODE_ABSOLUTE : CURSORMODE_RELATIVE);
+	}
+
+	if (g_inputSystem->WasKeyJustPressed('R'))
+	{
+		m_obj1->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() + Vector2(0.f, 100.f), 0.f);
+		m_obj1->m_transform.SetRotation(Vector3(0.f, 0.f, 30.f));
+		m_obj1->GetRigidBody2D()->SetVelocity(Vector2::ZERO);
+
+		for (int i = 0; i < 10; ++i)
+		{
+			m_objects[i]->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() + Vector2(-1000.f + 300.f * i, 300.f), 0.f);
+		}
 	}
 
 	// Update da camera
@@ -172,6 +189,13 @@ void Game::Render()
 	g_renderContext->DrawPolygon2D(firstPoly, m_material);
 	g_renderContext->DrawPolygon2D(secondPoly, m_material);	
 	
+	for (int i = 0; i < 10; ++i)
+	{
+		Polygon2D poly;
+		m_objects[i]->GetRigidBody2D()->GetWorldShape(poly);
+		g_renderContext->DrawPolygon2D(poly, m_material);
+	}
+
 	g_renderContext->DrawPoint2D(m_obj1->GetRigidBody2D()->GetCenterOfMassWs(), 10.f, m_material);
 	g_renderContext->DrawPoint2D(m_obj2->GetRigidBody2D()->GetCenterOfMassWs(), 10.f, m_material);
 
@@ -257,16 +281,13 @@ void Game::SetupObjects()
 	// *Local* space defined
 	Polygon2D* poly1 = new Polygon2D();
 	poly1->AddVertex(Vector2(-100.f, -100.f));
-	poly1->AddVertex(Vector2(-100.f, 100.f));
-	poly1->AddVertex(Vector2(100.f, 100.f));
+	poly1->AddVertex(Vector2(0.f, 150.f));
 	poly1->AddVertex(Vector2(100.f, -100.f));
 
 	Polygon2D* poly2 = new Polygon2D();
-	poly2->AddVertex(Vector2(-300.f, -50.f));
-	poly2->AddVertex(Vector2(-300.f, 50.f));
-	poly2->AddVertex(Vector2(300.f, 50.f));
-	poly2->AddVertex(Vector2(300.f, -50.f));
-
+	poly2->AddVertex(Vector2(-1000.f, -50.f));
+	poly2->AddVertex(Vector2(0.f, 50.f));
+	poly2->AddVertex(Vector2(1000.f, -50.f));
 
 	m_obj1 = new GameObject();
 	m_obj2 = new GameObject();
@@ -283,4 +304,14 @@ void Game::SetupObjects()
 
 	m_obj1->GetRigidBody2D()->SetMassProperties(1.f);
 	m_obj2->GetRigidBody2D()->SetAffectedByGravity(false);
+
+	// Make more!
+	for (int i = 0; i < 10; ++i)
+	{
+		m_objects[i] = new GameObject();
+		m_objects[i]->SetShape(poly1);
+		m_physicsScene->AddGameObject(m_objects[i]);
+		m_objects[i]->GetRigidBody2D()->SetMassProperties(1.f);
+		m_objects[i]->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() + Vector2(-1000.f + 300.f * i, 300.f), 0.f);
+	}
 }
