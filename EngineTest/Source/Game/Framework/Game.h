@@ -16,6 +16,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#define NUM_PLINKOS 1
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
@@ -89,10 +90,25 @@ private:
 
 	// Objects
 	PhysicsScene2D* m_physicsScene = nullptr;
-	GameObject* m_obj1 = nullptr;
-	GameObject* m_obj2 = nullptr;
+	//GameObject* m_obj1 = nullptr;
+	//GameObject* m_obj2 = nullptr;
 
-	GameObject* m_objects[10];
+	//GameObject* m_objects[10];
+
+
+	// Plinko!
+
+	Polygon2D*	m_floorPoly = nullptr;
+	Polygon2D*	m_wallPoly = nullptr;
+	Polygon2D*	m_trianglePoly = nullptr;
+	Polygon2D*	m_circlePoly = nullptr;
+
+	GameObject* m_floorObj = nullptr;
+	GameObject* m_leftWallObj = nullptr;
+	GameObject* m_rightWallObj = nullptr;
+
+	GameObject* m_triangles[50];
+	GameObject* m_plinkos[NUM_PLINKOS];
 };
 
 

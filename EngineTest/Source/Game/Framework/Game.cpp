@@ -83,13 +83,24 @@ Game::Game()
 //-------------------------------------------------------------------------------------------------
 Game::~Game()
 {
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < 50; ++i)
 	{
-		SAFE_DELETE_POINTER(m_objects[i]);
+		SAFE_DELETE_POINTER(m_triangles[i]);
 	}
 
-	SAFE_DELETE_POINTER(m_obj2);
-	SAFE_DELETE_POINTER(m_obj1);
+	for (int i = 0; i < NUM_PLINKOS; ++i)
+	{
+		SAFE_DELETE_POINTER(m_plinkos[i]);
+	}
+
+	SAFE_DELETE_POINTER(m_floorObj);
+	SAFE_DELETE_POINTER(m_leftWallObj);
+	SAFE_DELETE_POINTER(m_rightWallObj);
+
+	SAFE_DELETE_POINTER(m_floorPoly);
+	SAFE_DELETE_POINTER(m_wallPoly);
+	SAFE_DELETE_POINTER(m_trianglePoly);
+	SAFE_DELETE_POINTER(m_circlePoly);
 
 	SAFE_DELETE_POINTER(m_material);
 	SAFE_DELETE_POINTER(m_shader);
@@ -115,13 +126,22 @@ void Game::Update()
 
 	if (g_inputSystem->WasKeyJustPressed('R'))
 	{
-		m_obj1->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() + Vector2(0.f, 100.f), 0.f);
-		m_obj1->m_transform.SetRotation(Vector3(0.f, 0.f, 30.f));
-		m_obj1->GetRigidBody2D()->SetVelocity(Vector2::ZERO);
-
-		for (int i = 0; i < 10; ++i)
+		for (int i = 0; i < NUM_PLINKOS; ++i)
 		{
-			m_objects[i]->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() + Vector2(-1000.f + 300.f * i, 300.f), 0.f);
+			int row = i % 10;
+			int col = i / 10;
+
+			if (col % 2 == 0)
+			{
+				m_plinkos[i]->m_transform.position = Vector3(200.f * (float)row + 150.f, 40.f * (float)col + 800.f, 0.f);
+			}
+			else
+			{
+				m_plinkos[i]->m_transform.position = Vector3(200.f * (float)row + 250.f, 40.f * (float)col + 800.f, 0.f);
+			}
+
+			m_plinkos[i]->GetRigidBody2D()->SetVelocity(Vector2::ZERO);
+			m_plinkos[i]->GetRigidBody2D()->SetAngularVelocity(0.f);
 		}
 	}
 
@@ -159,15 +179,6 @@ void Game::Update()
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), "Data/Screenshots/Font.png");
 	}
 
-	// Translate first object
-	Vector2 polyTranslation = Vector2::ZERO;
-	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_UP_ARROW)) { polyTranslation.y += 1.f; }		// Forward
-	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_DOWN_ARROW)) { polyTranslation.y -= 1.f; }	// Back
-	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_LEFT_ARROW)) { polyTranslation.x -= 1.f; }	// Left
-	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_RIGHT_ARROW)) { polyTranslation.x += 1.f; }	// Right
-
-	m_obj1->m_transform.position += Vector3(polyTranslation * 200.f * deltaSeconds, 0.f);
-
 	// Do the physics step
 	m_physicsScene->FrameStep(deltaSeconds);
 }
@@ -182,50 +193,30 @@ void Game::Render()
 
 	g_renderContext->BeginCamera(m_uiCamera);
 	
-	Polygon2D firstPoly, secondPoly;
-	m_obj1->GetRigidBody2D()->GetWorldShape(firstPoly);
-	m_obj2->GetRigidBody2D()->GetWorldShape(secondPoly);
+	Polygon2D floorPolyWs, leftWallPolyWs, rightWallPolyWs;
+	m_floorObj->GetRigidBody2D()->GetWorldShape(floorPolyWs);
+	m_leftWallObj->GetRigidBody2D()->GetWorldShape(leftWallPolyWs);
+	m_rightWallObj->GetRigidBody2D()->GetWorldShape(rightWallPolyWs);
 
-	g_renderContext->DrawPolygon2D(firstPoly, m_material);
-	g_renderContext->DrawPolygon2D(secondPoly, m_material);	
-	
-	for (int i = 0; i < 10; ++i)
+	g_renderContext->DrawPolygon2D(floorPolyWs, m_material);
+	g_renderContext->DrawPolygon2D(leftWallPolyWs, m_material);
+	g_renderContext->DrawPolygon2D(rightWallPolyWs, m_material);
+
+	for (int i = 0; i < 50; ++i)
 	{
-		Polygon2D poly;
-		m_objects[i]->GetRigidBody2D()->GetWorldShape(poly);
-		g_renderContext->DrawPolygon2D(poly, m_material);
+		Polygon2D trianglePolyWs;
+		m_triangles[i]->GetRigidBody2D()->GetWorldShape(trianglePolyWs);
+		g_renderContext->DrawPolygon2D(trianglePolyWs, m_material);
 	}
 
-	g_renderContext->DrawPoint2D(m_obj1->GetRigidBody2D()->GetCenterOfMassWs(), 10.f, m_material);
-	g_renderContext->DrawPoint2D(m_obj2->GetRigidBody2D()->GetCenterOfMassWs(), 10.f, m_material);
-
-	Arbiter2D arb;
-	bool arbFound = m_physicsScene->GetThatArbiter(&arb);
-	if (arbFound)
+	for (int i = 0; i < NUM_PLINKOS; ++i)
 	{
-		const Contact2D* contacts = arb.GetContacts();
-		uint32 numContacts = arb.GetNumContacts();
-	
-		ASSERT_OR_DIE(numContacts > 0, "Um hello?");
-	
-		for (uint32 i = 0; i < numContacts; ++i)
-		{
-			const Contact2D& currContact = contacts[i];
-	
-			g_renderContext->DrawPoint2D(currContact.m_position, 10.f, m_material, Rgba::RED);
-	
-			// Reference edge
-			g_renderContext->DrawLine2D(currContact.m_referenceEdge.m_vertex1, currContact.m_referenceEdge.m_vertex2, m_material, Rgba::RED);
-	
-			// Contact normal/depth
-			g_renderContext->DrawLine2D(currContact.m_position, currContact.m_position + (currContact.m_normal * currContact.m_separation), m_material, Rgba::CYAN);
-	
-			// Radius (center of masses to contact)
-			g_renderContext->DrawLine2D(currContact.m_position - currContact.m_r1, currContact.m_position, m_material, Rgba::MAGENTA);
-			g_renderContext->DrawLine2D(currContact.m_position - currContact.m_r2, currContact.m_position, m_material, Rgba::YELLOW);
-		}
+		Polygon2D plinkoPolyWs;
+		m_plinkos[i]->GetRigidBody2D()->GetWorldShape(plinkoPolyWs);
+		g_renderContext->DrawPolygon2D(plinkoPolyWs, m_material);
 	}
 
+	g_renderContext->DrawPoint2D(m_uiCamera->GetOrthoBounds().GetCenter(), 20.f, m_material, Rgba::MAGENTA);
 	g_renderContext->EndCamera();
 }
 
@@ -240,6 +231,7 @@ void Game::SetupFramework()
 
 	m_gameClock = new Clock(nullptr);
 	m_physicsScene = new PhysicsScene2D();
+	m_physicsScene->SetGravity(Vector2(0.f, -1000.f));
 }
 
 
@@ -253,7 +245,7 @@ void Game::SetupRendering()
 	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
 
 	m_uiCamera = new Camera();
-	m_uiCamera->SetProjectionOrthographic(1000.f, g_window->GetClientAspect());
+	m_uiCamera->SetProjectionOrthographic(g_window->GetClientPixelHeight(), g_window->GetClientAspect());
 
 	// Shader
 	m_shader = new Shader();
@@ -279,39 +271,90 @@ void Game::SetupRendering()
 void Game::SetupObjects()
 {
 	// *Local* space defined
-	Polygon2D* poly1 = new Polygon2D();
-	poly1->AddVertex(Vector2(-100.f, -100.f));
-	poly1->AddVertex(Vector2(0.f, 150.f));
-	poly1->AddVertex(Vector2(100.f, -100.f));
+	m_floorPoly = new Polygon2D();
+	m_floorPoly->AddVertex(Vector2(-1200.f, -50.f));
+	m_floorPoly->AddVertex(Vector2(-1200.f, 0.f));
+	m_floorPoly->AddVertex(Vector2(1200.f, 0.f));
+	m_floorPoly->AddVertex(Vector2(1200.f, -50.f));
 
-	Polygon2D* poly2 = new Polygon2D();
-	poly2->AddVertex(Vector2(-1000.f, -50.f));
-	poly2->AddVertex(Vector2(0.f, 50.f));
-	poly2->AddVertex(Vector2(1000.f, -50.f));
+	m_wallPoly = new Polygon2D();
+	m_wallPoly->AddVertex(Vector2(-25.f, -400.f));
+	m_wallPoly->AddVertex(Vector2(-25.f, 400.f));
+	m_wallPoly->AddVertex(Vector2(25.f, 400.f));
+	m_wallPoly->AddVertex(Vector2(25.f, -400.f));
 
-	m_obj1 = new GameObject();
-	m_obj2 = new GameObject();
+	m_trianglePoly = new Polygon2D();
+	m_trianglePoly->AddVertex(Vector2(-25.f, -10.f));
+	m_trianglePoly->AddVertex(Vector2(0.f, 10.f));
+	m_trianglePoly->AddVertex(Vector2(25.f, -10.f));
 
-	m_obj1->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() + Vector2(0.f, 100.f), 0.f);
-	m_obj1->m_transform.SetRotation(Vector3(0.f, 0.f, 30.f));
-	m_obj2->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() - Vector2(0.f, 100.f), 0.f);
-
-	m_obj1->SetShape(poly1);
-	m_obj2->SetShape(poly2);
-
-	m_physicsScene->AddGameObject(m_obj1);
-	m_physicsScene->AddGameObject(m_obj2);
-
-	m_obj1->GetRigidBody2D()->SetMassProperties(1.f);
-	m_obj2->GetRigidBody2D()->SetAffectedByGravity(false);
-
-	// Make more!
-	for (int i = 0; i < 10; ++i)
+	m_circlePoly = new Polygon2D();
+	for (int i = 0; i < 4; ++i)
 	{
-		m_objects[i] = new GameObject();
-		m_objects[i]->SetShape(poly1);
-		m_physicsScene->AddGameObject(m_objects[i]);
-		m_objects[i]->GetRigidBody2D()->SetMassProperties(1.f);
-		m_objects[i]->m_transform.position = Vector3(g_window->GetClientBounds().GetCenter() + Vector2(-1000.f + 300.f * i, 300.f), 0.f);
+		float radius = 20.f;
+		float angle = (float)i * (360.f / 4.f);
+		m_circlePoly->AddVertex(radius * Vector2(CosDegrees(angle), SinDegrees(angle)));
+	}
+
+	m_floorObj = new GameObject();
+	m_leftWallObj = new GameObject();
+	m_rightWallObj = new GameObject();
+
+	m_floorObj->SetShape(m_floorPoly);
+	m_leftWallObj->SetShape(m_wallPoly);
+	m_rightWallObj->SetShape(m_wallPoly);
+
+	m_floorObj->m_transform.position = Vector3(m_uiCamera->GetOrthoBounds().GetCenter().x, 50.f, 0.f);
+	m_leftWallObj->m_transform.position = Vector3(25.f, 450.f, 0.f);
+	m_rightWallObj->m_transform.position = Vector3(m_uiCamera->GetOrthoBounds().maxs.x - 25.f, 450.f, 0.f);
+
+	m_physicsScene->AddGameObject(m_floorObj);
+	m_physicsScene->AddGameObject(m_leftWallObj);
+	m_physicsScene->AddGameObject(m_rightWallObj);
+
+	m_floorObj->GetRigidBody2D()->SetAffectedByGravity(false);
+	m_leftWallObj->GetRigidBody2D()->SetAffectedByGravity(false);
+	m_rightWallObj->GetRigidBody2D()->SetAffectedByGravity(false);
+
+	for (int i = 0; i < 50; ++i)
+	{
+		m_triangles[i] = new GameObject();
+		m_triangles[i]->SetShape(m_trianglePoly);
+
+		int row = i % 10;
+		int col = i / 10;
+
+		if (col % 2 == 0)
+		{
+			m_triangles[i]->m_transform.position = Vector3(200.f * (float)row + 150.f, 150.f * (float)col + 150.f, 0.f);
+		}
+		else
+		{
+			m_triangles[i]->m_transform.position = Vector3(200.f * (float)row + 275.f, 150.f * (float)col + 150.f, 0.f);
+		}
+
+		m_physicsScene->AddGameObject(m_triangles[i]);
+		m_triangles[i]->GetRigidBody2D()->SetAffectedByGravity(false);
+	}
+
+	for (int i = 0; i < NUM_PLINKOS; ++i)
+	{
+		m_plinkos[i] = new GameObject();
+		m_plinkos[i]->SetShape(m_circlePoly);
+
+		int row = i % 10;
+		int col = i / 10;
+
+		if (col % 2 == 0)
+		{
+			m_plinkos[i]->m_transform.position = Vector3(200.f * (float)row + 150.f, 40.f * (float)col + 800.f, 0.f);
+		}
+		else
+		{
+			m_plinkos[i]->m_transform.position = Vector3(200.f * (float)row + 250.f, 40.f * (float)col + 800.f, 0.f);
+		}
+
+		m_physicsScene->AddGameObject(m_plinkos[i]);
+		m_plinkos[i]->GetRigidBody2D()->SetMassProperties(1.0f);
 	}
 }
