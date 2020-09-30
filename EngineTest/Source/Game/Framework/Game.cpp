@@ -141,6 +141,7 @@ void Game::Update()
 			}
 
 			m_plinkos[i]->GetRigidBody2D()->SetVelocity(Vector2::ZERO);
+			m_plinkos[i]->m_transform.SetRotation(Vector3(0.f));
 			m_plinkos[i]->GetRigidBody2D()->SetAngularVelocity(0.f);
 		}
 	}
@@ -180,7 +181,17 @@ void Game::Update()
 	}
 
 	// Do the physics step
-	m_physicsScene->FrameStep(deltaSeconds);
+	static bool doPhysics = false;
+
+	if (g_inputSystem->WasKeyJustPressed('Y'))
+	{
+		doPhysics = !doPhysics;
+	}
+
+	if (doPhysics || g_inputSystem->WasKeyJustPressed('T'))
+	{
+		m_physicsScene->FrameStep(deltaSeconds);
+	}
 }
 
 
@@ -216,7 +227,6 @@ void Game::Render()
 		g_renderContext->DrawPolygon2D(plinkoPolyWs, m_material);
 	}
 
-	g_renderContext->DrawPoint2D(m_uiCamera->GetOrthoBounds().GetCenter(), 20.f, m_material, Rgba::MAGENTA);
 	g_renderContext->EndCamera();
 }
 
@@ -245,7 +255,7 @@ void Game::SetupRendering()
 	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
 
 	m_uiCamera = new Camera();
-	m_uiCamera->SetProjectionOrthographic(g_window->GetClientPixelHeight(), g_window->GetClientAspect());
+	m_uiCamera->SetProjectionOrthographic((float)g_window->GetClientPixelHeight(), g_window->GetClientAspect());
 
 	// Shader
 	m_shader = new Shader();
@@ -289,10 +299,10 @@ void Game::SetupObjects()
 	m_trianglePoly->AddVertex(Vector2(25.f, -10.f));
 
 	m_circlePoly = new Polygon2D();
-	for (int i = 0; i < 4; ++i)
+	for (int i = 19; i >= 0; --i)
 	{
 		float radius = 20.f;
-		float angle = (float)i * (360.f / 4.f);
+		float angle = (float)i * (360.f / 20.f);
 		m_circlePoly->AddVertex(radius * Vector2(CosDegrees(angle), SinDegrees(angle)));
 	}
 
