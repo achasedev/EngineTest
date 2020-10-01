@@ -22,19 +22,13 @@
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Camera;
-class Canvas;
 class Clock;
-class FontAtlas;
 class Image;
 class Material;
-class Mesh;
-class Panel;
 class Polygon2D;
-class Renderable;
 class Shader;
 class ShaderResourceView;
 class Texture2D;
-class UIText;
 class PhysicsScene2D;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -90,14 +84,8 @@ private:
 
 	// Objects
 	PhysicsScene2D* m_physicsScene = nullptr;
-	//GameObject* m_obj1 = nullptr;
-	//GameObject* m_obj2 = nullptr;
-
-	//GameObject* m_objects[10];
-
 
 	// Plinko!
-
 	Polygon2D*	m_floorPoly = nullptr;
 	Polygon2D*	m_wallPoly = nullptr;
 	Polygon2D*	m_trianglePoly = nullptr;
@@ -109,6 +97,7 @@ private:
 
 	GameObject* m_triangles[50];
 	GameObject* m_plinkos[NUM_PLINKOS];
+
 };
 
 
