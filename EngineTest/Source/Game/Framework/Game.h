@@ -55,6 +55,7 @@ private:
 	~Game();
 	Game(const Game& copy) = delete;
 
+	void ProcessInput();
 	void Update();
 	void Render();
 

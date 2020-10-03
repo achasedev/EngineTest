@@ -13,6 +13,7 @@
 #include "Game/Framework/Game.h"
 #include "Game/Framework/GameCommon.h"
 #include "Engine/Event/EventSystem.h"
+#include "Engine/Framework/DevConsole.h"
 #include "Engine/Framework/EngineCommon.h"
 #include "Engine/Framework/Window.h"
 #include "Engine/IO/InputSystem.h"
@@ -125,7 +126,7 @@ void App::Initialize()
 //-------------------------------------------------------------------------------------------------
 void App::Shutdown()
 {
-	SAFE_DELETE_POINTER(g_app->m_game);
+	SAFE_DELETE(g_app->m_game);
 
 	FontLoader::Shutdown();
 	JobSystem::Shutdown();
@@ -135,7 +136,7 @@ void App::Shutdown()
 	Window::Shutdown();
 	EventSystem::Shutdown();
 
-	SAFE_DELETE_POINTER(g_app);
+	SAFE_DELETE(g_app);
 }
 
 
@@ -143,11 +144,12 @@ void App::Shutdown()
 void App::RunFrame()
 {
 	Clock::BeginMasterFrame();
-	g_inputSystem->BeginFrame();
 	RunMessagePump();
 
 	// Begin Frames...
+	g_inputSystem->BeginFrame();
 	g_renderContext->BeginFrame();
+	g_devConsole->BeginFrame();
 
 	// Game Frame
 	ProcessInput();
@@ -155,7 +157,9 @@ void App::RunFrame()
 	Render();
 
 	// End Frames...
+	g_devConsole->EndFrame();
 	g_renderContext->EndFrame();
+	g_inputSystem->EndFrame();
 }
 
 
@@ -169,7 +173,10 @@ void App::Quit()
 //-------------------------------------------------------------------------------------------------
 void App::ProcessInput()
 {
-
+	if (!g_devConsole->IsActive())
+	{
+		m_game->ProcessInput();
+	}
 }
 
 

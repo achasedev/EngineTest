@@ -62,14 +62,6 @@
 /// CLASS IMPLEMENTATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
-void AFunction(const R<Texture2D>& hello)
-{
-
-	UNUSED(hello);
-	int x = 0;
-	x = 5;
-}
-
 
 //-------------------------------------------------------------------------------------------------
 Game::Game()
@@ -85,33 +77,40 @@ Game::~Game()
 {
 	for (int i = 0; i < 50; ++i)
 	{
-		SAFE_DELETE_POINTER(m_triangles[i]);
+		SAFE_DELETE(m_triangles[i]);
 	}
 
 	for (int i = 0; i < NUM_PLINKOS; ++i)
 	{
-		SAFE_DELETE_POINTER(m_plinkos[i]);
+		SAFE_DELETE(m_plinkos[i]);
 	}
 
-	SAFE_DELETE_POINTER(m_floorObj);
-	SAFE_DELETE_POINTER(m_leftWallObj);
-	SAFE_DELETE_POINTER(m_rightWallObj);
+	SAFE_DELETE(m_floorObj);
+	SAFE_DELETE(m_leftWallObj);
+	SAFE_DELETE(m_rightWallObj);
 
-	SAFE_DELETE_POINTER(m_floorPoly);
-	SAFE_DELETE_POINTER(m_wallPoly);
-	SAFE_DELETE_POINTER(m_trianglePoly);
-	SAFE_DELETE_POINTER(m_circlePoly);
+	SAFE_DELETE(m_floorPoly);
+	SAFE_DELETE(m_wallPoly);
+	SAFE_DELETE(m_trianglePoly);
+	SAFE_DELETE(m_circlePoly);
 
-	SAFE_DELETE_POINTER(m_material);
-	SAFE_DELETE_POINTER(m_shader);
-	SAFE_DELETE_POINTER(m_texture);
-	SAFE_DELETE_POINTER(m_image);
-	SAFE_DELETE_POINTER(m_uiCamera);
-	SAFE_DELETE_POINTER(m_gameCamera);
+	SAFE_DELETE(m_material);
+	SAFE_DELETE(m_shader);
+	SAFE_DELETE(m_texture);
+	SAFE_DELETE(m_image);
+	SAFE_DELETE(m_uiCamera);
+	SAFE_DELETE(m_gameCamera);
 
-	SAFE_DELETE_POINTER(m_physicsScene);
-	SAFE_DELETE_POINTER(m_gameClock);
+	SAFE_DELETE(m_physicsScene);
+	SAFE_DELETE(m_gameClock);
 }
+
+
+//-------------------------------------------------------------------------------------------------
+void Game::ProcessInput()
+{
+}
+
 
 //-------------------------------------------------------------------------------------------------
 void Game::Update()
