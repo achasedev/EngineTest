@@ -118,6 +118,7 @@ void App::Initialize()
 	DebugSIDSystem::Initialize();
 	JobSystem::Initialize();
 	FontLoader::Initialize();
+	DevConsole::Initialize();
 
 	g_app->m_game = new Game();
 }
@@ -128,11 +129,13 @@ void App::Shutdown()
 {
 	SAFE_DELETE(g_app->m_game);
 
+	DevConsole::Shutdown();
 	FontLoader::Shutdown();
 	JobSystem::Shutdown();
 	DebugSIDSystem::Shutdown();
 	InputSystem::Shutdown();
 	RenderContext::Shutdown();
+	g_window->UnregisterMessageHandler(AppMessageHandler);
 	Window::Shutdown();
 	EventSystem::Shutdown();
 
@@ -191,4 +194,5 @@ void App::Update()
 void App::Render()
 {
 	m_game->Render();
+	g_devConsole->Render();
 }

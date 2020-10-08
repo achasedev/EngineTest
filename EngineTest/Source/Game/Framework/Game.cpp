@@ -36,7 +36,7 @@
 #include "Engine/Utility/SmartPointer.h"
 #include "Engine/Utility/StringID.h"
 #include "Engine/UI/Canvas.h"
-#include "Engine/UI/Panel.h"
+#include "Engine/UI/UIPanel.h"
 #include "Engine/UI/UIText.h"
 #include "Engine/Voxel/QEFLoader.h"
 #include "Engine/Physics/Arbiter2D.h"
