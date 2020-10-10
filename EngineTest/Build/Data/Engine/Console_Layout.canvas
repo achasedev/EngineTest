@@ -1,6 +1,6 @@
-<canvas resolution="2268.0, 972.0" match_mode = "blend" blend_value="1.0">
-	<background_panel anchor_preset="top_left" pivot="0.0, 1.0" position="0.0, 0.0" dimensions="2268.0, 950.0"/>
-	<input_panel anchor_preset="bottom_left" pivot="0.0, 0.0" position="0.0, 0.0" dimensions="2268.0, 50.0">
-		<input_text anchor_preset="bottom_left" pivot="0.0, 0.0" position="0.0, 0.0" dimensions="2268.0, 972.0" font="Data/Font/bitwise.regular.ttf" font_size="100.0" text="The quick brown fox jumped over the lazy dog!" text_color="0.0, 0.0, 1.0, 1.0" align="bottom_left"/>
+<canvas resolution="2333.3, 1000.0" match_mode = "blend" blend_value="1.0">
+	<background_panel anchor_preset="top_left" pivot="0.0, 1.0" position="0.0, 0.0" dimensions="2333.0, 950.0"/>
+	<input_panel anchor_preset="bottom_left" pivot="0.0, 0.0" position="0.0, 0.0" dimensions="2333.3, 50.0">
+		<input_text anchor_preset="bottom_left" pivot="0.0, 0.0" position="0.0, 0.0" dimensions="2333.3, 1000.0" font="Data/Font/bitwise.regular.ttf" font_size="100.0" text="The quick brown fox jumped over the lazy dog! The quick brown fox jumped over the lazy dog! The quick brown fox jumped over the lazy dog! The quick brown fox jumped over the lazy dog!" text_color="0.0, 0.0, 1.0, 1.0" align="center_bottom" draw_mode="shrink"/>
 	</input_panel>
 </canvas>

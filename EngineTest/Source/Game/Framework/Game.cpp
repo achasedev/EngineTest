@@ -41,7 +41,6 @@
 #include "Engine/Voxel/QEFLoader.h"
 #include "Engine/Physics/Arbiter2D.h"
 
-
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,7 +175,9 @@ void Game::Update()
 
 	if (g_inputSystem->WasKeyJustPressed('I'))
 	{
-		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), "Data/Screenshots/Font.png");
+		CreateDirectoryA("Data/Screenshots", NULL);
+		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), "Data/Screenshots/Latest.png");
+		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), Stringf("Data/Screenshots/%s.png", GetFormattedSystemDateAndTime().c_str()).c_str());
 	}
 
 	// Do the physics step
