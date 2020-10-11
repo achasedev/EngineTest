@@ -177,7 +177,7 @@ void Game::Update()
 	{
 		CreateDirectoryA("Data/Screenshots", NULL);
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), "Data/Screenshots/Latest.png");
-		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), Stringf("Data/Screenshots/%s.png", GetFormattedSystemDateAndTime().c_str()).c_str());
+		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), Stringf("Data/Screenshots/Screenshot_%s.png", GetFormattedSystemDateAndTime().c_str()).c_str());
 	}
 
 	// Do the physics step
