@@ -202,8 +202,8 @@ void Game::Render()
 	g_renderContext->ClearScreen(Rgba::BLACK);
 	g_renderContext->ClearDepth();
 
-	g_renderContext->BeginCamera(m_uiCamera);
-	
+	/*g_renderContext->BeginCamera(m_uiCamera);
+
 	Polygon2D floorPolyWs, leftWallPolyWs, rightWallPolyWs;
 	m_floorObj->GetRigidBody2D()->GetWorldShape(floorPolyWs);
 	m_leftWallObj->GetRigidBody2D()->GetWorldShape(leftWallPolyWs);
@@ -225,7 +225,7 @@ void Game::Render()
 		Polygon2D plinkoPolyWs;
 		m_plinkos[i]->GetRigidBody2D()->GetWorldShape(plinkoPolyWs);
 		g_renderContext->DrawPolygon2D(plinkoPolyWs, m_material);
-	}
+	}*/
 
 	g_renderContext->EndCamera();
 }
@@ -267,7 +267,7 @@ void Game::SetupRendering()
 	m_image = new Image(IntVector2(2));
 
 	m_texture = new Texture2D();
-	m_texture->CreateFromImage(*m_image);
+	m_texture->CreateFromImage(*m_image, TEXTURE_USAGE_SHADER_RESOURCE_BIT, GPU_MEMORY_USAGE_STATIC);
 	m_textureView = m_texture->CreateOrGetShaderResourceView();
 
 	// Combine into default material

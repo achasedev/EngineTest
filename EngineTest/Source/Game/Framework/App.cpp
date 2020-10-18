@@ -176,7 +176,11 @@ void App::Quit()
 //-------------------------------------------------------------------------------------------------
 void App::ProcessInput()
 {
-	if (!g_devConsole->IsActive())
+	if (g_devConsole->IsActive())
+	{
+		g_devConsole->ProcessInput();
+	}
+	else
 	{
 		m_game->ProcessInput();
 	}
