@@ -14,7 +14,9 @@
 		font_size="25.0" 
 		text=">Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;>Hello&#10;"
 		text_color="0.8, 0.8, 0.8, 1.0" 
-		align="bottom_left">
+		align="bottom_left"
+		vertical_scrollbar="right"
+		horizontal_scrollbar="none">
 	</log_scrollview>
 
 </canvas>
