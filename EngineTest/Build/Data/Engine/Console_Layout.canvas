@@ -1,7 +1,35 @@
-<canvas resolution="2333.3, 1000.0" match_mode="blend" blend_value="1.0">
-	<background_panel anchor_preset="top_left" pivot="0.0, 1.0" position="1.0, 1.0" dimensions="2332.3, 974.0"/>
-	<input_panel anchor_preset="bottom_left" pivot="0.0, 0.0" position="1.0, 1.0" dimensions="2332.3, 25.0">
-		<input_text anchor_preset="bottom_left" pivot="0.0, 0.0" position="1.0, 1.0" dimensions="2332.3, 25.0" font="Data/Font/neuro.ttf" font_size="25.0" text=">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." text_color="1.0, 1.0, 1.0, 1.0" align="top_left" draw_mode="default"/>
+<canvas 
+	resolution="2333.3, 1000.0" 
+	match_mode="blend" 
+	blend_value="1.0">
+	<background_panel 
+		anchor_preset="top_left" 
+		pivot="0.0, 1.0" 
+		position="1.0, 1.0" 
+		dimensions="2332.3, 974.0"/>
+	<input_panel 
+		anchor_preset="bottom_left" 
+		pivot="0.0, 0.0" 
+		position="1.0, 1.0" 
+		dimensions="2332.3, 25.0">
+		<input_text 
+			anchor_preset="bottom_left" 
+			pivot="0.0, 0.0" 
+			position="0.0, 0.0" 
+			dimensions="2332.3, 25.0" 
+			font="Data/Font/neuro.ttf" 
+			font_size="25.0" text="" 
+			text_color="1.0, 1.0, 1.0, 1.0" 
+			align="top_left" 
+			draw_mode="default">
+			<input_cursor_image
+				anchor_preset="bottom_left" 
+				pivot="0.0, 0.0" 
+				position="0.0, 0.0" 
+				dimensions="2.0, 25.0"
+				image="white">
+			</input_cursor_image>
+		</input_text>
 	</input_panel>
 	<log_scrollview 
 		anchor_preset="bottom_left"

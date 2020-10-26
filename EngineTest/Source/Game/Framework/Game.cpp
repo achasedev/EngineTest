@@ -122,28 +122,6 @@ void Game::Update()
 		mouse.SetCursorMode(mouse.GetCursorMode() == CURSORMODE_RELATIVE ? CURSORMODE_ABSOLUTE : CURSORMODE_RELATIVE);
 	}
 
-	if (g_inputSystem->WasKeyJustPressed('R'))
-	{
-		for (int i = 0; i < NUM_PLINKOS; ++i)
-		{
-			int row = i % 10;
-			int col = i / 10;
-
-			if (col % 2 == 0)
-			{
-				m_plinkos[i]->m_transform.position = Vector3(200.f * (float)row + 150.f, 40.f * (float)col + 800.f, 0.f);
-			}
-			else
-			{
-				m_plinkos[i]->m_transform.position = Vector3(200.f * (float)row + 250.f, 40.f * (float)col + 800.f, 0.f);
-			}
-
-			m_plinkos[i]->GetRigidBody2D()->SetVelocity(Vector2::ZERO);
-			m_plinkos[i]->m_transform.SetRotation(Vector3(0.f));
-			m_plinkos[i]->GetRigidBody2D()->SetAngularVelocity(0.f);
-		}
-	}
-
 	// Update da camera
 
 	// Translating the camera
@@ -173,24 +151,11 @@ void Game::Update()
 	Vector3 deltaRotation = Vector3(rotationOffset.x * 90.f * deltaSeconds, rotationOffset.y * 90.f * deltaSeconds, 0.f);
 	m_gameCamera->SetRotation(m_gameCamera->GetRotation() + deltaRotation);
 
-	if (g_inputSystem->WasKeyJustPressed('I'))
+	if (g_inputSystem->WasKeyJustPressed(InputSystem::KEYBOARD_F9))
 	{
 		CreateDirectoryA("Data/Screenshots", NULL);
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), "Data/Screenshots/Latest.png");
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), Stringf("Data/Screenshots/Screenshot_%s.png", GetFormattedSystemDateAndTime().c_str()).c_str());
-	}
-
-	// Do the physics step
-	static bool doPhysics = false;
-
-	if (g_inputSystem->WasKeyJustPressed('Y'))
-	{
-		doPhysics = !doPhysics;
-	}
-
-	if (doPhysics || g_inputSystem->WasKeyJustPressed('T'))
-	{
-		m_physicsScene->FrameStep(deltaSeconds);
 	}
 }
 
@@ -201,31 +166,6 @@ void Game::Render()
 	g_renderContext->BeginCamera(m_gameCamera);
 	g_renderContext->ClearScreen(Rgba::BLACK);
 	g_renderContext->ClearDepth();
-
-	/*g_renderContext->BeginCamera(m_uiCamera);
-
-	Polygon2D floorPolyWs, leftWallPolyWs, rightWallPolyWs;
-	m_floorObj->GetRigidBody2D()->GetWorldShape(floorPolyWs);
-	m_leftWallObj->GetRigidBody2D()->GetWorldShape(leftWallPolyWs);
-	m_rightWallObj->GetRigidBody2D()->GetWorldShape(rightWallPolyWs);
-
-	g_renderContext->DrawPolygon2D(floorPolyWs, m_material);
-	g_renderContext->DrawPolygon2D(leftWallPolyWs, m_material);
-	g_renderContext->DrawPolygon2D(rightWallPolyWs, m_material);
-
-	for (int i = 0; i < 50; ++i)
-	{
-		Polygon2D trianglePolyWs;
-		m_triangles[i]->GetRigidBody2D()->GetWorldShape(trianglePolyWs);
-		g_renderContext->DrawPolygon2D(trianglePolyWs, m_material);
-	}
-
-	for (int i = 0; i < NUM_PLINKOS; ++i)
-	{
-		Polygon2D plinkoPolyWs;
-		m_plinkos[i]->GetRigidBody2D()->GetWorldShape(plinkoPolyWs);
-		g_renderContext->DrawPolygon2D(plinkoPolyWs, m_material);
-	}*/
 
 	g_renderContext->EndCamera();
 }
