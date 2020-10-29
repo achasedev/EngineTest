@@ -23,6 +23,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Camera;
 class Clock;
+class FrameTimer;
 class Image;
 class Material;
 class Polygon2D;
@@ -82,6 +83,7 @@ private:
 
 	// Framework
 	Clock* m_gameClock = nullptr;
+	FrameTimer* m_timer = nullptr;
 
 	// Objects
 	PhysicsScene2D* m_physicsScene = nullptr;

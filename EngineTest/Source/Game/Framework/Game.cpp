@@ -7,6 +7,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Engine/Framework/DevConsole.h"
 #include "Game/Framework/Game.h"
 #include "Game/Framework/GameJobs.h"
 #include "Engine/Framework/EngineCommon.h"
@@ -31,6 +32,7 @@
 #include "Engine/Render/Shader.h"
 #include "Engine/Render/Texture/Texture2D.h"
 #include "Engine/Time/Clock.h"
+#include "Engine/Time/FrameTimer.h"
 #include "Engine/Time/Time.h"
 #include "Engine/Utility/NamedProperties.h"
 #include "Engine/Utility/SmartPointer.h"
@@ -101,6 +103,7 @@ Game::~Game()
 	SAFE_DELETE(m_gameCamera);
 
 	SAFE_DELETE(m_physicsScene);
+	SAFE_DELETE(m_timer);
 	SAFE_DELETE(m_gameClock);
 }
 
@@ -180,6 +183,9 @@ void Game::SetupFramework()
 	mouse.SetCursorMode(CURSORMODE_RELATIVE);
 
 	m_gameClock = new Clock(nullptr);
+	m_timer = new FrameTimer(m_gameClock);
+	m_timer->SetInterval(0.01f);
+
 	m_physicsScene = new PhysicsScene2D();
 	m_physicsScene->SetGravity(Vector2(0.f, -1000.f));
 }
