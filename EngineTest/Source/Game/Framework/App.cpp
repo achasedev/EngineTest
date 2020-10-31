@@ -109,13 +109,13 @@ void App::Initialize()
 {
 	g_app = new App();
 
+	StringIDSystem::Initialize();
 	EventSystem::Initialize();
 	Window::Initialize((21.f / 9.f), "Hello");
 	g_window->RegisterMessageHandler(AppMessageHandler);
 	Clock::ResetMaster();
 	RenderContext::Initialize();
 	InputSystem::Initialize();
-	DebugSIDSystem::Initialize();
 	JobSystem::Initialize();
 	FontLoader::Initialize();
 	DevConsole::Initialize();
@@ -132,12 +132,12 @@ void App::Shutdown()
 	DevConsole::Shutdown();
 	FontLoader::Shutdown();
 	JobSystem::Shutdown();
-	DebugSIDSystem::Shutdown();
 	InputSystem::Shutdown();
 	RenderContext::Shutdown();
 	g_window->UnregisterMessageHandler(AppMessageHandler);
 	Window::Shutdown();
 	EventSystem::Shutdown();
+	StringIDSystem::Shutdown();
 
 	SAFE_DELETE(g_app);
 }

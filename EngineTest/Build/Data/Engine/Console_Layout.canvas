@@ -27,7 +27,7 @@
 				pivot="0.0, 0.0" 
 				position="0.0, 0.0" 
 				dimensions="2.0, 25.0"
-				image="white">
+				color="white">
 			</input_cursor_image>
 		</input_text>
 	</input_panel>
@@ -46,5 +46,24 @@
 		vertical_scrollbar="right"
 		horizontal_scrollbar="none">
 	</log_scrollview>
+	<autocomplete_text 
+		anchor_preset="bottom_left"
+		pivot="0.0, 0.0" 
+		position="1.0, 26.0" 
+		dimensions="2332.3, 25.0"
+		font="Data/Font/neuro.ttf" 
+		font_size="25.0" 
+		text=""
+		text_color="0.8, 0.8, 0.8, 1.0" 
+		align="bottom_left">
+		<autocomplete_image 
+			anchor_preset="stretch_all"
+			pivot="0.0, 0.0" 
+			x_padding="0.0, 0.0"
+			y_padding="0.0, 0.0" 
+			align="bottom_left"
+			color="0.4, 0.4, 0.4, 0.4">
+		</autocomplete_image>
+	</autocomplete_text>
 
 </canvas>
