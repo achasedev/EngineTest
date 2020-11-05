@@ -5,65 +5,77 @@
 	<background_panel 
 		anchor_preset="top_left" 
 		pivot="0.0, 1.0" 
-		position="1.0, 1.0" 
-		dimensions="2332.3, 974.0"/>
-	<input_panel 
-		anchor_preset="bottom_left" 
-		pivot="0.0, 0.0" 
-		position="1.0, 1.0" 
-		dimensions="2332.3, 25.0">
-		<input_text 
-			anchor_preset="bottom_left" 
-			pivot="0.0, 0.0" 
-			position="0.0, 0.0" 
-			dimensions="2332.3, 25.0" 
-			font="Data/Font/neuro.ttf" 
-			font_size="25.0" text="" 
-			text_color="1.0, 1.0, 1.0, 1.0" 
-			align="top_left" 
-			draw_mode="default">
-			<input_cursor_image
-				anchor_preset="bottom_left" 
-				pivot="0.0, 0.0" 
-				position="0.0, 0.0" 
-				dimensions="2.0, 25.0"
-				color="white">
-			</input_cursor_image>
-		</input_text>
-	</input_panel>
-	<log_scrollview 
-		anchor_preset="bottom_left"
-		pivot="0.0, 0.0" 
-		position="1.0, 26.0" 
-		dimensions="2332.3, 974.0" 
-		scroll_speed="50.0" 
-		button_size="20.0" 
-		font="Data/Font/neuro.ttf" 
-		font_size="25.0" 
-		text=""
-		text_color="0.8, 0.8, 0.8, 1.0" 
-		align="bottom_left"
-		vertical_scrollbar="right"
-		horizontal_scrollbar="none">
-	</log_scrollview>
-	<popup_text 
-		anchor_preset="bottom_left"
-		pivot="0.0, 0.0" 
-		position="1.0, 26.0" 
-		dimensions="2332.3, 25.0"
-		font="Data/Font/neuro.ttf" 
-		font_size="25.0" 
-		text=""
-		text_color="0.8, 0.8, 0.8, 1.0" 
-		align="bottom_left">
-		<popup_image 
-			anchor_preset="stretch_all"
+		position="2.0, -1.0" 
+		dimensions="2329.3, 998.0">
+		<input_panel 
+			anchor_preset="bottom_stretch" 
 			pivot="0.0, 0.0" 
 			x_padding="0.0, 0.0"
-			y_padding="0.0, 0.0" 
+			y_position="0.0" 
+			height="25.0">
+			<input_text 
+				anchor_preset="stretch_all" 
+				pivot="0.0, 0.0" 
+				x_padding="0.0, 0.0"
+				y_padding="0.0, 0.0" 
+				font="Data/Font/Prototype.ttf" 
+				font_size="20.0" 
+				text="" 
+				text_color="1.0, 1.0, 1.0, 1.0" 
+				align="bottom_left" 
+				draw_mode="default">
+				<input_cursor_image
+					anchor_preset="bottom_left" 
+					pivot="0.0, 0.0" 
+					position="0.0, 0.0" 
+					dimensions="2.0, 25.0"
+					color="white">
+				</input_cursor_image>
+			</input_text>
+		</input_panel>
+		<log_scrollview 
+			anchor_preset="stretch_all" 
+			pivot="0.0, 0.0" 
+			x_padding="0.0, 0.0"
+			y_padding="25.0, 0.0"  
+			scroll_speed="50.0" 
+			button_size="20.0" 
+			font="Data/Font/Prototype.ttf" 
+			font_size="20.0" 
+			text=""
+			text_color="0.8, 0.8, 0.8, 1.0" 
 			align="bottom_left"
-			color="0.4, 0.4, 0.4, 0.4">
-		</popup_image>
-	</popup_text>
-
+			vertical_scrollbar="right"
+			horizontal_scrollbar="none">
+		</log_scrollview>
+		<popup_text 
+			anchor_preset="bottom_left"
+			pivot="0.0, 0.0" 
+			position="0.0, 25.0" 
+			dimensions="2319.3, 25.0"
+			font="Data/Font/Prototype.ttf" 
+			font_size="20.0" 
+			text=""
+			text_color="0.8, 0.8, 0.8, 1.0" 
+			align="bottom_left">
+			<popup_image 
+				anchor_preset="stretch_all"
+				pivot="0.0, 0.0" 
+				x_padding="0.0, 0.0"
+				y_padding="0.0, 0.0" 
+				align="bottom_left"
+				color="0.4, 0.4, 0.4, 0.4">
+			</popup_image>
+		</popup_text>
+		<fps_text 
+			anchor_preset="top_right" 
+			pivot="1.0, 1.0" 
+			position="-20.0, 0.0" 
+			dimensions="500.0, 25.0"
+			font="Data/Font/Prototype.ttf" 
+			font_size="20.0" 
+			text="Placeholder!"
+			align="top_right">
+		</fps_text>
+	</background_panel>
 </canvas>
