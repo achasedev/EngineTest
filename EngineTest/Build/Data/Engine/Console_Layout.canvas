@@ -29,7 +29,7 @@
 					pivot="0.0, 0.0" 
 					position="0.0, 0.0" 
 					dimensions="2.0, 25.0"
-					color="white">
+					color="0.6, 0.6, 0.6, 0.6">
 				</input_cursor_image>
 			</input_text>
 		</input_panel>
