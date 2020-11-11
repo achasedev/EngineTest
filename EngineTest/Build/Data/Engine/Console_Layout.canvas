@@ -48,25 +48,31 @@
 			vertical_scrollbar="right"
 			horizontal_scrollbar="none">
 		</log_scrollview>
-		<popup_text 
-			anchor_preset="bottom_left"
+		<popup_panel
+			anchor_preset="bottom_stretch" 
 			pivot="0.0, 0.0" 
-			position="0.0, 25.0" 
-			dimensions="2319.3, 25.0"
-			font="Data/Font/Prototype.ttf" 
-			font_size="20.0" 
-			text=""
-			text_color="0.8, 0.8, 0.8, 1.0" 
-			align="bottom_left">
+			x_padding="0.0, 0.0"
+			y_position="25.0" 
+			height="25.0">
 			<popup_image 
 				anchor_preset="stretch_all"
 				pivot="0.0, 0.0" 
 				x_padding="0.0, 0.0"
 				y_padding="0.0, 0.0" 
-				align="bottom_left"
-				color="0.4, 0.4, 0.4, 0.4">
+				color="0.2, 0.2, 0.2, 0.9">
 			</popup_image>
-		</popup_text>
+			<popup_text 
+				anchor_preset="stretch_all"
+				pivot="0.0, 0.0" 
+				x_padding="0.0, 0.0"
+				y_padding="0.0, 0.0"
+				font="Data/Font/Prototype.ttf" 
+				font_size="20.0" 
+				text=""
+				text_color="0.8, 0.8, 0.8, 1.0" 
+				align="bottom_left">
+			</popup_text>
+		</popup_panel>
 		<fps_text 
 			anchor_preset="top_right" 
 			pivot="1.0, 1.0" 

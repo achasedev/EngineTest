@@ -11,8 +11,10 @@
 #include <windows.h>
 #include "Game/Framework/App.h"
 #include "Game/Framework/Game.h"
+#include "Game/Framework/GameCommands.h"
 #include "Game/Framework/GameCommon.h"
 #include "Engine/Event/EventSystem.h"
+#include "Engine/Framework/ConsoleCommand.h"
 #include "Engine/Framework/DevConsole.h"
 #include "Engine/Framework/EngineCommon.h"
 #include "Engine/Framework/Window.h"
@@ -121,6 +123,7 @@ void App::Initialize()
 	DevConsole::Initialize();
 
 	g_app->m_game = new Game();
+	g_app->RegisterGameCommands();
 }
 
 
@@ -204,4 +207,11 @@ void App::Render()
 {
 	m_game->Render();
 	g_devConsole->Render();
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void App::RegisterGameCommands()
+{
+	ConsoleCommand::Register(SID("exit"), "Shuts down the program", "exit (NO_PARAMS)", Command_Exit, false);
 }
