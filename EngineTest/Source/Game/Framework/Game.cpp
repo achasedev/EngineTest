@@ -19,7 +19,7 @@
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Math/OBB2.h"
 #include "Engine/Math/Polygon2D.h"
-#include "Engine/Physics/Physics2D.h"
+#include "Engine/Physics/2D/Physics2D.h"
 #include "Engine/Render/Camera/Camera.h"
 #include "Engine/Render/Core/Renderable.h"
 #include "Engine/Render/Core/RenderContext.h"
@@ -41,7 +41,7 @@
 #include "Engine/UI/UIPanel.h"
 #include "Engine/UI/UIText.h"
 #include "Engine/Voxel/QEFLoader.h"
-#include "Engine/Physics/Arbiter2D.h"
+#include "Engine/Physics/2D/Arbiter2D.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
