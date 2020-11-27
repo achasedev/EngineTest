@@ -18,8 +18,8 @@
 #include "Engine/Job/JobSystem.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Math/OBB2.h"
-#include "Engine/Math/Polygon2D.h"
-#include "Engine/Physics/2D/Physics2D.h"
+#include "Engine/Math/Polygon3D.h"
+#include "Engine/Physics/3D/Physics3D.h"
 #include "Engine/Render/Camera/Camera.h"
 #include "Engine/Render/Core/Renderable.h"
 #include "Engine/Render/Core/RenderContext.h"
@@ -41,7 +41,7 @@
 #include "Engine/UI/UIPanel.h"
 #include "Engine/UI/UIText.h"
 #include "Engine/Voxel/QEFLoader.h"
-#include "Engine/Physics/2D/Arbiter2D.h"
+#include "Engine/Physics/3D/Arbiter3D.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -76,24 +76,10 @@ Game::Game()
 //-------------------------------------------------------------------------------------------------
 Game::~Game()
 {
-	for (int i = 0; i < 50; ++i)
-	{
-		SAFE_DELETE(m_triangles[i]);
-	}
+	SAFE_DELETE(m_secondObj);
+	SAFE_DELETE(m_firstObj);
 
-	for (int i = 0; i < NUM_PLINKOS; ++i)
-	{
-		SAFE_DELETE(m_plinkos[i]);
-	}
-
-	SAFE_DELETE(m_floorObj);
-	SAFE_DELETE(m_leftWallObj);
-	SAFE_DELETE(m_rightWallObj);
-
-	SAFE_DELETE(m_floorPoly);
-	SAFE_DELETE(m_wallPoly);
-	SAFE_DELETE(m_trianglePoly);
-	SAFE_DELETE(m_circlePoly);
+	SAFE_DELETE(m_cubePoly);
 
 	SAFE_DELETE(m_material);
 	SAFE_DELETE(m_shader);
@@ -111,6 +97,37 @@ Game::~Game()
 //-------------------------------------------------------------------------------------------------
 void Game::ProcessInput()
 {
+	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
+
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_LEFT_ARROW))
+	{
+		m_secondObj->m_transform.position.x += -10.f * deltaSeconds;
+	}
+
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_RIGHT_ARROW))
+	{
+		m_secondObj->m_transform.position.x += 10.f * deltaSeconds;
+	}
+
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_DOWN_ARROW))
+	{
+		m_secondObj->m_transform.position.z += -10.f * deltaSeconds;
+	}
+
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_UP_ARROW))
+	{
+		m_secondObj->m_transform.position.z += 10.f * deltaSeconds;
+	}
+
+	if (g_inputSystem->IsKeyPressed('K'))
+	{
+		m_secondObj->m_transform.position.y += -10.f * deltaSeconds;
+	}
+
+	if (g_inputSystem->IsKeyPressed('I'))
+	{
+		m_secondObj->m_transform.position.y += 10.f * deltaSeconds;
+	}
 }
 
 
@@ -160,6 +177,8 @@ void Game::Update()
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), "Data/Screenshots/Latest.png");
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), Stringf("Data/Screenshots/Screenshot_%s.png", GetFormattedSystemDateAndTime().c_str()).c_str());
 	}
+
+	m_physicsScene->FrameStep(deltaSeconds);
 }
 
 
@@ -169,6 +188,18 @@ void Game::Render()
 	g_renderContext->BeginCamera(m_gameCamera);
 	g_renderContext->ClearScreen(Rgba::BLACK);
 	g_renderContext->ClearDepth();
+
+	Arbiter3D* arb = m_physicsScene->GetArbiter3DForBodies(m_firstObj->GetRigidBody3D(), m_secondObj->GetRigidBody3D());
+	if (arb != nullptr && arb->GetSeparation().m_collisionFound)
+	{
+		m_firstObj->GetShape3D()->DebugRender(&m_firstObj->m_transform, m_material, Rgba::RED);
+		m_secondObj->GetShape3D()->DebugRender(&m_secondObj->m_transform, m_material, Rgba::RED);
+	}
+	else
+	{
+		m_firstObj->GetShape3D()->DebugRender(&m_firstObj->m_transform, m_material, Rgba::BLUE);
+		m_secondObj->GetShape3D()->DebugRender(&m_secondObj->m_transform, m_material, Rgba::YELLOW);
+	}
 
 	g_renderContext->EndCamera();
 }
@@ -186,8 +217,8 @@ void Game::SetupFramework()
 	m_timer = new FrameTimer(m_gameClock);
 	m_timer->SetInterval(0.01f);
 
-	m_physicsScene = new PhysicsScene2D();
-	m_physicsScene->SetGravity(Vector2(0.f, -1000.f));
+	m_physicsScene = new PhysicsScene3D();
+	m_physicsScene->SetGravity(Vector3(0.f, -9.8f, 0.f));
 }
 
 
@@ -227,90 +258,83 @@ void Game::SetupRendering()
 void Game::SetupObjects()
 {
 	// *Local* space defined
-	m_floorPoly = new Polygon2D();
-	m_floorPoly->AddVertex(Vector2(-1200.f, -50.f));
-	m_floorPoly->AddVertex(Vector2(-1200.f, 0.f));
-	m_floorPoly->AddVertex(Vector2(1200.f, 0.f));
-	m_floorPoly->AddVertex(Vector2(1200.f, -50.f));
+	m_cubePoly = new Polygon3D();
+	float cubeSize = 5.f;
 
-	m_wallPoly = new Polygon2D();
-	m_wallPoly->AddVertex(Vector2(-25.f, -400.f));
-	m_wallPoly->AddVertex(Vector2(-25.f, 400.f));
-	m_wallPoly->AddVertex(Vector2(25.f, 400.f));
-	m_wallPoly->AddVertex(Vector2(25.f, -400.f));
+	m_cubePoly->PushVertex(Vector3(-cubeSize, -cubeSize, -cubeSize));
+	m_cubePoly->PushVertex(Vector3(-cubeSize, cubeSize, -cubeSize));
+	m_cubePoly->PushVertex(Vector3(cubeSize, cubeSize, -cubeSize));
+	m_cubePoly->PushVertex(Vector3(cubeSize, -cubeSize, -cubeSize));
+	m_cubePoly->PushVertex(Vector3(cubeSize, -cubeSize, cubeSize));
+	m_cubePoly->PushVertex(Vector3(cubeSize, cubeSize, cubeSize));
+	m_cubePoly->PushVertex(Vector3(-cubeSize, cubeSize, cubeSize));
+	m_cubePoly->PushVertex(Vector3(-cubeSize, -cubeSize, cubeSize));
+	
+	// Left/Right
+	m_cubePoly->PushIndex(7);
+	m_cubePoly->PushIndex(6);
+	m_cubePoly->PushIndex(1);
+	m_cubePoly->PushIndex(0);
 
-	m_trianglePoly = new Polygon2D();
-	m_trianglePoly->AddVertex(Vector2(-25.f, -10.f));
-	m_trianglePoly->AddVertex(Vector2(0.f, 10.f));
-	m_trianglePoly->AddVertex(Vector2(25.f, -10.f));
+	m_cubePoly->PushIndex(3);
+	m_cubePoly->PushIndex(2);
+	m_cubePoly->PushIndex(5);
+	m_cubePoly->PushIndex(4);
 
-	m_circlePoly = new Polygon2D();
-	for (int i = 19; i >= 0; --i)
-	{
-		float radius = 20.f;
-		float angle = (float)i * (360.f / 20.f);
-		m_circlePoly->AddVertex(radius * Vector2(CosDegrees(angle), SinDegrees(angle)));
-	}
+	//m_cubePoly->PushIndicesForTriangle(7, 6, 1);
+	//m_cubePoly->PushIndicesForTriangle(7, 1, 0);
+	//m_cubePoly->PushIndicesForTriangle(3, 2, 5);
+	//m_cubePoly->PushIndicesForTriangle(3, 5, 4);
 
-	m_floorObj = new GameObject();
-	m_leftWallObj = new GameObject();
-	m_rightWallObj = new GameObject();
+	// Bottom/Top
+	m_cubePoly->PushIndex(7);
+	m_cubePoly->PushIndex(0);
+	m_cubePoly->PushIndex(3);
+	m_cubePoly->PushIndex(4);
 
-	m_floorObj->SetShape(m_floorPoly);
-	m_leftWallObj->SetShape(m_wallPoly);
-	m_rightWallObj->SetShape(m_wallPoly);
+	m_cubePoly->PushIndex(1);
+	m_cubePoly->PushIndex(6);
+	m_cubePoly->PushIndex(5);
+	m_cubePoly->PushIndex(2);
 
-	m_floorObj->m_transform.position = Vector3(m_uiCamera->GetOrthoBounds().GetCenter().x, 50.f, 0.f);
-	m_leftWallObj->m_transform.position = Vector3(25.f, 450.f, 0.f);
-	m_rightWallObj->m_transform.position = Vector3(m_uiCamera->GetOrthoBounds().maxs.x - 25.f, 450.f, 0.f);
+	//m_cubePoly->PushIndicesForTriangle(7, 0, 3);
+	//m_cubePoly->PushIndicesForTriangle(7, 3, 4);
+	//m_cubePoly->PushIndicesForTriangle(1, 6, 5);
+	//m_cubePoly->PushIndicesForTriangle(1, 5, 2);
 
-	m_physicsScene->AddGameObject(m_floorObj);
-	m_physicsScene->AddGameObject(m_leftWallObj);
-	m_physicsScene->AddGameObject(m_rightWallObj);
+	// Back/Front
+	m_cubePoly->PushIndex(0);
+	m_cubePoly->PushIndex(1);
+	m_cubePoly->PushIndex(2);
+	m_cubePoly->PushIndex(3);
 
-	m_floorObj->GetRigidBody2D()->SetAffectedByGravity(false);
-	m_leftWallObj->GetRigidBody2D()->SetAffectedByGravity(false);
-	m_rightWallObj->GetRigidBody2D()->SetAffectedByGravity(false);
+	m_cubePoly->PushIndex(4);
+	m_cubePoly->PushIndex(5);
+	m_cubePoly->PushIndex(6);
+	m_cubePoly->PushIndex(7);
 
-	for (int i = 0; i < 50; ++i)
-	{
-		m_triangles[i] = new GameObject();
-		m_triangles[i]->SetShape(m_trianglePoly);
+	//m_cubePoly->PushIndicesForTriangle(0, 1, 2);
+	//m_cubePoly->PushIndicesForTriangle(0, 2, 3);
+	//m_cubePoly->PushIndicesForTriangle(4, 5, 6);
+	//m_cubePoly->PushIndicesForTriangle(4, 6, 7);
 
-		int row = i % 10;
-		int col = i / 10;
+	// 6 faces, each with 4 vertices
+	m_cubePoly->PushFaceIndexCount(4);
+	m_cubePoly->PushFaceIndexCount(4);
+	m_cubePoly->PushFaceIndexCount(4);
+	m_cubePoly->PushFaceIndexCount(4);
+	m_cubePoly->PushFaceIndexCount(4);
+	m_cubePoly->PushFaceIndexCount(4);
 
-		if (col % 2 == 0)
-		{
-			m_triangles[i]->m_transform.position = Vector3(200.f * (float)row + 150.f, 150.f * (float)col + 150.f, 0.f);
-		}
-		else
-		{
-			m_triangles[i]->m_transform.position = Vector3(200.f * (float)row + 275.f, 150.f * (float)col + 150.f, 0.f);
-		}
+	m_firstObj = new GameObject();
+	m_secondObj = new GameObject();
 
-		m_physicsScene->AddGameObject(m_triangles[i]);
-		m_triangles[i]->GetRigidBody2D()->SetAffectedByGravity(false);
-	}
+	m_firstObj->SetShape3D(m_cubePoly);
+	m_secondObj->SetShape3D(m_cubePoly);
 
-	for (int i = 0; i < NUM_PLINKOS; ++i)
-	{
-		m_plinkos[i] = new GameObject();
-		m_plinkos[i]->SetShape(m_circlePoly);
+	m_firstObj->m_transform.position = Vector3(-20.f, 0.f, 0.f);
+	m_secondObj->m_transform.position = Vector3(20.f, 0.f, 0.f);
 
-		int row = i % 10;
-		int col = i / 10;
-
-		if (col % 2 == 0)
-		{
-			m_plinkos[i]->m_transform.position = Vector3(200.f * (float)row + 150.f, 40.f * (float)col + 800.f, 0.f);
-		}
-		else
-		{
-			m_plinkos[i]->m_transform.position = Vector3(200.f * (float)row + 250.f, 40.f * (float)col + 800.f, 0.f);
-		}
-
-		m_physicsScene->AddGameObject(m_plinkos[i]);
-		m_plinkos[i]->GetRigidBody2D()->SetMassProperties(1.0f);
-	}
+	m_physicsScene->AddGameObject(m_firstObj);
+	m_physicsScene->AddGameObject(m_secondObj);
 }

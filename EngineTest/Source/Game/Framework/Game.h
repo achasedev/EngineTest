@@ -26,11 +26,11 @@ class Clock;
 class FrameTimer;
 class Image;
 class Material;
-class Polygon2D;
+class Polygon3D;
 class Shader;
 class ShaderResourceView;
 class Texture2D;
-class PhysicsScene2D;
+class PhysicsScene3D;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -86,20 +86,13 @@ private:
 	FrameTimer* m_timer = nullptr;
 
 	// Objects
-	PhysicsScene2D* m_physicsScene = nullptr;
+	PhysicsScene3D* m_physicsScene = nullptr;
 
 	// Plinko!
-	Polygon2D*	m_floorPoly = nullptr;
-	Polygon2D*	m_wallPoly = nullptr;
-	Polygon2D*	m_trianglePoly = nullptr;
-	Polygon2D*	m_circlePoly = nullptr;
+	Polygon3D*	m_cubePoly = nullptr;
 
-	GameObject* m_floorObj = nullptr;
-	GameObject* m_leftWallObj = nullptr;
-	GameObject* m_rightWallObj = nullptr;
-
-	GameObject* m_triangles[50];
-	GameObject* m_plinkos[NUM_PLINKOS];
+	GameObject* m_firstObj = nullptr;
+	GameObject* m_secondObj = nullptr;
 
 };
 
