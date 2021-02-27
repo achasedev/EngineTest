@@ -24,7 +24,7 @@
 #include "Engine/Render/Core/RenderContext.h"
 #include "Engine/Render/Font/FontLoader.h"
 #include "Engine/Time/Clock.h"
-#include "Engine/Utility/StringID.h"
+#include "Engine/Utility/StringId.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -111,7 +111,7 @@ void App::Initialize()
 {
 	g_app = new App();
 
-	StringIDSystem::Initialize();
+	StringIdSystem::Initialize();
 	EventSystem::Initialize();
 	Window::Initialize((21.f / 9.f), "Hello");
 	g_window->RegisterMessageHandler(AppMessageHandler);
@@ -140,7 +140,7 @@ void App::Shutdown()
 	g_window->UnregisterMessageHandler(AppMessageHandler);
 	Window::Shutdown();
 	EventSystem::Shutdown();
-	StringIDSystem::Shutdown();
+	StringIdSystem::Shutdown();
 
 	SAFE_DELETE(g_app);
 }

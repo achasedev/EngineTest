@@ -36,7 +36,7 @@
 #include "Engine/Time/Time.h"
 #include "Engine/Utility/NamedProperties.h"
 #include "Engine/Utility/SmartPointer.h"
-#include "Engine/Utility/StringID.h"
+#include "Engine/Utility/StringId.h"
 #include "Engine/UI/Canvas.h"
 #include "Engine/UI/UIPanel.h"
 #include "Engine/UI/UIText.h"
