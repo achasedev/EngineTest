@@ -337,41 +337,49 @@ void Game::SetupObjects()
 	m_cubePoly->PushFaceIndexCount(4);
 	m_cubePoly->PushFaceIndexCount(4);
 
-	Polygon3D* trigPoly = new Polygon3D();
-	trigPoly->PushVertex(Vector3(-1.0f, -1.0f, -1.0f));
-	trigPoly->PushVertex(Vector3(1.0f, -1.0f, -1.0f));
-	trigPoly->PushVertex(Vector3(0.f, -1.0f, 1.0f));
-	trigPoly->PushVertex(Vector3(0.f, 1.0f, 0.f));
+	Polygon3D* conePoly = new Polygon3D();
 
-	trigPoly->PushIndex(0);
-	trigPoly->PushIndex(1);
-	trigPoly->PushIndex(2);
+	conePoly->PushVertex(Vector3(0.f, 5.f, 0.f));
+	for (int i = 0; i < 20; ++i)
+	{
+		float deg = 360.f * ((float)i / 20.f);
+		Vector3 v = Vector3(CosDegrees(deg), -5.f, SinDegrees(deg));
+		conePoly->PushVertex(v);
+		conePoly->PushIndex(i + 1);
+	}
 
-	trigPoly->PushIndex(0);
-	trigPoly->PushIndex(2);
-	trigPoly->PushIndex(3);
+	for (int i = 1; i < 21; ++i)
+	{
+		conePoly->PushIndex(i);
 
-	trigPoly->PushIndex(1);
-	trigPoly->PushIndex(3);
-	trigPoly->PushIndex(2);
+		if (i < 20)
+		{
+			conePoly->PushIndex((i + 1));
+		}
+		else
+		{
+			conePoly->PushIndex(1);
+		}
 
-	trigPoly->PushIndex(0);
-	trigPoly->PushIndex(3);
-	trigPoly->PushIndex(1);
+		conePoly->PushIndex(0);
+	}
 
-	trigPoly->PushFaceIndexCount(3);
-	trigPoly->PushFaceIndexCount(3);
-	trigPoly->PushFaceIndexCount(3);
-	trigPoly->PushFaceIndexCount(3);
+	conePoly->PushFaceIndexCount(20);
+
+	for (int i = 0; i < 20; ++i)
+	{
+		conePoly->PushFaceIndexCount(3);
+	}
 
 	m_firstObj = new GameObject();
 	m_secondObj = new GameObject();
 
-	m_firstObj->SetShape3D(m_cubePoly);
-	m_secondObj->SetShape3D(trigPoly);
+	m_firstObj->SetShape3D(conePoly);
+	m_secondObj->SetShape3D(conePoly);
 
 	m_firstObj->m_transform.position = Vector3(-20.f, 0.f, 0.f);
 	m_secondObj->m_transform.position = Vector3(20.f, 0.f, 0.f);
+	m_secondObj->m_transform.SetRotation(Vector3(45.f, 45.f, 0.f));
 
 	m_physicsScene->AddGameObject(m_firstObj);
 	m_physicsScene->AddGameObject(m_secondObj);
