@@ -179,6 +179,17 @@ void Game::Update()
 	}
 
 	m_physicsScene->FrameStep(deltaSeconds);
+
+	Arbiter3D* arb = m_physicsScene->GetArbiter3DForBodies(m_firstObj->GetRigidBody3D(), m_secondObj->GetRigidBody3D());
+	
+	if (arb != nullptr)
+	{
+		CollisionSeparation3D sep = arb->GetSeparation();
+		if (sep.m_collisionFound)
+		{
+			m_secondObj->m_transform.position += sep.m_dirFromFirst * sep.m_separation;
+		}
+	}
 }
 
 
@@ -326,11 +337,38 @@ void Game::SetupObjects()
 	m_cubePoly->PushFaceIndexCount(4);
 	m_cubePoly->PushFaceIndexCount(4);
 
+	Polygon3D* trigPoly = new Polygon3D();
+	trigPoly->PushVertex(Vector3(-1.0f, -1.0f, -1.0f));
+	trigPoly->PushVertex(Vector3(1.0f, -1.0f, -1.0f));
+	trigPoly->PushVertex(Vector3(0.f, -1.0f, 1.0f));
+	trigPoly->PushVertex(Vector3(0.f, 1.0f, 0.f));
+
+	trigPoly->PushIndex(0);
+	trigPoly->PushIndex(1);
+	trigPoly->PushIndex(2);
+
+	trigPoly->PushIndex(0);
+	trigPoly->PushIndex(2);
+	trigPoly->PushIndex(3);
+
+	trigPoly->PushIndex(1);
+	trigPoly->PushIndex(3);
+	trigPoly->PushIndex(2);
+
+	trigPoly->PushIndex(0);
+	trigPoly->PushIndex(3);
+	trigPoly->PushIndex(1);
+
+	trigPoly->PushFaceIndexCount(3);
+	trigPoly->PushFaceIndexCount(3);
+	trigPoly->PushFaceIndexCount(3);
+	trigPoly->PushFaceIndexCount(3);
+
 	m_firstObj = new GameObject();
 	m_secondObj = new GameObject();
 
 	m_firstObj->SetShape3D(m_cubePoly);
-	m_secondObj->SetShape3D(m_cubePoly);
+	m_secondObj->SetShape3D(trigPoly);
 
 	m_firstObj->m_transform.position = Vector3(-20.f, 0.f, 0.f);
 	m_secondObj->m_transform.position = Vector3(20.f, 0.f, 0.f);
