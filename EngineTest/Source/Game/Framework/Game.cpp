@@ -184,10 +184,10 @@ void Game::Update()
 	
 	if (arb != nullptr)
 	{
-		CollisionSeparation3D sep = arb->GetSeparation();
+		CollisionSeparation3d sep = arb->GetSeparation();
 		if (sep.m_collisionFound)
 		{
-			m_secondObj->m_transform.position += sep.m_dirFromFirst * sep.m_separation;
+			//m_secondObj->m_transform.position += sep.m_dirFromFirst * sep.m_separation;
 		}
 	}
 }
@@ -205,11 +205,21 @@ void Game::Render()
 	{
 		m_firstObj->GetShape3D()->DebugRender(&m_firstObj->m_transform, m_material, Rgba::RED);
 		m_secondObj->GetShape3D()->DebugRender(&m_secondObj->m_transform, m_material, Rgba::RED);
+
+		int numContacts = arb->GetNumContacts();
+		const Contact3D* contacts = arb->GetContacts();
+
+		for (int i = 0; i < numContacts; ++i)
+		{
+			g_renderContext->DrawPoint3D(contacts[i].m_position, 0.25f, m_material, Rgba::YELLOW);
+		}
+
+		g_renderContext->DrawLine3D(m_firstObj->m_transform.position, m_firstObj->m_transform.position + arb->GetSeparation().m_dirFromFirst * arb->GetSeparation().m_separation, m_material, Rgba::MAGENTA);
 	}
 	else
 	{
 		m_firstObj->GetShape3D()->DebugRender(&m_firstObj->m_transform, m_material, Rgba::BLUE);
-		m_secondObj->GetShape3D()->DebugRender(&m_secondObj->m_transform, m_material, Rgba::YELLOW);
+		m_secondObj->GetShape3D()->DebugRender(&m_secondObj->m_transform, m_material, Rgba::GREEN);
 	}
 
 	g_renderContext->EndCamera();
@@ -374,8 +384,8 @@ void Game::SetupObjects()
 	m_firstObj = new GameObject();
 	m_secondObj = new GameObject();
 
-	m_firstObj->SetShape3D(conePoly);
-	m_secondObj->SetShape3D(conePoly);
+	m_firstObj->SetShape3D(m_cubePoly);
+	m_secondObj->SetShape3D(m_cubePoly);
 
 	m_firstObj->m_transform.position = Vector3(-20.f, 0.f, 0.f);
 	m_secondObj->m_transform.position = Vector3(20.f, 0.f, 0.f);
