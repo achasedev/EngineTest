@@ -128,12 +128,7 @@ void Game::ProcessInput()
 	{
 		m_secondObj->m_transform.position.y += 10.f * deltaSeconds;
 	}
-}
 
-
-//-------------------------------------------------------------------------------------------------
-void Game::Update()
-{
 	if (g_inputSystem->WasKeyJustPressed(InputSystem::KEYBOARD_F1))
 	{
 		Mouse& mouse = InputSystem::GetMouse();
@@ -146,19 +141,18 @@ void Game::Update()
 
 	// Translating the camera
 	Vector3 translationOffset = Vector3::ZERO;
-	if (g_inputSystem->IsKeyPressed('W'))								{ translationOffset.z += 1.f; }		// Forward
-	if (g_inputSystem->IsKeyPressed('S'))								{ translationOffset.z -= 1.f; }		// Left
-	if (g_inputSystem->IsKeyPressed('A'))								{ translationOffset.x -= 1.f; }		// Back
-	if (g_inputSystem->IsKeyPressed('D'))								{ translationOffset.x += 1.f; }		// Right
-	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_SPACEBAR))	{ translationOffset.y += 1.f; }		// Up
-	if (g_inputSystem->IsKeyPressed('X'))								{ translationOffset.y -= 1.f; }		// Down
+	if (g_inputSystem->IsKeyPressed('W')) { translationOffset.z += 1.f; }		// Forward
+	if (g_inputSystem->IsKeyPressed('S')) { translationOffset.z -= 1.f; }		// Left
+	if (g_inputSystem->IsKeyPressed('A')) { translationOffset.x -= 1.f; }		// Back
+	if (g_inputSystem->IsKeyPressed('D')) { translationOffset.x += 1.f; }		// Right
+	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_SPACEBAR)) { translationOffset.y += 1.f; }		// Up
+	if (g_inputSystem->IsKeyPressed('X')) { translationOffset.y -= 1.f; }		// Down
 
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_SHIFT))
 	{
 		translationOffset *= 50.f;
 	}
 
-	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
 	translationOffset *= deltaSeconds * 10.f;
 
 	m_gameCamera->Translate(translationOffset);
@@ -177,7 +171,13 @@ void Game::Update()
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), "Data/Screenshots/Latest.png");
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), Stringf("Data/Screenshots/Screenshot_%s.png", GetFormattedSystemDateAndTime().c_str()).c_str());
 	}
+}
 
+
+//-------------------------------------------------------------------------------------------------
+void Game::Update()
+{
+	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
 	m_physicsScene->FrameStep(deltaSeconds);
 
 	Arbiter3D* arb = m_physicsScene->GetArbiter3DForBodies(m_firstObj->GetRigidBody3D(), m_secondObj->GetRigidBody3D());
@@ -211,16 +211,19 @@ void Game::Render()
 
 		for (int i = 0; i < numContacts; ++i)
 		{
-			g_renderContext->DrawPoint3D(contacts[i].m_position, 0.25f, m_material, Rgba::YELLOW);
+			g_renderContext->DrawPoint3D(contacts[i].m_position, 0.25f, m_material, Rgba::MAGENTA);
+			g_renderContext->DrawLine3D(contacts[i].m_position, contacts[i].m_position + -1.0f * contacts[i].m_separation * contacts[i].m_normal, m_material, Rgba::YELLOW);
 		}
-
-		g_renderContext->DrawLine3D(m_firstObj->m_transform.position, m_firstObj->m_transform.position + arb->GetSeparation().m_dirFromFirst * arb->GetSeparation().m_separation, m_material, Rgba::MAGENTA);
 	}
 	else
 	{
 		m_firstObj->GetShape3D()->DebugRender(&m_firstObj->m_transform, m_material, Rgba::BLUE);
-		m_secondObj->GetShape3D()->DebugRender(&m_secondObj->m_transform, m_material, Rgba::GREEN);
+		m_secondObj->GetShape3D()->DebugRender(&m_secondObj->m_transform, m_material, Rgba::BLUE);
 	}
+
+	g_renderContext->DrawPoint3D(m_firstObj->GetRigidBody3D()->GetCenterOfMassWs(), 0.25f, m_material, Rgba::MAGENTA);
+	g_renderContext->DrawPoint3D(m_secondObj->GetRigidBody3D()->GetCenterOfMassWs(), 0.25f, m_material, Rgba::MAGENTA);
+	g_renderContext->DrawPoint3D(m_secondObj->m_transform.GetLocalToWorldMatrix().TransformPoint(m_secondObj->GetShape3D()->GetCenter()).xyz(), 0.25f, m_material, Rgba::YELLOW);
 
 	g_renderContext->EndCamera();
 }
@@ -349,34 +352,38 @@ void Game::SetupObjects()
 
 	Polygon3D* conePoly = new Polygon3D();
 
-	conePoly->PushVertex(Vector3(0.f, 5.f, 0.f));
-	for (int i = 0; i < 20; ++i)
+	Vector3 coneTop = Vector3(0.f, 5.f, 0.f);
+	const float numPoints = 3;
+	for (int i = numPoints - 1; i >= 0; --i)
 	{
-		float deg = 360.f * ((float)i / 20.f);
+		float deg = 360.f * ((float)i / (float)numPoints);
 		Vector3 v = Vector3(CosDegrees(deg), -5.f, SinDegrees(deg));
 		conePoly->PushVertex(v);
-		conePoly->PushIndex(i + 1);
+		conePoly->PushIndex(i);
 	}
 
-	for (int i = 1; i < 21; ++i)
+	conePoly->PushVertex(coneTop);
+	int coneTopIndex = numPoints;
+
+	for (int i = 0; i < numPoints; ++i)
 	{
 		conePoly->PushIndex(i);
 
-		if (i < 20)
+		if (i == numPoints - 1)
 		{
-			conePoly->PushIndex((i + 1));
+			conePoly->PushIndex(0);
 		}
 		else
 		{
-			conePoly->PushIndex(1);
+			conePoly->PushIndex(i + 1);
 		}
 
-		conePoly->PushIndex(0);
+		conePoly->PushIndex(coneTopIndex);
 	}
 
-	conePoly->PushFaceIndexCount(20);
+	conePoly->PushFaceIndexCount(numPoints);
 
-	for (int i = 0; i < 20; ++i)
+	for (int i = 0; i < numPoints; ++i)
 	{
 		conePoly->PushFaceIndexCount(3);
 	}
@@ -385,7 +392,7 @@ void Game::SetupObjects()
 	m_secondObj = new GameObject();
 
 	m_firstObj->SetShape3D(m_cubePoly);
-	m_secondObj->SetShape3D(m_cubePoly);
+	m_secondObj->SetShape3D(conePoly);
 
 	m_firstObj->m_transform.position = Vector3(-20.f, 0.f, 0.f);
 	m_secondObj->m_transform.position = Vector3(20.f, 0.f, 0.f);
