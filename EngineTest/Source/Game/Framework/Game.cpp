@@ -213,6 +213,9 @@ void Game::Render()
 		{
 			g_renderContext->DrawPoint3D(contacts[i].m_position, 0.25f, m_material, Rgba::MAGENTA);
 			g_renderContext->DrawLine3D(contacts[i].m_position, contacts[i].m_position + -1.0f * contacts[i].m_separation * contacts[i].m_normal, m_material, Rgba::YELLOW);
+
+			g_renderContext->DrawPoint3D(contacts[i].m_originalPosition, 0.25f, m_material, Rgba::CYAN);
+			g_renderContext->DrawLine3D(contacts[i].m_originalPosition, contacts[i].m_position, m_material, Rgba::GREEN);
 		}
 	}
 	else
@@ -221,9 +224,9 @@ void Game::Render()
 		m_secondObj->GetShape3D()->DebugRender(&m_secondObj->m_transform, m_material, Rgba::BLUE);
 	}
 
-	g_renderContext->DrawPoint3D(m_firstObj->GetRigidBody3D()->GetCenterOfMassWs(), 0.25f, m_material, Rgba::MAGENTA);
-	g_renderContext->DrawPoint3D(m_secondObj->GetRigidBody3D()->GetCenterOfMassWs(), 0.25f, m_material, Rgba::MAGENTA);
-	g_renderContext->DrawPoint3D(m_secondObj->m_transform.GetLocalToWorldMatrix().TransformPoint(m_secondObj->GetShape3D()->GetCenter()).xyz(), 0.25f, m_material, Rgba::YELLOW);
+	//g_renderContext->DrawPoint3D(m_firstObj->GetRigidBody3D()->GetCenterOfMassWs(), 0.25f, m_material, Rgba::MAGENTA);
+	//g_renderContext->DrawPoint3D(m_secondObj->GetRigidBody3D()->GetCenterOfMassWs(), 0.25f, m_material, Rgba::MAGENTA);
+	//g_renderContext->DrawPoint3D(m_secondObj->m_transform.GetLocalToWorldMatrix().TransformPoint(m_secondObj->GetShape3D()->GetCenter()).xyz(), 0.25f, m_material, Rgba::YELLOW);
 
 	g_renderContext->EndCamera();
 }
@@ -353,7 +356,7 @@ void Game::SetupObjects()
 	Polygon3D* conePoly = new Polygon3D();
 
 	Vector3 coneTop = Vector3(0.f, 5.f, 0.f);
-	const float numPoints = 3;
+	const float numPoints = 8;
 	for (int i = numPoints - 1; i >= 0; --i)
 	{
 		float deg = 360.f * ((float)i / (float)numPoints);
@@ -392,11 +395,12 @@ void Game::SetupObjects()
 	m_secondObj = new GameObject();
 
 	m_firstObj->SetShape3D(m_cubePoly);
-	m_secondObj->SetShape3D(conePoly);
+	m_secondObj->SetShape3D(m_cubePoly);
 
 	m_firstObj->m_transform.position = Vector3(-20.f, 0.f, 0.f);
 	m_secondObj->m_transform.position = Vector3(20.f, 0.f, 0.f);
-	m_secondObj->m_transform.SetRotation(Vector3(45.f, 45.f, 0.f));
+	m_secondObj->m_transform.SetRotation(Vector3(57.f, 90.f, 0.f));
+	m_secondObj->m_transform.SetScale(Vector3(0.5f));
 
 	m_physicsScene->AddGameObject(m_firstObj);
 	m_physicsScene->AddGameObject(m_secondObj);
