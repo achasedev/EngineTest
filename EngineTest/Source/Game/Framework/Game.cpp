@@ -7,10 +7,13 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-#include "Engine/Framework/DevConsole.h"
 #include "Game/Framework/Game.h"
 #include "Game/Framework/GameJobs.h"
+#include "Engine/Collision/3D/Collider3d.h"
+#include "Engine/Collision/3D/CollisionSystem3d.h"
+#include "Engine/Framework/DevConsole.h"
 #include "Engine/Framework/EngineCommon.h"
+#include "Engine/Framework/Entity.h"
 #include "Engine/Framework/GameObject.h"
 #include "Engine/Framework/Window.h"
 #include "Engine/IO/Image.h"
@@ -18,6 +21,7 @@
 #include "Engine/Job/JobSystem.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Math/OBB2.h"
+#include "Engine/Math/OBB3.h"
 #include "Engine/Math/Polygon3D.h"
 #include "Engine/Physics/3D/Physics3D.h"
 #include "Engine/Render/Camera/Camera.h"
@@ -76,10 +80,12 @@ Game::Game()
 //-------------------------------------------------------------------------------------------------
 Game::~Game()
 {
-	SAFE_DELETE(m_secondObj);
-	SAFE_DELETE(m_firstObj);
+	m_collisionSystem->RemoveEntity(m_entity1);
+	m_collisionSystem->RemoveEntity(m_entity2);
 
-	SAFE_DELETE(m_cubePoly);
+	SAFE_DELETE(m_entity2);
+	SAFE_DELETE(m_entity1);
+	SAFE_DELETE(m_collisionSystem);
 
 	SAFE_DELETE(m_material);
 	SAFE_DELETE(m_shader);
@@ -88,7 +94,6 @@ Game::~Game()
 	SAFE_DELETE(m_uiCamera);
 	SAFE_DELETE(m_gameCamera);
 
-	SAFE_DELETE(m_physicsScene);
 	SAFE_DELETE(m_timer);
 	SAFE_DELETE(m_gameClock);
 }
@@ -101,32 +106,32 @@ void Game::ProcessInput()
 
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_LEFT_ARROW))
 	{
-		m_secondObj->m_transform.position.x += -10.f * deltaSeconds;
+		m_entity2->transform.position.x += -10.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_RIGHT_ARROW))
 	{
-		m_secondObj->m_transform.position.x += 10.f * deltaSeconds;
+		m_entity2->transform.position.x += 10.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_DOWN_ARROW))
 	{
-		m_secondObj->m_transform.position.z += -10.f * deltaSeconds;
+		m_entity2->transform.position.z += -10.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_UP_ARROW))
 	{
-		m_secondObj->m_transform.position.z += 10.f * deltaSeconds;
+		m_entity2->transform.position.z += 10.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->IsKeyPressed('K'))
 	{
-		m_secondObj->m_transform.position.y += -10.f * deltaSeconds;
+		m_entity2->transform.position.y += -10.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->IsKeyPressed('I'))
 	{
-		m_secondObj->m_transform.position.y += 10.f * deltaSeconds;
+		m_entity2->transform.position.y += 10.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->WasKeyJustPressed(InputSystem::KEYBOARD_F1))
@@ -178,17 +183,14 @@ void Game::ProcessInput()
 void Game::Update()
 {
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
-	m_physicsScene->FrameStep(deltaSeconds);
+	m_collisionSystem->PerformBroadPhase();
 
-	Arbiter3D* arb = m_physicsScene->GetArbiter3DForBodies(m_firstObj->GetRigidBody3D(), m_secondObj->GetRigidBody3D());
-	
-	if (arb != nullptr)
+	m_entity1->transform.Rotate(Vector3(0.f, 90.f * deltaSeconds, 0.f));
+
+	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
+	if (man && man->GetBroadphaseResult().m_collisionFound)
 	{
-		CollisionSeparation3d sep = arb->GetSeparation();
-		if (sep.m_collisionFound)
-		{
-			//m_secondObj->m_transform.position += sep.m_dirFromFirst * sep.m_separation;
-		}
+		m_entity2->transform.position += man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration;
 	}
 }
 
@@ -200,33 +202,25 @@ void Game::Render()
 	g_renderContext->ClearScreen(Rgba::BLACK);
 	g_renderContext->ClearDepth();
 
-	Arbiter3D* arb = m_physicsScene->GetArbiter3DForBodies(m_firstObj->GetRigidBody3D(), m_secondObj->GetRigidBody3D());
-	if (arb != nullptr && arb->GetSeparation().m_collisionFound)
+	Vector3 rot = m_entity1->transform.GetWorldRotationDegrees();
+	Quaternion quat = Quaternion::FromEuler(rot);
+
+	Renderable rend;
+	rend.SetRenderableMatrix(m_entity1->transform.GetLocalToWorldMatrix());
+	rend.AddDraw(m_mesh, m_material);
+	g_renderContext->DrawRenderable(rend);
+	
+	rend.SetRenderableMatrix(m_entity2->transform.GetLocalToWorldMatrix());
+	g_renderContext->DrawRenderable(rend);
+
+	m_entity1->GetCollider()->DebugRender(m_material);
+	m_entity2->GetCollider()->DebugRender(m_material);
+
+	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
+	if (man && man->GetBroadphaseResult().m_collisionFound)
 	{
-		m_firstObj->GetShape3D()->DebugRender(&m_firstObj->m_transform, m_material, Rgba::RED);
-		m_secondObj->GetShape3D()->DebugRender(&m_secondObj->m_transform, m_material, Rgba::RED);
-
-		int numContacts = arb->GetNumContacts();
-		const Contact3D* contacts = arb->GetContacts();
-
-		for (int i = 0; i < numContacts; ++i)
-		{
-			g_renderContext->DrawPoint3D(contacts[i].m_position, 0.25f, m_material, Rgba::MAGENTA);
-			g_renderContext->DrawLine3D(contacts[i].m_position, contacts[i].m_position + -1.0f * contacts[i].m_separation * contacts[i].m_normal, m_material, Rgba::YELLOW);
-
-			g_renderContext->DrawPoint3D(contacts[i].m_originalPosition, 0.25f, m_material, Rgba::CYAN);
-			g_renderContext->DrawLine3D(contacts[i].m_originalPosition, contacts[i].m_position, m_material, Rgba::GREEN);
-		}
+		g_renderContext->DrawLine3D(m_entity2->transform.position, m_entity2->transform.position + man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration, m_material, Rgba::RED);
 	}
-	else
-	{
-		m_firstObj->GetShape3D()->DebugRender(&m_firstObj->m_transform, m_material, Rgba::BLUE);
-		m_secondObj->GetShape3D()->DebugRender(&m_secondObj->m_transform, m_material, Rgba::BLUE);
-	}
-
-	//g_renderContext->DrawPoint3D(m_firstObj->GetRigidBody3D()->GetCenterOfMassWs(), 0.25f, m_material, Rgba::MAGENTA);
-	//g_renderContext->DrawPoint3D(m_secondObj->GetRigidBody3D()->GetCenterOfMassWs(), 0.25f, m_material, Rgba::MAGENTA);
-	//g_renderContext->DrawPoint3D(m_secondObj->m_transform.GetLocalToWorldMatrix().TransformPoint(m_secondObj->GetShape3D()->GetCenter()).xyz(), 0.25f, m_material, Rgba::YELLOW);
 
 	g_renderContext->EndCamera();
 }
@@ -244,8 +238,7 @@ void Game::SetupFramework()
 	m_timer = new FrameTimer(m_gameClock);
 	m_timer->SetInterval(0.01f);
 
-	m_physicsScene = new PhysicsScene3D();
-	m_physicsScene->SetGravity(Vector3(0.f, -9.8f, 0.f));
+	m_collisionSystem = new CollisionSystem3d();
 }
 
 
@@ -278,130 +271,29 @@ void Game::SetupRendering()
 	m_material = new Material();
 	m_material->SetShader(m_shader);
 	m_material->SetAlbedoTextureView(m_textureView);
+
+	MeshBuilder mb;
+	mb.BeginBuilding(true);
+	mb.PushCube(Vector3::ZERO, Vector3(1.f), AABB2::ZERO_TO_ONE, AABB2::ZERO_TO_ONE, AABB2::ZERO_TO_ONE, Rgba::BLUE);
+	mb.FinishBuilding();
+
+	m_mesh = mb.CreateMesh<Vertex3D_PCU>();
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void Game::SetupObjects()
 {
-	// *Local* space defined
-	m_cubePoly = new Polygon3D();
-	float cubeSize = 5.f;
+	m_entity1 = new Entity();
+	m_entity2 = new Entity();
 
-	m_cubePoly->PushVertex(Vector3(-cubeSize, -cubeSize, -cubeSize));
-	m_cubePoly->PushVertex(Vector3(-cubeSize, cubeSize, -cubeSize));
-	m_cubePoly->PushVertex(Vector3(cubeSize, cubeSize, -cubeSize));
-	m_cubePoly->PushVertex(Vector3(cubeSize, -cubeSize, -cubeSize));
-	m_cubePoly->PushVertex(Vector3(cubeSize, -cubeSize, cubeSize));
-	m_cubePoly->PushVertex(Vector3(cubeSize, cubeSize, cubeSize));
-	m_cubePoly->PushVertex(Vector3(-cubeSize, cubeSize, cubeSize));
-	m_cubePoly->PushVertex(Vector3(-cubeSize, -cubeSize, cubeSize));
-	
-	// Left/Right
-	m_cubePoly->PushIndex(7);
-	m_cubePoly->PushIndex(6);
-	m_cubePoly->PushIndex(1);
-	m_cubePoly->PushIndex(0);
+	OBB3 colliderBounds = OBB3(Vector3::ZERO, Vector3(0.5f), Vector3::ZERO);
 
-	m_cubePoly->PushIndex(3);
-	m_cubePoly->PushIndex(2);
-	m_cubePoly->PushIndex(5);
-	m_cubePoly->PushIndex(4);
+	m_collisionSystem->AddEntity(m_entity1, colliderBounds);
+	m_collisionSystem->AddEntity(m_entity2, colliderBounds);
 
-	//m_cubePoly->PushIndicesForTriangle(7, 6, 1);
-	//m_cubePoly->PushIndicesForTriangle(7, 1, 0);
-	//m_cubePoly->PushIndicesForTriangle(3, 2, 5);
-	//m_cubePoly->PushIndicesForTriangle(3, 5, 4);
-
-	// Bottom/Top
-	m_cubePoly->PushIndex(7);
-	m_cubePoly->PushIndex(0);
-	m_cubePoly->PushIndex(3);
-	m_cubePoly->PushIndex(4);
-
-	m_cubePoly->PushIndex(1);
-	m_cubePoly->PushIndex(6);
-	m_cubePoly->PushIndex(5);
-	m_cubePoly->PushIndex(2);
-
-	//m_cubePoly->PushIndicesForTriangle(7, 0, 3);
-	//m_cubePoly->PushIndicesForTriangle(7, 3, 4);
-	//m_cubePoly->PushIndicesForTriangle(1, 6, 5);
-	//m_cubePoly->PushIndicesForTriangle(1, 5, 2);
-
-	// Back/Front
-	m_cubePoly->PushIndex(0);
-	m_cubePoly->PushIndex(1);
-	m_cubePoly->PushIndex(2);
-	m_cubePoly->PushIndex(3);
-
-	m_cubePoly->PushIndex(4);
-	m_cubePoly->PushIndex(5);
-	m_cubePoly->PushIndex(6);
-	m_cubePoly->PushIndex(7);
-
-	//m_cubePoly->PushIndicesForTriangle(0, 1, 2);
-	//m_cubePoly->PushIndicesForTriangle(0, 2, 3);
-	//m_cubePoly->PushIndicesForTriangle(4, 5, 6);
-	//m_cubePoly->PushIndicesForTriangle(4, 6, 7);
-
-	// 6 faces, each with 4 vertices
-	m_cubePoly->PushFaceIndexCount(4);
-	m_cubePoly->PushFaceIndexCount(4);
-	m_cubePoly->PushFaceIndexCount(4);
-	m_cubePoly->PushFaceIndexCount(4);
-	m_cubePoly->PushFaceIndexCount(4);
-	m_cubePoly->PushFaceIndexCount(4);
-
-	Polygon3D* conePoly = new Polygon3D();
-
-	Vector3 coneTop = Vector3(0.f, 5.f, 0.f);
-	const float numPoints = 8;
-	for (int i = numPoints - 1; i >= 0; --i)
-	{
-		float deg = 360.f * ((float)i / (float)numPoints);
-		Vector3 v = Vector3(CosDegrees(deg), -5.f, SinDegrees(deg));
-		conePoly->PushVertex(v);
-		conePoly->PushIndex(i);
-	}
-
-	conePoly->PushVertex(coneTop);
-	int coneTopIndex = numPoints;
-
-	for (int i = 0; i < numPoints; ++i)
-	{
-		conePoly->PushIndex(i);
-
-		if (i == numPoints - 1)
-		{
-			conePoly->PushIndex(0);
-		}
-		else
-		{
-			conePoly->PushIndex(i + 1);
-		}
-
-		conePoly->PushIndex(coneTopIndex);
-	}
-
-	conePoly->PushFaceIndexCount(numPoints);
-
-	for (int i = 0; i < numPoints; ++i)
-	{
-		conePoly->PushFaceIndexCount(3);
-	}
-
-	m_firstObj = new GameObject();
-	m_secondObj = new GameObject();
-
-	m_firstObj->SetShape3D(m_cubePoly);
-	m_secondObj->SetShape3D(m_cubePoly);
-
-	m_firstObj->m_transform.position = Vector3(-20.f, 0.f, 0.f);
-	m_secondObj->m_transform.position = Vector3(20.f, 0.f, 0.f);
-	m_secondObj->m_transform.SetRotation(Vector3(57.f, 90.f, 0.f));
-	m_secondObj->m_transform.SetScale(Vector3(0.5f));
-
-	m_physicsScene->AddGameObject(m_firstObj);
-	m_physicsScene->AddGameObject(m_secondObj);
+	m_entity1->transform.position = Vector3(-20.f, 0.f, 0.f);
+	m_entity1->transform.scale = Vector3(1.f);
+	m_entity2->transform.position = Vector3(20.f, 0.f, 0.f);
+	m_entity2->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
 }

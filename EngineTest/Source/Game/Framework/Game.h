@@ -22,10 +22,13 @@
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Camera;
+class CollisionSystem3d;
 class Clock;
+class Entity;
 class FrameTimer;
 class Image;
 class Material;
+class Mesh;
 class Polygon3D;
 class Shader;
 class ShaderResourceView;
@@ -80,19 +83,15 @@ private:
 	Texture2D*			m_texture = nullptr;
 	ShaderResourceView* m_textureView = nullptr;
 	Material*			m_material = nullptr;
+	Mesh*				m_mesh = nullptr;
 
 	// Framework
 	Clock* m_gameClock = nullptr;
 	FrameTimer* m_timer = nullptr;
 
-	// Objects
-	PhysicsScene3D* m_physicsScene = nullptr;
-
-	// Plinko!
-	Polygon3D*	m_cubePoly = nullptr;
-
-	GameObject* m_firstObj = nullptr;
-	GameObject* m_secondObj = nullptr;
+	CollisionSystem3d* m_collisionSystem = nullptr;
+	Entity* m_entity1 = nullptr;
+	Entity* m_entity2 = nullptr;
 
 };
 
