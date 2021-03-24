@@ -183,15 +183,18 @@ void Game::ProcessInput()
 void Game::Update()
 {
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
-	m_collisionSystem->PerformBroadPhase();
-
 	m_entity1->transform.Rotate(Vector3(0.f, 90.f * deltaSeconds, 0.f));
+
+	m_collisionSystem->PerformBroadPhase();
+	m_collisionSystem->PerformNarrowPhase();
 
 	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
 	if (man && man->GetBroadphaseResult().m_collisionFound)
 	{
-		m_entity2->transform.position += man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration;
+		float pushDir = (man->GetEntityB() == m_entity2 ? 1.0f : -1.0f);
+		m_entity2->transform.position += pushDir * man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration;
 	}
+
 }
 
 
