@@ -29,7 +29,7 @@ class FrameTimer;
 class Image;
 class Material;
 class Mesh;
-class Polygon3D;
+class Polygon3d;
 class Shader;
 class ShaderResourceView;
 class Texture2D;

@@ -22,7 +22,7 @@
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Math/OBB2.h"
 #include "Engine/Math/OBB3.h"
-#include "Engine/Math/Polygon3D.h"
+#include "Engine/Math/Polygon3d.h"
 #include "Engine/Physics/3D/Physics3D.h"
 #include "Engine/Render/Camera/Camera.h"
 #include "Engine/Render/Core/Renderable.h"
@@ -186,15 +186,14 @@ void Game::Update()
 	m_entity1->transform.Rotate(Vector3(0.f, 90.f * deltaSeconds, 0.f));
 
 	m_collisionSystem->PerformBroadPhase();
-	m_collisionSystem->PerformNarrowPhase();
-
-	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
-	if (man && man->GetBroadphaseResult().m_collisionFound)
-	{
-		float pushDir = (man->GetEntityB() == m_entity2 ? 1.0f : -1.0f);
-		m_entity2->transform.position += pushDir * man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration;
-	}
-
+	//m_collisionSystem->PerformNarrowPhase();
+	//
+	//const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
+	//if (man && man->GetBroadphaseResult().m_collisionFound)
+	//{
+	//	float pushDir = (man->GetEntityB() == m_entity2 ? 1.0f : -1.0f);
+	//	m_entity2->transform.position += pushDir * man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration;
+	//}
 }
 
 
