@@ -99,6 +99,109 @@ Game::~Game()
 }
 
 
+struct AxisResult
+{
+	float m_distance;
+	Plane3 m_plane;
+	const HalfEdge* m_edgeA;
+	const HalfEdge* m_edgeB;
+	Vector3 m_supportPoint;
+	float m_distanceCenterToPlane;
+};
+
+//-------------------------------------------------------------------------------------------------
+int SolveEdgeSATGame(const Polygon3d* a, const Polygon3d* b, std::vector<AxisResult>& out_results)
+{
+	out_results.clear();
+
+	UniqueHalfEdgeIterator edgeAIter(*a);
+	const HalfEdge* edgeA = edgeAIter.GetNext();
+
+	float maxDistance = 0.f;
+	bool firstIteration = true;
+	int bestIndex = -1;
+
+	while (edgeA != nullptr)
+	{
+		Vector3 directionA = a->GetEdgeDirection(edgeA);
+		Vector3 outwardDirA = a->GetVertexPosition(edgeA->m_vertexIndex) - a->GetCenter();
+
+		UniqueHalfEdgeIterator edgeBIter(*b);
+		const HalfEdge* edgeB = edgeBIter.GetNext();
+
+		while (edgeB != nullptr)
+		{
+			Vector3 aStart = a->GetVertexPosition(edgeA->m_vertexIndex);
+			Vector3 aEnd = a->GetVertexPosition(a->GetEdge(edgeA->m_nextEdgeIndex)->m_vertexIndex);
+			Vector3 bStart = b->GetVertexPosition(edgeB->m_vertexIndex);
+			Vector3 bEnd = b->GetVertexPosition(b->GetEdge(edgeB->m_nextEdgeIndex)->m_vertexIndex);
+
+			Vector3 aDir = aEnd - aStart;
+			Vector3 bDir = bEnd - bStart;
+
+			Vector3 directionB = b->GetEdgeDirection(edgeB);
+
+			Vector3 normal = CrossProduct(directionA, directionB);
+
+			if (AreMostlyEqual(normal.GetLengthSquared(), 0.f))
+			{
+				edgeB = edgeBIter.GetNext();
+				continue;
+			}
+			else
+			{
+				normal.Normalize();
+			}
+
+			// Ensure the normal points away from A
+			if (AreMostlyEqual(DotProduct(normal, outwardDirA), 0.f))
+			{
+				edgeB = edgeBIter.GetNext();
+				continue;
+			}
+			else if (DotProduct(normal, outwardDirA) < 0.f)
+			{
+				normal *= -1.0f;
+			}
+
+			// Make a plane on the edge of A facing outward from A
+			Plane3 plane(normal, a->GetVertexPosition(edgeA->m_vertexIndex));
+
+			// Get the vertex in B that would be furthest against the normal (if anything will be behind this plane, it would be that point)
+			Vector3 supportB;
+			b->GetSupportPoint(-1.0f * normal, supportB);
+			float distance = plane.GetDistanceFromPlane(supportB);
+
+			AxisResult result;
+			result.m_distance = distance;
+			result.m_plane = plane;
+			result.m_edgeA = edgeA;
+			result.m_edgeB = edgeB;
+			result.m_supportPoint = supportB;
+			result.m_distanceCenterToPlane = plane.GetDistanceFromPlane(a->GetCenter());
+
+			out_results.push_back(result);
+
+			if (firstIteration || distance > maxDistance)
+			{
+				maxDistance = distance;
+				bestIndex = (int)out_results.size() - 1;
+				firstIteration = false;
+			}
+
+			edgeB = edgeBIter.GetNext();
+		}
+
+		edgeA = edgeAIter.GetNext();
+	}
+
+	return bestIndex;
+}
+
+
+std::vector<AxisResult> g_results;
+int g_index = 0;
+int g_bestIndex = 0;
 //-------------------------------------------------------------------------------------------------
 void Game::ProcessInput()
 {
@@ -106,32 +209,32 @@ void Game::ProcessInput()
 
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_LEFT_ARROW))
 	{
-		m_entity2->transform.position.x += -10.f * deltaSeconds;
+		m_entity2->transform.position.x += -1.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_RIGHT_ARROW))
 	{
-		m_entity2->transform.position.x += 10.f * deltaSeconds;
+		m_entity2->transform.position.x += 1.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_DOWN_ARROW))
 	{
-		m_entity2->transform.position.z += -10.f * deltaSeconds;
+		m_entity2->transform.position.z += -1.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_UP_ARROW))
 	{
-		m_entity2->transform.position.z += 10.f * deltaSeconds;
+		m_entity2->transform.position.z += 1.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->IsKeyPressed('K'))
 	{
-		m_entity2->transform.position.y += -10.f * deltaSeconds;
+		m_entity2->transform.position.y += -1.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->IsKeyPressed('I'))
 	{
-		m_entity2->transform.position.y += 10.f * deltaSeconds;
+		m_entity2->transform.position.y += 1.f * deltaSeconds;
 	}
 
 	if (g_inputSystem->WasKeyJustPressed(InputSystem::KEYBOARD_F1))
@@ -140,6 +243,22 @@ void Game::ProcessInput()
 		mouse.ShowMouseCursor(!mouse.IsCursorShown());
 		mouse.LockCursorToClient(!mouse.IsCursorLocked());
 		mouse.SetCursorMode(mouse.GetCursorMode() == CURSORMODE_RELATIVE ? CURSORMODE_ABSOLUTE : CURSORMODE_RELATIVE);
+	}
+
+	
+	if (g_inputSystem->WasKeyJustPressed('G'))
+	{
+		g_index = Clamp(g_index - 1, 0, 100);
+	}
+
+	if (g_inputSystem->WasKeyJustPressed('H'))
+	{
+		g_index = Clamp(g_index + 1, 0, (int)g_results.size() - 1);
+	}
+
+	if (g_inputSystem->WasKeyJustPressed('J'))
+	{
+		g_index = g_bestIndex;
 	}
 
 	// Update da camera
@@ -182,18 +301,24 @@ void Game::ProcessInput()
 //-------------------------------------------------------------------------------------------------
 void Game::Update()
 {
+	m_entity1->GetCollider()->GetAsType<PolytopeCollider3d>()->GenerateWorldShape();
+	m_entity2->GetCollider()->GetAsType<PolytopeCollider3d>()->GenerateWorldShape();
+	const Polygon3d* shape1 = m_entity1->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
+	const Polygon3d* shape2 = m_entity2->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
+
+	g_bestIndex = SolveEdgeSATGame(shape1, shape2, g_results);
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
 	m_entity1->transform.Rotate(Vector3(0.f, 90.f * deltaSeconds, 0.f));
 
 	m_collisionSystem->PerformBroadPhase();
 	//m_collisionSystem->PerformNarrowPhase();
-	//
-	//const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
-	//if (man && man->GetBroadphaseResult().m_collisionFound)
-	//{
-	//	float pushDir = (man->GetEntityB() == m_entity2 ? 1.0f : -1.0f);
-	//	m_entity2->transform.position += pushDir * man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration;
-	//}
+
+	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
+	if (man)
+	{
+		float pushDir = (man->GetEntityB() == m_entity2 ? 1.0f : -1.0f);
+		m_entity2->transform.position += pushDir * man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration;
+	}
 }
 
 
@@ -207,21 +332,34 @@ void Game::Render()
 	Vector3 rot = m_entity1->transform.GetWorldRotationDegrees();
 	Quaternion quat = Quaternion::FromEuler(rot);
 
-	Renderable rend;
-	rend.SetRenderableMatrix(m_entity1->transform.GetLocalToWorldMatrix());
-	rend.AddDraw(m_mesh, m_material);
-	g_renderContext->DrawRenderable(rend);
-	
-	rend.SetRenderableMatrix(m_entity2->transform.GetLocalToWorldMatrix());
-	g_renderContext->DrawRenderable(rend);
+	// Render selected result
+	const Polygon3d* shape1 = m_entity1->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
+	const Polygon3d* shape2 = m_entity2->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
 
-	m_entity1->GetCollider()->DebugRender(m_material);
-	m_entity2->GetCollider()->DebugRender(m_material);
+	//AxisResult& result = g_results[g_index];
+	//g_renderContext->DrawLine3D(shape1->GetVertexPosition(result.m_edgeA->m_vertexIndex), shape1->GetVertexPosition(shape1->GetEdge(result.m_edgeA->m_nextEdgeIndex)->m_vertexIndex), m_material, Rgba::MAGENTA);
+	//g_renderContext->DrawLine3D(shape2->GetVertexPosition(result.m_edgeB->m_vertexIndex), shape2->GetVertexPosition(shape2->GetEdge(result.m_edgeB->m_nextEdgeIndex)->m_vertexIndex), m_material, Rgba::CYAN);
+	//g_renderContext->DrawPlane3(result.m_plane, m_material, Rgba(255, 255, 255, 100));
+	//g_renderContext->DrawPoint3D(result.m_supportPoint, 0.05f, m_material, Rgba::YELLOW);
+	//g_renderContext->DrawLine3D(result.m_supportPoint, result.m_supportPoint + -1.0f * result.m_plane.GetNormal() * result.m_distance, m_material, Rgba::ORANGE);
 
 	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
-	if (man && man->GetBroadphaseResult().m_collisionFound)
+	if (man)
 	{
-		g_renderContext->DrawLine3D(m_entity2->transform.position, m_entity2->transform.position + man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration, m_material, Rgba::RED);
+		m_shader->SetFillMode(FILL_MODE_SOLID);
+		man->DebugRender(m_material);
+		m_shader->SetFillMode(FILL_MODE_WIREFRAME);
+		//g_renderContext->DrawLine3D(m_entity2->transform.position, m_entity2->transform.position + man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration, m_material, Rgba::RED);
+	}
+	else
+	{
+		Renderable rend;
+		rend.SetRenderableMatrix(m_entity1->transform.GetLocalToWorldMatrix());
+		rend.AddDraw(m_mesh, m_material);
+		g_renderContext->DrawRenderable(rend);
+		
+		rend.SetRenderableMatrix(m_entity2->transform.GetLocalToWorldMatrix());
+		g_renderContext->DrawRenderable(rend);
 	}
 
 	g_renderContext->EndCamera();
@@ -294,8 +432,9 @@ void Game::SetupObjects()
 	m_collisionSystem->AddEntity(m_entity1, colliderBounds);
 	m_collisionSystem->AddEntity(m_entity2, colliderBounds);
 
-	m_entity1->transform.position = Vector3(-20.f, 0.f, 0.f);
+	m_entity1->transform.position = Vector3(-2.f, 0.f, 0.f);
 	m_entity1->transform.scale = Vector3(1.f);
-	m_entity2->transform.position = Vector3(20.f, 0.f, 0.f);
+	m_entity2->transform.position = Vector3(-1.32701576f, 0.f, -0.746994615f);
+	m_entity1->transform.SetRotation(Vector3(45.f, 0.f, 0.f));
 	m_entity2->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
 }
