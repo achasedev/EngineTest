@@ -301,22 +301,22 @@ void Game::ProcessInput()
 //-------------------------------------------------------------------------------------------------
 void Game::Update()
 {
-	m_entity1->GetCollider()->GetAsType<PolytopeCollider3d>()->GenerateWorldShape();
-	m_entity2->GetCollider()->GetAsType<PolytopeCollider3d>()->GenerateWorldShape();
-	const Polygon3d* shape1 = m_entity1->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
-	const Polygon3d* shape2 = m_entity2->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
-
-	g_bestIndex = SolveEdgeSATGame(shape1, shape2, g_results);
+	//m_entity1->GetCollider()->GetAsType<PolytopeCollider3d>()->GenerateWorldShape();
+	//m_entity2->GetCollider()->GetAsType<PolytopeCollider3d>()->GenerateWorldShape();
+	//const Polygon3d* shape1 = m_entity1->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
+	//const Polygon3d* shape2 = m_entity2->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
+	//
+	//g_bestIndex = SolveEdgeSATGame(shape1, shape2, g_results);
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
 	m_entity1->transform.Rotate(Vector3(0.f, 90.f * deltaSeconds, 0.f));
 
 	m_collisionSystem->PerformBroadPhase();
-	//m_collisionSystem->PerformNarrowPhase();
+	m_collisionSystem->PerformNarrowPhase();
 
 	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
 	if (man)
 	{
-		float pushDir = (man->GetEntityB() == m_entity2 ? 1.0f : -1.0f);
+		float pushDir = (man->GetReferenceEntity() == m_entity1 ? 1.0f : -1.0f);
 		m_entity2->transform.position += pushDir * man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration;
 	}
 }
@@ -434,7 +434,7 @@ void Game::SetupObjects()
 
 	m_entity1->transform.position = Vector3(-2.f, 0.f, 0.f);
 	m_entity1->transform.scale = Vector3(1.f);
-	m_entity2->transform.position = Vector3(-1.32701576f, 0.f, -0.746994615f);
-	m_entity1->transform.SetRotation(Vector3(45.f, 0.f, 0.f));
-	m_entity2->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
+	//m_entity2->transform.position = Vector3(-1.32701576f, 0.f, -0.746994615f);
+	//m_entity1->transform.SetRotation(Vector3(45.f, 0.f, 0.f));
+	//m_entity2->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
 }
