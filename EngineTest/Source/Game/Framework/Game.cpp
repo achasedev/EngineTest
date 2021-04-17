@@ -372,6 +372,10 @@ void Game::Render()
 	m_entity1->GetRigidBody()->DebugRender(m_material, Rgba::RED);
 	m_entity2->GetRigidBody()->DebugRender(m_material, Rgba::BLUE);
 
+	for (int i = 0; i < 10; ++i)
+	{
+		m_entities[i]->GetRigidBody()->DebugRender(m_material, Rgba(10 * i, 20 * i, 255 - 10 * i, 255));
+	}
 
 	//m_shader->SetFillMode(FILL_MODE_SOLID);
 	//man->DebugRender(m_material);
@@ -456,9 +460,10 @@ void Game::SetupObjects()
 	m_entity2 = new Entity();
 
 	OBB3 colliderBounds = OBB3(Vector3::ZERO, Vector3(0.5f), Vector3::ZERO);
+	OBB3 groundBounds = OBB3(Vector3::ZERO, Vector3(100.f, 0.1f, 100.f), Vector3::ZERO);
 
 	Polygon3d cone;
-	const int numVertsInCircle = 20;
+	const int numVertsInCircle = 8;
 
 	cone.AddVertex(Vector3(0.f, 1.f, 0.f));
 	float degPerI = 360.f / (float)numVertsInCircle;
@@ -475,19 +480,19 @@ void Game::SetupObjects()
 
 	cone.AddFace(faceIndices);
 
-	for (int i = 1; i < numVertsInCircle; ++i)
+	for (int i = 1; i <= numVertsInCircle; ++i)
 	{
 		faceIndices.clear();
 		faceIndices.push_back(0);
-		faceIndices.push_back(i);
 		faceIndices.push_back(((i == numVertsInCircle ? 1 : i + 1)));
+		faceIndices.push_back(i);
 
 		cone.AddFace(faceIndices);
 	}
 
 
-	m_collisionSystem->AddEntity(m_entity1, colliderBounds);
-	m_collisionSystem->AddEntity(m_entity2, colliderBounds);
+	m_collisionSystem->AddEntity(m_entity1, &cone);
+	m_collisionSystem->AddEntity(m_entity2, groundBounds);
 
 	m_physicsSystem->AddEntity(m_entity1);
 	m_physicsSystem->AddEntity(m_entity2);
@@ -500,6 +505,16 @@ void Game::SetupObjects()
 	m_entity2->transform.position = Vector3(0.f, 0.f, 0.f);
 	//m_entity1->transform.scale = Vector3(1.f);
 	//m_entity2->transform.position = Vector3(-1.32701576f, 0.f, -0.746994615f);
-	m_entity1->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
+	m_entity1->transform.SetRotation(Vector3(30.f, 45.f, 0.f));
 	//m_entity2->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
+
+	for (int i = 0; i < 10; ++i)
+	{
+		m_entities[i] = new Entity();
+		m_collisionSystem->AddEntity(m_entities[i], colliderBounds);
+		m_physicsSystem->AddEntity(m_entities[i]);
+
+		m_entities[i]->transform.position = Vector3(0.f, 4.f + 2.f * (float)i, 0.f);
+		m_entities[i]->GetRigidBody()->SetMassProperties(1.f);
+	}
 }

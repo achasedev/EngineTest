@@ -95,7 +95,7 @@ private:
 
 	Entity* m_entity1 = nullptr;
 	Entity* m_entity2 = nullptr;
-
+	Entity* m_entities[10];
 };
 
 
