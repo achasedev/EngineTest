@@ -493,13 +493,13 @@ void Game::SetupObjects()
 	m_physicsSystem->AddEntity(m_entity2);
 
 	m_entity1->GetRigidBody()->SetMassProperties(1.f);
-	m_entity2->GetRigidBody()->SetMassProperties(1.f);
+	m_entity2->GetRigidBody()->SetMassProperties(FLT_MAX);
 	m_entity2->GetRigidBody()->SetAffectedByGravity(false);
 
 	m_entity1->transform.position = Vector3(0.f, 2.f, 0.f);
 	m_entity2->transform.position = Vector3(0.f, 0.f, 0.f);
 	//m_entity1->transform.scale = Vector3(1.f);
 	//m_entity2->transform.position = Vector3(-1.32701576f, 0.f, -0.746994615f);
-	//m_entity1->transform.SetRotation(Vector3(45.f, 0.f, 0.f));
+	m_entity1->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
 	//m_entity2->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
 }
