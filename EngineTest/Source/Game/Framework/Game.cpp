@@ -23,7 +23,7 @@
 #include "Engine/Math/OBB2.h"
 #include "Engine/Math/OBB3.h"
 #include "Engine/Math/Polygon3d.h"
-#include "Engine/Physics/3D/Physics3D.h"
+#include "Engine/Physics/3D/PhysicsSystem3D.h"
 #include "Engine/Render/Camera/Camera.h"
 #include "Engine/Render/Core/Renderable.h"
 #include "Engine/Render/Core/RenderContext.h"
@@ -46,6 +46,7 @@
 #include "Engine/UI/UIText.h"
 #include "Engine/Voxel/QEFLoader.h"
 #include "Engine/Physics/3D/Arbiter3D.h"
+#include "Engine/Physics/3D/RigidBody3D.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -85,6 +86,7 @@ Game::~Game()
 
 	SAFE_DELETE(m_entity2);
 	SAFE_DELETE(m_entity1);
+	SAFE_DELETE(m_physicsSystem);
 	SAFE_DELETE(m_collisionSystem);
 
 	SAFE_DELETE(m_material);
@@ -295,6 +297,12 @@ void Game::ProcessInput()
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), "Data/Screenshots/Latest.png");
 		g_renderContext->SaveTextureToImage(g_renderContext->GetDefaultRenderTarget(), Stringf("Data/Screenshots/Screenshot_%s.png", GetFormattedSystemDateAndTime().c_str()).c_str());
 	}
+
+	if (g_inputSystem->WasKeyJustPressed('B'))
+	{
+		m_entity1->GetRigidBody()->AddTorque(Vector3(50.f, 50.f, 0.f));
+		m_entity2->GetRigidBody()->AddTorque(Vector3(50.f, 50.f, 0.f));
+	}
 }
 
 
@@ -308,16 +316,17 @@ void Game::Update()
 	//
 	//g_bestIndex = SolveEdgeSATGame(shape1, shape2, g_results);
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
-	m_entity1->transform.Rotate(Vector3(0.f, 90.f * deltaSeconds, 0.f));
+	//m_entity1->transform.Rotate(Vector3(0.f, 90.f * deltaSeconds, 0.f));
 
 	m_collisionSystem->PerformBroadPhase();
 	m_collisionSystem->PerformNarrowPhase();
+	m_physicsSystem->FrameStep(deltaSeconds);
 
 	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
 	if (man)
 	{
-		float pushDir = (man->GetReferenceEntity() == m_entity1 ? 1.0f : -1.0f);
-		m_entity2->transform.position += pushDir * man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration;
+		//float pushDir = (man->GetReferenceEntity() == m_entity1 ? 1.0f : -1.0f);
+		//m_entity2->transform.position += pushDir * man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration;
 	}
 }
 
@@ -330,7 +339,7 @@ void Game::Render()
 	g_renderContext->ClearDepth();
 
 	Vector3 rot = m_entity1->transform.GetWorldRotationDegrees();
-	Quaternion quat = Quaternion::FromEuler(rot);
+	Quaternion quat = Quaternion::FromEulerAngles(rot);
 
 	// Render selected result
 	const Polygon3d* shape1 = m_entity1->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
@@ -343,24 +352,31 @@ void Game::Render()
 	//g_renderContext->DrawPoint3D(result.m_supportPoint, 0.05f, m_material, Rgba::YELLOW);
 	//g_renderContext->DrawLine3D(result.m_supportPoint, result.m_supportPoint + -1.0f * result.m_plane.GetNormal() * result.m_distance, m_material, Rgba::ORANGE);
 
-	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
-	if (man)
-	{
-		m_shader->SetFillMode(FILL_MODE_SOLID);
-		man->DebugRender(m_material);
-		m_shader->SetFillMode(FILL_MODE_WIREFRAME);
+	//const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
+	//if (man)
+	//{
+	g_renderContext->DrawTransform(m_entity1->transform, m_material, 1.f);
+	g_renderContext->DrawTransform(m_entity2->transform, m_material, 1.f);
+
+	m_entity1->GetRigidBody()->DebugRender(m_material, Rgba::RED);
+	m_entity2->GetRigidBody()->DebugRender(m_material, Rgba::BLUE);
+
+
+	//m_shader->SetFillMode(FILL_MODE_SOLID);
+	//man->DebugRender(m_material);
+	//m_shader->SetFillMode(FILL_MODE_WIREFRAME);
 		//g_renderContext->DrawLine3D(m_entity2->transform.position, m_entity2->transform.position + man->GetBroadphaseResult().m_direction * man->GetBroadphaseResult().m_penetration, m_material, Rgba::RED);
-	}
-	else
-	{
-		Renderable rend;
-		rend.SetRenderableMatrix(m_entity1->transform.GetLocalToWorldMatrix());
-		rend.AddDraw(m_mesh, m_material);
-		g_renderContext->DrawRenderable(rend);
-		
-		rend.SetRenderableMatrix(m_entity2->transform.GetLocalToWorldMatrix());
-		g_renderContext->DrawRenderable(rend);
-	}
+	//}
+	//else
+	//{
+	//	Renderable rend;
+	//	rend.SetRenderableMatrix(m_entity1->transform.GetLocalToWorldMatrix());
+	//	rend.AddDraw(m_mesh, m_material);
+	//	g_renderContext->DrawRenderable(rend);
+	//	
+	//	rend.SetRenderableMatrix(m_entity2->transform.GetLocalToWorldMatrix());
+	//	g_renderContext->DrawRenderable(rend);
+	//}
 
 	g_renderContext->EndCamera();
 }
@@ -379,6 +395,7 @@ void Game::SetupFramework()
 	m_timer->SetInterval(0.01f);
 
 	m_collisionSystem = new CollisionSystem3d();
+	m_physicsSystem = new PhysicsSystem3D();
 }
 
 
@@ -429,8 +446,43 @@ void Game::SetupObjects()
 
 	OBB3 colliderBounds = OBB3(Vector3::ZERO, Vector3(0.5f), Vector3::ZERO);
 
+	Polygon3d cone;
+	const int numVertsInCircle = 20;
+
+	cone.AddVertex(Vector3(0.f, 1.f, 0.f));
+	float degPerI = 360.f / (float)numVertsInCircle;
+	float radius = 1.f;
+
+	std::vector<int> faceIndices;
+
+	for (int i = 0; i < numVertsInCircle; ++i)
+	{
+		float degrees = degPerI * i;
+		cone.AddVertex(radius * Vector3(CosDegrees(degrees), -1.f, SinDegrees(degrees)));
+		faceIndices.push_back(i + 1);
+	}
+
+	cone.AddFace(faceIndices);
+
+	for (int i = 1; i < numVertsInCircle; ++i)
+	{
+		faceIndices.clear();
+		faceIndices.push_back(0);
+		faceIndices.push_back(i);
+		faceIndices.push_back(((i == numVertsInCircle ? 1 : i + 1)));
+
+		cone.AddFace(faceIndices);
+	}
+
+
 	m_collisionSystem->AddEntity(m_entity1, colliderBounds);
-	m_collisionSystem->AddEntity(m_entity2, colliderBounds);
+	m_collisionSystem->AddEntity(m_entity2, &cone);
+
+	m_physicsSystem->AddEntity(m_entity1);
+	m_physicsSystem->AddEntity(m_entity2);
+
+	m_entity1->GetRigidBody()->SetMassProperties(1.f);
+	m_entity2->GetRigidBody()->SetMassProperties(1.f);
 
 	m_entity1->transform.position = Vector3(-2.f, 0.f, 0.f);
 	m_entity1->transform.scale = Vector3(1.f);

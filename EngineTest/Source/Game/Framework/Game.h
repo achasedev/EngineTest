@@ -33,7 +33,7 @@ class Polygon3d;
 class Shader;
 class ShaderResourceView;
 class Texture2D;
-class PhysicsScene3D;
+class PhysicsSystem3D;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -90,6 +90,8 @@ private:
 	FrameTimer* m_timer = nullptr;
 
 	CollisionSystem3d* m_collisionSystem = nullptr;
+	PhysicsSystem3D* m_physicsSystem = nullptr;
+
 	Entity* m_entity1 = nullptr;
 	Entity* m_entity2 = nullptr;
 
