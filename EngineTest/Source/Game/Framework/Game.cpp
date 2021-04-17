@@ -300,8 +300,15 @@ void Game::ProcessInput()
 
 	if (g_inputSystem->WasKeyJustPressed('B'))
 	{
-		m_entity1->GetRigidBody()->AddTorque(Vector3(50.f, 50.f, 0.f));
-		m_entity2->GetRigidBody()->AddTorque(Vector3(50.f, 50.f, 0.f));
+		m_entity1->transform.position = Vector3(0.f, 2.f, 0.f);
+		m_entity2->transform.position = Vector3(0.5f, 0.f, 0.f);
+		//m_entity1->GetRigidBody()->AddTorque(Vector3(50.f, 50.f, 0.f));
+		//m_entity2->GetRigidBody()->AddTorque(Vector3(50.f, 50.f, 0.f));
+	}
+
+	if (g_inputSystem->WasKeyJustPressed('N'))
+	{
+		m_doPhysics = !m_doPhysics;
 	}
 }
 
@@ -320,7 +327,11 @@ void Game::Update()
 
 	m_collisionSystem->PerformBroadPhase();
 	m_collisionSystem->PerformNarrowPhase();
-	m_physicsSystem->FrameStep(deltaSeconds);
+
+	if (m_doPhysics)
+	{
+		m_physicsSystem->FrameStep(deltaSeconds, m_collisionSystem);
+	}
 
 	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
 	if (man)
@@ -405,7 +416,7 @@ void Game::SetupRendering()
 	// Cameras
 	m_gameCamera = new Camera();
 	m_gameCamera->SetProjectionPerspective(90.f, 0.1f, 100.f);
-	m_gameCamera->LookAt(Vector3(0.f, 10.f, -10.f), Vector3(0.f, 0.f, 0.f));
+	m_gameCamera->LookAt(Vector3(0.f, 0.f, -10.f), Vector3(0.f, 0.f, 0.f));
 	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
 
 	m_uiCamera = new Camera();
@@ -476,16 +487,18 @@ void Game::SetupObjects()
 
 
 	m_collisionSystem->AddEntity(m_entity1, colliderBounds);
-	m_collisionSystem->AddEntity(m_entity2, &cone);
+	m_collisionSystem->AddEntity(m_entity2, colliderBounds);
 
 	m_physicsSystem->AddEntity(m_entity1);
 	m_physicsSystem->AddEntity(m_entity2);
 
 	m_entity1->GetRigidBody()->SetMassProperties(1.f);
 	m_entity2->GetRigidBody()->SetMassProperties(1.f);
+	m_entity2->GetRigidBody()->SetAffectedByGravity(false);
 
-	m_entity1->transform.position = Vector3(-2.f, 0.f, 0.f);
-	m_entity1->transform.scale = Vector3(1.f);
+	m_entity1->transform.position = Vector3(0.f, 2.f, 0.f);
+	m_entity2->transform.position = Vector3(0.f, 0.f, 0.f);
+	//m_entity1->transform.scale = Vector3(1.f);
 	//m_entity2->transform.position = Vector3(-1.32701576f, 0.f, -0.746994615f);
 	//m_entity1->transform.SetRotation(Vector3(45.f, 0.f, 0.f));
 	//m_entity2->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
