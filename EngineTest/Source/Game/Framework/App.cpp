@@ -159,6 +159,7 @@ void App::RunFrame()
 	g_inputSystem->BeginFrame();
 	g_renderContext->BeginFrame();
 	g_devConsole->BeginFrame();
+	g_eventSystem->BeginFrame();
 
 	// Game Frame
 	ProcessInput();
