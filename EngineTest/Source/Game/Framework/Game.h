@@ -83,7 +83,7 @@ private:
 	Clock* m_gameClock = nullptr;
 	FrameTimer* m_timer = nullptr;
 
-	bool m_doPhysics = false;
+	bool m_doPhysics = true;
 	CollisionSystem3d* m_collisionSystem = nullptr;
 	PhysicsSystem3D* m_physicsSystem = nullptr;
 

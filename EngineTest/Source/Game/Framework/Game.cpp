@@ -326,7 +326,7 @@ void Game::Update()
 
 	if (m_doPhysics)
 	{
-		m_physicsSystem->FrameStep(deltaSeconds, m_collisionSystem);
+		m_physicsSystem->Update(m_collisionSystem);
 	}
 
 	const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
@@ -462,7 +462,7 @@ void Game::SetupObjects()
 	}
 
 
-	m_collisionSystem->AddEntity(m_entity1, &cone);
+	m_collisionSystem->AddEntity(m_entity1, colliderBounds);
 	m_collisionSystem->AddEntity(m_entity2, groundBounds);
 
 	m_physicsSystem->AddEntity(m_entity1);
@@ -476,7 +476,7 @@ void Game::SetupObjects()
 	m_entity2->transform.position = Vector3(0.f, 0.f, 0.f);
 	//m_entity1->transform.scale = Vector3(1.f);
 	//m_entity2->transform.position = Vector3(-1.32701576f, 0.f, -0.746994615f);
-	m_entity1->transform.SetRotation(Vector3(30.f, 45.f, 0.f));
+	m_entity1->transform.SetRotation(Vector3(90.f, 1.f, 7.f));
 	//m_entity2->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
 
 	/*for (int i = 0; i < 10; ++i)
