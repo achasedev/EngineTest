@@ -47,6 +47,7 @@
 #include "Engine/Voxel/QEFLoader.h"
 #include "Engine/Physics/3D/Arbiter3D.h"
 #include "Engine/Physics/3D/RigidBody3D.h"
+#include "Engine/Render/Debug/DebugRenderSystem.h"
 #include "Engine/Resource/ResourceSystem.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -82,6 +83,8 @@ Game::Game()
 //-------------------------------------------------------------------------------------------------
 Game::~Game()
 {
+	g_debugRenderSystem->SetCamera(nullptr);
+
 	m_collisionSystem->RemoveEntity(m_entity1);
 	m_collisionSystem->RemoveEntity(m_entity2);
 
@@ -362,8 +365,8 @@ void Game::Render()
 	//const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
 	//if (man)
 	//{
-	g_renderContext->DrawTransform(m_entity1->transform, 1.f);
-	g_renderContext->DrawTransform(m_entity2->transform, 1.f);
+	//g_renderContext->DrawTransform(m_entity1->transform, 1.f);
+	//g_renderContext->DrawTransform(m_entity2->transform, 1.f);
 
 	m_entity1->GetRigidBody()->DebugRender(g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material"), Rgba::RED);
 	m_entity2->GetRigidBody()->DebugRender(g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material"), Rgba::BLUE);
@@ -418,6 +421,7 @@ void Game::SetupRendering()
 	m_gameCamera->SetProjectionPerspective(90.f, 0.1f, 100.f);
 	m_gameCamera->LookAt(Vector3(0.f, 0.f, -10.f), Vector3(0.f, 0.f, 0.f));
 	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
+	g_debugRenderSystem->SetCamera(m_gameCamera);
 
 	m_uiCamera = new Camera();
 	m_uiCamera->SetProjectionOrthographic((float)g_window->GetClientPixelHeight(), g_window->GetClientAspect());
@@ -488,4 +492,7 @@ void Game::SetupObjects()
 		m_entities[i]->transform.position = Vector3(0.f, 4.f + 2.f * (float)i, 0.f);
 		m_entities[i]->GetRigidBody()->SetMassProperties(1.f);
 	}*/
+
+	DebugDrawTransform(m_entity1->transform, 3.f, true);
+	DebugDrawTransform(m_entity2->transform, 6.f, true);
 }

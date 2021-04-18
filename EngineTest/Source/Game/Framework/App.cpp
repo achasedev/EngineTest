@@ -22,6 +22,7 @@
 #include "Engine/Job/JobSystem.h"
 #include "Engine/Render/Core/DX11Common.h"
 #include "Engine/Render/Core/RenderContext.h"
+#include "Engine/Render/Debug/DebugRenderSystem.h"
 #include "Engine/Render/Font/FontLoader.h"
 #include "Engine/Resource/ResourceSystem.h"
 #include "Engine/Time/Clock.h"
@@ -123,6 +124,7 @@ void App::Initialize()
 	FontLoader::Initialize();
 	ResourceSystem::Initialize();
 	DevConsole::Initialize();
+	DebugRenderSystem::Initialize();
 
 	g_app->m_game = new Game();
 	g_app->RegisterGameCommands();
@@ -134,6 +136,7 @@ void App::Shutdown()
 {
 	SAFE_DELETE(g_app->m_game);
 
+	DebugRenderSystem::Shutdown();
 	ResourceSystem::Shutdown();
 	DevConsole::Shutdown();
 	FontLoader::Shutdown();
@@ -210,6 +213,7 @@ void App::Update()
 void App::Render()
 {
 	m_game->Render();
+	g_debugRenderSystem->Render();
 	g_devConsole->Render();
 }
 
