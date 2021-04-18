@@ -78,12 +78,6 @@ private:
 	// Rendering
 	Camera*				m_gameCamera = nullptr;
 	Camera*				m_uiCamera = nullptr;
-	Shader*				m_shader = nullptr;
-	Image*				m_image = nullptr;
-	Texture2D*			m_texture = nullptr;
-	ShaderResourceView* m_textureView = nullptr;
-	Material*			m_material = nullptr;
-	Mesh*				m_mesh = nullptr;
 
 	// Framework
 	Clock* m_gameClock = nullptr;

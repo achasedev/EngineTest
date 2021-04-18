@@ -1,0 +1,89 @@
+
+struct VInput
+{
+	float3 position : POSITION;
+	float4 color : COLOR;
+	float2 uv : UV;
+};
+
+struct VOut
+{
+	float4 position : SV_POSITION;
+    float4 color : COLOR;
+    float2 uv : UV;
+};
+
+Texture2D<float4> tAlbedo : register(t0);
+SamplerState sAlbedo : register(s0);
+
+cbuffer cameraConstants : register(b2)
+{
+   float4x4 CAMERA;
+   float4x4 VIEW; 
+   float4x4 PROJECTION; 
+   float    VIEWPORT_TOP_LEFT_X;
+   float    VIEWPORT_TOP_LEFT_Y;
+   float    VIEWPORT_WIDTH;
+   float    VIEWPORT_HEIGHT;
+};
+
+cbuffer modelConstant : register(b3)
+{
+   float4x4 MODEL; 
+};
+
+VOut VertexFunction(VInput input)
+{
+    float4 localPos = float4(input.position, 1.0f);
+    float4 worldPos = mul( MODEL, localPos );
+    float4 viewPos = mul( VIEW, worldPos ); 
+    float4 clipPos = mul( PROJECTION, viewPos ); 
+
+    float3 ndcPos = clipPos.xyz / clipPos.w;
+
+    float2 screenPos;
+    screenPos.x = (ndcPos.x + 1.0) * VIEWPORT_WIDTH * 0.5 + VIEWPORT_TOP_LEFT_X;
+    screenPos.y = (1.0 - ndcPos.y) * VIEWPORT_HEIGHT * 0.5 + VIEWPORT_TOP_LEFT_Y;
+
+    screenPos.x = float(int(screenPos.x));
+    screenPos.y = float(int(screenPos.y));
+
+    ndcPos.x = (2.0 * (screenPos.x - VIEWPORT_TOP_LEFT_X) / VIEWPORT_WIDTH) - 1.0;
+    ndcPos.y = -1.0 * ((2.0 * (screenPos.y - VIEWPORT_TOP_LEFT_Y) / VIEWPORT_HEIGHT) - 1.0);
+
+    clipPos.xy = ndcPos.xy * clipPos.w;
+
+    VOut output;
+
+    output.position = clipPos;
+    output.color = input.color;
+    output.uv = input.uv;
+
+    return output;
+}
+
+float4 GetAsFloats(uint byteColors)
+{
+    float4 asFloats;
+
+
+    asFloats.x = ((byteColors & 0xFF000000) >> 24) / 255.0;
+    asFloats.y = ((byteColors & 0x00FF0000) >> 16) / 255.0;
+    asFloats.z = ((byteColors & 0x0000FF00) >> 8) / 255.0;
+    asFloats.w = (byteColors & 0x000000FF) / 255.0;
+
+    return asFloats;
+}
+
+float4 FragmentFunction( VOut input ) : SV_Target0
+{
+   // First, we sample from our texture
+   float4 texColor = tAlbedo.Sample( sAlbedo, input.uv ); 
+
+   // component wise multiply to "tint" the output
+
+   float4 finalColor = texColor * input.color;
+
+   // output it; 
+   return finalColor; 
+}

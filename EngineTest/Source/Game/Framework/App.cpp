@@ -23,8 +23,9 @@
 #include "Engine/Render/Core/DX11Common.h"
 #include "Engine/Render/Core/RenderContext.h"
 #include "Engine/Render/Font/FontLoader.h"
+#include "Engine/Resource/ResourceSystem.h"
 #include "Engine/Time/Clock.h"
-#include "Engine/Utility/StringId.h"
+#include "Engine/Utility/StringID.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -120,6 +121,7 @@ void App::Initialize()
 	InputSystem::Initialize();
 	JobSystem::Initialize();
 	FontLoader::Initialize();
+	ResourceSystem::Initialize();
 	DevConsole::Initialize();
 
 	g_app->m_game = new Game();
@@ -132,6 +134,7 @@ void App::Shutdown()
 {
 	SAFE_DELETE(g_app->m_game);
 
+	ResourceSystem::Shutdown();
 	DevConsole::Shutdown();
 	FontLoader::Shutdown();
 	JobSystem::Shutdown();

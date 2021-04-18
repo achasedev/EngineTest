@@ -40,13 +40,14 @@
 #include "Engine/Time/Time.h"
 #include "Engine/Utility/NamedProperties.h"
 #include "Engine/Utility/SmartPointer.h"
-#include "Engine/Utility/StringId.h"
+#include "Engine/Utility/StringID.h"
 #include "Engine/UI/Canvas.h"
 #include "Engine/UI/UIPanel.h"
 #include "Engine/UI/UIText.h"
 #include "Engine/Voxel/QEFLoader.h"
 #include "Engine/Physics/3D/Arbiter3D.h"
 #include "Engine/Physics/3D/RigidBody3D.h"
+#include "Engine/Resource/ResourceSystem.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -88,11 +89,6 @@ Game::~Game()
 	SAFE_DELETE(m_entity1);
 	SAFE_DELETE(m_physicsSystem);
 	SAFE_DELETE(m_collisionSystem);
-
-	SAFE_DELETE(m_material);
-	SAFE_DELETE(m_shader);
-	SAFE_DELETE(m_texture);
-	SAFE_DELETE(m_image);
 	SAFE_DELETE(m_uiCamera);
 	SAFE_DELETE(m_gameCamera);
 
@@ -353,8 +349,8 @@ void Game::Render()
 	Quaternion quat = Quaternion::FromEulerAngles(rot);
 
 	// Render selected result
-	const Polygon3d* shape1 = m_entity1->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
-	const Polygon3d* shape2 = m_entity2->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
+	//const Polygon3d* shape1 = m_entity1->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
+	//const Polygon3d* shape2 = m_entity2->GetCollider()->GetAsType<PolytopeCollider3d>()->GetWorldShape();
 
 	//AxisResult& result = g_results[g_index];
 	//g_renderContext->DrawLine3D(shape1->GetVertexPosition(result.m_edgeA->m_vertexIndex), shape1->GetVertexPosition(shape1->GetEdge(result.m_edgeA->m_nextEdgeIndex)->m_vertexIndex), m_material, Rgba::MAGENTA);
@@ -366,16 +362,16 @@ void Game::Render()
 	//const ContactManifold3d* man = m_collisionSystem->GetManifoldForColliders(m_entity1->GetCollider(), m_entity2->GetCollider());
 	//if (man)
 	//{
-	g_renderContext->DrawTransform(m_entity1->transform, m_material, 1.f);
-	g_renderContext->DrawTransform(m_entity2->transform, m_material, 1.f);
+	g_renderContext->DrawTransform(m_entity1->transform, 1.f);
+	g_renderContext->DrawTransform(m_entity2->transform, 1.f);
 
-	m_entity1->GetRigidBody()->DebugRender(m_material, Rgba::RED);
-	m_entity2->GetRigidBody()->DebugRender(m_material, Rgba::BLUE);
+	m_entity1->GetRigidBody()->DebugRender(g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material"), Rgba::RED);
+	m_entity2->GetRigidBody()->DebugRender(g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material"), Rgba::BLUE);
 
-	for (int i = 0; i < 10; ++i)
-	{
-		m_entities[i]->GetRigidBody()->DebugRender(m_material, Rgba(10 * i, 20 * i, 255 - 10 * i, 255));
-	}
+	//for (int i = 0; i < 10; ++i)
+	//{
+	//	m_entities[i]->GetRigidBody()->DebugRender(m_material, Rgba(10 * i, 20 * i, 255 - 10 * i, 255));
+	//}
 
 	//m_shader->SetFillMode(FILL_MODE_SOLID);
 	//man->DebugRender(m_material);
@@ -425,31 +421,6 @@ void Game::SetupRendering()
 
 	m_uiCamera = new Camera();
 	m_uiCamera->SetProjectionOrthographic((float)g_window->GetClientPixelHeight(), g_window->GetClientAspect());
-
-	// Shader
-	m_shader = new Shader();
-	m_shader->CreateFromFile("Data/Shader/test.shader");
-	m_shader->SetBlend(BLEND_PRESET_ALPHA);
-	m_shader->SetFillMode(FILL_MODE_WIREFRAME);
-
-	// Texture
-	m_image = new Image(IntVector2(2));
-
-	m_texture = new Texture2D();
-	m_texture->CreateFromImage(*m_image, TEXTURE_USAGE_SHADER_RESOURCE_BIT, GPU_MEMORY_USAGE_STATIC);
-	m_textureView = m_texture->CreateOrGetShaderResourceView();
-
-	// Combine into default material
-	m_material = new Material();
-	m_material->SetShader(m_shader);
-	m_material->SetAlbedoTextureView(m_textureView);
-
-	MeshBuilder mb;
-	mb.BeginBuilding(true);
-	mb.PushCube(Vector3::ZERO, Vector3(1.f), AABB2::ZERO_TO_ONE, AABB2::ZERO_TO_ONE, AABB2::ZERO_TO_ONE, Rgba::BLUE);
-	mb.FinishBuilding();
-
-	m_mesh = mb.CreateMesh<Vertex3D_PCU>();
 }
 
 
@@ -508,7 +479,7 @@ void Game::SetupObjects()
 	m_entity1->transform.SetRotation(Vector3(30.f, 45.f, 0.f));
 	//m_entity2->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
 
-	for (int i = 0; i < 10; ++i)
+	/*for (int i = 0; i < 10; ++i)
 	{
 		m_entities[i] = new Entity();
 		m_collisionSystem->AddEntity(m_entities[i], colliderBounds);
@@ -516,5 +487,5 @@ void Game::SetupObjects()
 
 		m_entities[i]->transform.position = Vector3(0.f, 4.f + 2.f * (float)i, 0.f);
 		m_entities[i]->GetRigidBody()->SetMassProperties(1.f);
-	}
+	}*/
 }
