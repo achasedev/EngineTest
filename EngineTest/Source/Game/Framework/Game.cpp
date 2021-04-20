@@ -477,7 +477,7 @@ void Game::SetupObjects()
 	m_entity2->transform.position = Vector3(0.f, 0.f, 0.f);
 	//m_entity1->transform.scale = Vector3(1.f);
 	//m_entity2->transform.position = Vector3(-1.32701576f, 0.f, -0.746994615f);
-	m_entity1->transform.SetRotation(Vector3(90.f, 1.f, 7.f));
+	//m_entity1->transform.SetRotation(Vector3(90.f, 32.f, 7.f));
 	//m_entity2->transform.SetRotation(Vector3(0.f, 45.f, 0.f));
 
 	/*for (int i = 0; i < 10; ++i)
@@ -490,9 +490,6 @@ void Game::SetupObjects()
 		m_entities[i]->GetRigidBody()->SetMassProperties(1.f);
 	}*/
 
-	DebugDrawTransform(m_entity1->transform, 3.f, true);
-	DebugDrawTransform(m_entity2->transform, 6.f, true);
-
-	DebugDrawRigidBody3D(m_entity1->GetRigidBody(), Rgba::RED);
-	DebugDrawRigidBody3D(m_entity2->GetRigidBody(), Rgba::BLUE);
+	DebugDrawRigidBody3D(m_entity1->GetRigidBody(), Rgba::YELLOW);
+	DebugDrawRigidBody3D(m_entity2->GetRigidBody(), Rgba::CYAN);
 }
