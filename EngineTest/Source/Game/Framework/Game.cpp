@@ -368,9 +368,6 @@ void Game::Render()
 	//g_renderContext->DrawTransform(m_entity1->transform, 1.f);
 	//g_renderContext->DrawTransform(m_entity2->transform, 1.f);
 
-	m_entity1->GetRigidBody()->DebugRender(g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material"), Rgba::RED);
-	m_entity2->GetRigidBody()->DebugRender(g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material"), Rgba::BLUE);
-
 	//for (int i = 0; i < 10; ++i)
 	//{
 	//	m_entities[i]->GetRigidBody()->DebugRender(m_material, Rgba(10 * i, 20 * i, 255 - 10 * i, 255));
@@ -495,4 +492,7 @@ void Game::SetupObjects()
 
 	DebugDrawTransform(m_entity1->transform, 3.f, true);
 	DebugDrawTransform(m_entity2->transform, 6.f, true);
+
+	DebugDrawRigidBody3D(m_entity1->GetRigidBody(), Rgba::RED);
+	DebugDrawRigidBody3D(m_entity2->GetRigidBody(), Rgba::BLUE);
 }
