@@ -490,6 +490,7 @@ void Game::SetupObjects()
 		m_entities[i]->GetRigidBody()->SetMassProperties(1.f);
 	}*/
 
+	DebugDrawLine3D(Vector3::ZERO, Vector3::ONES, Rgba::ORANGE);
 	DebugDrawRigidBody3D(m_entity1->GetRigidBody(), Rgba::YELLOW);
 	DebugDrawRigidBody3D(m_entity2->GetRigidBody(), Rgba::CYAN);
 }
