@@ -23,7 +23,6 @@
 #include "Engine/Render/Core/DX11Common.h"
 #include "Engine/Render/Core/RenderContext.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
-#include "Engine/Render/Font/FontLoader.h"
 #include "Engine/Resource/ResourceSystem.h"
 #include "Engine/Time/Clock.h"
 #include "Engine/Utility/StringID.h"
@@ -121,7 +120,6 @@ void App::Initialize()
 	RenderContext::Initialize();
 	InputSystem::Initialize();
 	JobSystem::Initialize();
-	FontLoader::Initialize();
 	ResourceSystem::Initialize();
 	DevConsole::Initialize();
 	DebugRenderSystem::Initialize();
@@ -139,7 +137,6 @@ void App::Shutdown()
 	DebugRenderSystem::Shutdown();
 	ResourceSystem::Shutdown();
 	DevConsole::Shutdown();
-	FontLoader::Shutdown();
 	JobSystem::Shutdown();
 	InputSystem::Shutdown();
 	RenderContext::Shutdown();
