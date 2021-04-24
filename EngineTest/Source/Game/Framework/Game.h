@@ -8,32 +8,17 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-#include "Engine/Framework/Rgba.h"
-#include "Engine/Math/Transform.h"
-#include "Engine/Physics/2D/RigidBody2D.h"
 #include <vector>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-#define NUM_PLINKOS 50
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Camera;
-class CollisionSystem3d;
 class Clock;
-class Entity;
-class FrameTimer;
-class Image;
-class Material;
-class Mesh;
-class Polygon3d;
-class Shader;
-class ShaderResourceView;
-class Texture2D;
-class PhysicsSystem3D;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -69,7 +54,6 @@ private:
 
 	void SetupFramework();
 	void SetupRendering();
-	void SetupObjects();
 
 
 private:
@@ -80,16 +64,7 @@ private:
 	Camera*				m_uiCamera = nullptr;
 
 	// Framework
-	Clock* m_gameClock = nullptr;
-	FrameTimer* m_timer = nullptr;
-
-	bool m_doPhysics = true;
-	CollisionSystem3d* m_collisionSystem = nullptr;
-	PhysicsSystem3D* m_physicsSystem = nullptr;
-
-	Entity* m_entity1 = nullptr;
-	Entity* m_entity2 = nullptr;
-	Entity* m_entities[10];
+	Clock*				m_gameClock = nullptr;
 };
 
 

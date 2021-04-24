@@ -2,7 +2,7 @@
 #include <windows.h>
 #include "Game/Framework/App.h"
 #include "Game/Framework/GameCommon.h"
-#include "Engine/Framework/EngineCommon.h"
+#include "Engine/Core/EngineCommon.h"
 
 //-----------------------------------------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE applicationInstanceHandle, HINSTANCE, LPSTR commandLineString, int)

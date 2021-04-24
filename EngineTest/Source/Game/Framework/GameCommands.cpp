@@ -10,8 +10,8 @@
 #include "Game/Framework/App.h"
 #include "Game/Framework/GameCommands.h"
 #include "Game/Framework/GameCommon.h"
-#include "Engine/Framework/DevConsole.h"
-#include "Engine/Framework/EngineCommon.h"
+#include "Engine/Core/DevConsole.h"
+#include "Engine/Core/EngineCommon.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
