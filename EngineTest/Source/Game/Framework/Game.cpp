@@ -12,7 +12,9 @@
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Core/Window.h"
 #include "Engine/IO/InputSystem.h"
-#include "Engine/Physics/Particle.h"
+#include "Engine/Physics/Particle/Particle.h"
+#include "Engine/Physics/Particle/ParticleSpring.h"
+#include "Engine/Physics/Particle/ParticleAnchoredSpring.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Render/Camera.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
@@ -58,7 +60,7 @@ Game::~Game()
 	SAFE_DELETE(m_uiCamera);
 	SAFE_DELETE(m_gameCamera);
 	SAFE_DELETE(m_gameClock);
-	SAFE_DELETE_VECTOR(m_particles);
+	SafeDeleteVector(m_particles);
 }
 
 
@@ -109,8 +111,11 @@ void Game::Update()
 {
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
 
-	int numParticles = (int)m_particles.size();
+	// Generate forces
+	m_particleGens.GenerateAndApplyForces(deltaSeconds);
 
+	// Integrate to update velocities and positions
+	int numParticles = (int)m_particles.size();
 	for (int particleIndex = 0; particleIndex < numParticles; ++particleIndex)
 	{
 		m_particles[particleIndex]->Integrate(deltaSeconds);
@@ -157,25 +162,22 @@ void Game::SetupRendering()
 	m_uiCamera = new Camera();
 	m_uiCamera->SetProjectionOrthographic((float)g_window->GetClientPixelHeight(), g_window->GetClientAspect());
 
-	DebugDrawCube(Vector3(2.f, 2.f, 2.f), Vector3(0.5f));
-	DebugDrawCube(Vector3(2.f, 2.f, -2.f), Vector3(0.5f));
-	DebugDrawCube(Vector3(2.f, -2.f, 2.f), Vector3(0.5f));
-	DebugDrawCube(Vector3(2.f, -2.f, -2.f), Vector3(0.5f));
-	DebugDrawCube(Vector3(-2.f, 2.f, 2.f), Vector3(0.5f));
-	DebugDrawCube(Vector3(-2.f, 2.f, -2.f), Vector3(0.5f));
-	DebugDrawCube(Vector3(-2.f, -2.f, 2.f), Vector3(0.5f));
-	DebugDrawCube(Vector3(-2.f, -2.f, -2.f), Vector3(0.5f));
+	DebugDrawPoint3D(Vector3::ZERO, Rgba::BLUE);
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void Game::SetupParticles()
 {
-	const int numParticles = 10;
+	const int numParticles = 1;
 
 	for (int particleIndex = 0; particleIndex < numParticles; ++particleIndex)
 	{
-		Particle* particle = new Particle(Vector3::ZERO, Vector3(GetRandomFloatInRange(-5.f, 5.f), GetRandomFloatInRange(0.f, 20.f), GetRandomFloatInRange(-5.f, 5.f)));
+		Particle* particle = new Particle(Vector3::ZERO, Vector3::ZERO);
 		m_particles.push_back(particle);
 	}
+
+	ParticleAnchoredSpring* spring1 = new ParticleAnchoredSpring(Vector3::ZERO, 1.0f, 1.0f);
+
+	m_particleGens.AddRegistration(m_particles[0], spring1);
 }
