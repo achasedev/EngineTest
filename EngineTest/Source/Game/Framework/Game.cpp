@@ -16,6 +16,7 @@
 #include "Engine/Physics/Particle/ParticleAnchoredBungee.h"
 #include "Engine/Physics/Particle/ParticleAnchoredSpring.h"
 #include "Engine/Physics/Particle/ParticleBungee.h"
+#include "Engine/Physics/Particle/ParticleBuoyancy.h"
 #include "Engine/Physics/Particle/ParticleSpring.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Render/Camera.h"
@@ -164,7 +165,8 @@ void Game::SetupRendering()
 	m_uiCamera = new Camera();
 	m_uiCamera->SetProjectionOrthographic((float)g_window->GetClientPixelHeight(), g_window->GetClientAspect());
 
-	DebugDrawPoint3D(Vector3::ONES, Rgba::BLUE);
+	DebugDrawPoint3D(Vector3(0.f, 2.f, 0.f), Rgba::BLUE);
+	DebugDrawPoint3D(Vector3(0.f, 0.f, 0.f), Rgba::GREEN);
 }
 
 
@@ -175,10 +177,10 @@ void Game::SetupParticles()
 
 	for (int particleIndex = 0; particleIndex < numParticles; ++particleIndex)
 	{
-		Particle* particle = new Particle(Vector3(0.f, (float)particleIndex, 0.f), Vector3::ZERO);
+		Particle* particle = new Particle(Vector3(0.f, 2.f, 0.f), Vector3::ZERO, 1.f, 0.5f);
 		m_particles.push_back(particle);
 	}
 
-	ParticleAnchoredBungee* spring1 = new ParticleAnchoredBungee(Vector3::ONES, 1.0f, 1.0f);
+	ParticleBuoyancy* spring1 = new ParticleBuoyancy(1.f, 1.f);
 	m_particleGens.AddRegistration(m_particles[0], spring1);
 }
