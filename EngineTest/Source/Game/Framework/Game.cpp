@@ -13,8 +13,10 @@
 #include "Engine/Core/Window.h"
 #include "Engine/IO/InputSystem.h"
 #include "Engine/Physics/Particle/Particle.h"
-#include "Engine/Physics/Particle/ParticleSpring.h"
+#include "Engine/Physics/Particle/ParticleAnchoredBungee.h"
 #include "Engine/Physics/Particle/ParticleAnchoredSpring.h"
+#include "Engine/Physics/Particle/ParticleBungee.h"
+#include "Engine/Physics/Particle/ParticleSpring.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Render/Camera.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
@@ -162,7 +164,7 @@ void Game::SetupRendering()
 	m_uiCamera = new Camera();
 	m_uiCamera->SetProjectionOrthographic((float)g_window->GetClientPixelHeight(), g_window->GetClientAspect());
 
-	DebugDrawPoint3D(Vector3::ZERO, Rgba::BLUE);
+	DebugDrawPoint3D(Vector3::ONES, Rgba::BLUE);
 }
 
 
@@ -173,11 +175,10 @@ void Game::SetupParticles()
 
 	for (int particleIndex = 0; particleIndex < numParticles; ++particleIndex)
 	{
-		Particle* particle = new Particle(Vector3::ZERO, Vector3::ZERO);
+		Particle* particle = new Particle(Vector3(0.f, (float)particleIndex, 0.f), Vector3::ZERO);
 		m_particles.push_back(particle);
 	}
 
-	ParticleAnchoredSpring* spring1 = new ParticleAnchoredSpring(Vector3::ZERO, 1.0f, 1.0f);
-
+	ParticleAnchoredBungee* spring1 = new ParticleAnchoredBungee(Vector3::ONES, 1.0f, 1.0f);
 	m_particleGens.AddRegistration(m_particles[0], spring1);
 }
