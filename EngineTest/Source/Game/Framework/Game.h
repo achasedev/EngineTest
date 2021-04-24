@@ -19,6 +19,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Camera;
 class Clock;
+class Particle;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -54,17 +55,20 @@ private:
 
 	void SetupFramework();
 	void SetupRendering();
+	void SetupParticles();
 
 
 private:
 	//-----Private Data-----
 
 	// Rendering
-	Camera*				m_gameCamera = nullptr;
-	Camera*				m_uiCamera = nullptr;
+	Camera*					m_gameCamera = nullptr;
+	Camera*					m_uiCamera = nullptr;
 
 	// Framework
-	Clock*				m_gameClock = nullptr;
+	Clock*					m_gameClock = nullptr;
+
+	std::vector<Particle*>	m_particles;
 };
 
 

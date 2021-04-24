@@ -8,40 +8,17 @@
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Framework/Game.h"
-#include "Game/Framework/GameJobs.h"
 #include "Engine/Core/DevConsole.h"
 #include "Engine/Core/EngineCommon.h"
-#include "Engine/Core/Entity.h"
 #include "Engine/Core/Window.h"
-#include "Engine/IO/Image.h"
 #include "Engine/IO/InputSystem.h"
-#include "Engine/Job/JobSystem.h"
+#include "Engine/Physics/Particle.h"
 #include "Engine/Math/MathUtils.h"
-#include "Engine/Math/OBB2.h"
-#include "Engine/Math/OBB3.h"
-#include "Engine/Math/Polygon3d.h"
 #include "Engine/Render/Camera.h"
-#include "Engine/Render/Renderable.h"
-#include "Engine/Render/RenderContext.h"
-#include "Engine/Render/Font/Font.h"
-#include "Engine/Render/Font/FontAtlas.h"
-#include "Engine/Render/Material.h"
-#include "Engine/Render/Mesh/Mesh.h"
-#include "Engine/Render/Mesh/MeshBuilder.h"
-#include "Engine/Render/Shader.h"
-#include "Engine/Render/Texture/Texture2D.h"
-#include "Engine/Time/Clock.h"
-#include "Engine/Time/FrameTimer.h"
-#include "Engine/Time/Time.h"
-#include "Engine/Utility/NamedProperties.h"
-#include "Engine/Utility/SmartPointer.h"
-#include "Engine/Utility/StringID.h"
-#include "Engine/UI/Canvas.h"
-#include "Engine/UI/UIPanel.h"
-#include "Engine/UI/UIText.h"
-#include "Engine/Voxel/QEFLoader.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
+#include "Engine/Render/RenderContext.h"
 #include "Engine/Resource/ResourceSystem.h"
+#include "Engine/Time/Clock.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -69,6 +46,7 @@ Game::Game()
 {
 	SetupFramework();
 	SetupRendering();
+	SetupParticles();
 }
 
 
@@ -80,6 +58,7 @@ Game::~Game()
 	SAFE_DELETE(m_uiCamera);
 	SAFE_DELETE(m_gameCamera);
 	SAFE_DELETE(m_gameClock);
+	SAFE_DELETE_VECTOR(m_particles);
 }
 
 
@@ -128,6 +107,15 @@ void Game::ProcessInput()
 //-------------------------------------------------------------------------------------------------
 void Game::Update()
 {
+	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
+
+	int numParticles = (int)m_particles.size();
+
+	for (int particleIndex = 0; particleIndex < numParticles; ++particleIndex)
+	{
+		m_particles[particleIndex]->Integrate(deltaSeconds);
+		DebugDrawPoint3D(m_particles[particleIndex]->GetPosition(), Rgba::RED, 0.f);
+	}
 }
 
 
@@ -177,4 +165,17 @@ void Game::SetupRendering()
 	DebugDrawCube(Vector3(-2.f, 2.f, -2.f), Vector3(0.5f));
 	DebugDrawCube(Vector3(-2.f, -2.f, 2.f), Vector3(0.5f));
 	DebugDrawCube(Vector3(-2.f, -2.f, -2.f), Vector3(0.5f));
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void Game::SetupParticles()
+{
+	const int numParticles = 10;
+
+	for (int particleIndex = 0; particleIndex < numParticles; ++particleIndex)
+	{
+		Particle* particle = new Particle(Vector3::ZERO, Vector3(GetRandomFloatInRange(-5.f, 5.f), GetRandomFloatInRange(0.f, 20.f), GetRandomFloatInRange(-5.f, 5.f)));
+		m_particles.push_back(particle);
+	}
 }
