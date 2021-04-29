@@ -169,12 +169,20 @@ void Game::SetupParticles()
 	m_particleWorld = new ParticleWorld(8, 8);
 
 	Particle* anchorParticle = new Particle(Vector3::ZERO, Vector3::ZERO, 0.f, 0.f, Vector3::ZERO);
-	Particle* moveParticle = new Particle(Vector3(-1.f, 0.f, 0.f), Vector3(0.f, 10.0f, 0.f), 1.f, 0.99f, Vector3(0.f, -10.f, 0.f));
+	Particle* moveParticle = new Particle(Vector3(-1.f, 0.f, 0.f), Vector3(0.f, 5.0f, 0.f), 1.f, 0.99f, Vector3(0.f, -10.f, 0.f));
+	Particle* moveParticle2 = new Particle(Vector3(-2.f, 0.f, 0.f), Vector3(0.f, 0.0f, 0.f), 1.f, 0.99f, Vector3(0.f, -10.f, 0.f));
 
 	m_particleWorld->AddParticle(anchorParticle);
 	m_particleWorld->AddParticle(moveParticle);
+	m_particleWorld->AddParticle(moveParticle2);
 
 	ParticleRod* rod = new ParticleRod(anchorParticle, moveParticle, 1.0f);
-	//ParticleCable* cable = new ParticleCable(anchorParticle, moveParticle, 3.0f, 0.75f);
+	ParticleRod* rod2 = new ParticleRod(moveParticle2, moveParticle, 2.0f);
 	m_particleWorld->AddContactGenerator(rod);
+	m_particleWorld->AddContactGenerator(rod2);
+
+	//ParticleCable* cable = new ParticleCable(moveParticle, anchorParticle, 3.0f, 0.75f);
+	//ParticleCable* cable2 = new ParticleCable(moveParticle, moveParticle2, 1.0f, 0.75f);
+	//m_particleWorld->AddContactGenerator(cable);
+	//m_particleWorld->AddContactGenerator(cable2);
 }
