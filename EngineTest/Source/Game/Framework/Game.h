@@ -8,7 +8,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-#include "Engine/Physics/Particle/ParticleGeneratorRegistry.h"
+#include "Engine/Physics/Particle/ParticleForceRegistry.h"
 #include <vector>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -21,6 +21,7 @@
 class Camera;
 class Clock;
 class Particle;
+class ParticleWorld;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -69,8 +70,7 @@ private:
 	// Framework
 	Clock*					m_gameClock = nullptr;
 
-	ParticleGeneratorRegistry	m_particleGens;
-	std::vector<Particle*>		m_particles;
+	ParticleWorld*			m_particleWorld = nullptr;
 };
 
 

@@ -18,12 +18,15 @@
 #include "Engine/Physics/Particle/ParticleBungee.h"
 #include "Engine/Physics/Particle/ParticleBuoyancy.h"
 #include "Engine/Physics/Particle/ParticleSpring.h"
+#include "Engine/Physics/Particle/ParticleWorld.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Render/Camera.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
 #include "Engine/Render/RenderContext.h"
 #include "Engine/Resource/ResourceSystem.h"
 #include "Engine/Time/Clock.h"
+#include "Engine/Physics/Particle/ParticleRod.h"
+#include "Engine/Physics/Particle/ParticleCable.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -60,10 +63,10 @@ Game::~Game()
 {
 	g_debugRenderSystem->SetCamera(nullptr);
 
+	SAFE_DELETE(m_particleWorld);
 	SAFE_DELETE(m_uiCamera);
 	SAFE_DELETE(m_gameCamera);
 	SAFE_DELETE(m_gameClock);
-	SafeDeleteVector(m_particles);
 }
 
 
@@ -115,15 +118,8 @@ void Game::Update()
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
 
 	// Generate forces
-	m_particleGens.GenerateAndApplyForces(deltaSeconds);
-
-	// Integrate to update velocities and positions
-	int numParticles = (int)m_particles.size();
-	for (int particleIndex = 0; particleIndex < numParticles; ++particleIndex)
-	{
-		m_particles[particleIndex]->Integrate(deltaSeconds);
-		DebugDrawPoint3D(m_particles[particleIndex]->GetPosition(), Rgba::RED, 0.f);
-	}
+	m_particleWorld->DoPhysicsStep(deltaSeconds);
+	m_particleWorld->DebugDrawParticles();
 }
 
 
@@ -164,23 +160,21 @@ void Game::SetupRendering()
 
 	m_uiCamera = new Camera();
 	m_uiCamera->SetProjectionOrthographic((float)g_window->GetClientPixelHeight(), g_window->GetClientAspect());
-
-	DebugDrawPoint3D(Vector3(0.f, 2.f, 0.f), Rgba::BLUE);
-	DebugDrawPoint3D(Vector3(0.f, 0.f, 0.f), Rgba::GREEN);
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void Game::SetupParticles()
 {
-	const int numParticles = 1;
+	m_particleWorld = new ParticleWorld(8, 8);
 
-	for (int particleIndex = 0; particleIndex < numParticles; ++particleIndex)
-	{
-		Particle* particle = new Particle(Vector3(0.f, 2.f, 0.f), Vector3::ZERO, 1.f, 0.5f);
-		m_particles.push_back(particle);
-	}
+	Particle* anchorParticle = new Particle(Vector3::ZERO, Vector3::ZERO, 0.f, 0.f, Vector3::ZERO);
+	Particle* moveParticle = new Particle(Vector3(-1.f, 0.f, 0.f), Vector3(0.f, 10.0f, 0.f), 1.f, 0.99f, Vector3(0.f, -10.f, 0.f));
 
-	ParticleBuoyancy* spring1 = new ParticleBuoyancy(1.f, 1.f);
-	m_particleGens.AddRegistration(m_particles[0], spring1);
+	m_particleWorld->AddParticle(anchorParticle);
+	m_particleWorld->AddParticle(moveParticle);
+
+	ParticleRod* rod = new ParticleRod(anchorParticle, moveParticle, 1.0f);
+	//ParticleCable* cable = new ParticleCable(anchorParticle, moveParticle, 3.0f, 0.75f);
+	m_particleWorld->AddContactGenerator(rod);
 }
