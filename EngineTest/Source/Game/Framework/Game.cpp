@@ -47,6 +47,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// CLASS IMPLEMENTATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Engine/Math/Matrix3.h"
 
 //-------------------------------------------------------------------------------------------------
 Game::Game()
@@ -58,12 +59,31 @@ Game::Game()
 	m_parent.position = Vector3(0.f, 10.f, -10.f);
 	//m_parent.rotation = Quaternion::CreateFromAxisAndDegreeAngle(Vector3::ONES, 90.f);
 	m_child.position = Vector3(2.f, 0.f, 0.f);
-	m_child.rotation = Quaternion::CreateFromEulerAngles(45.f, 0.f, 0.f);
+	m_child.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 0.f, 0.f);
 	m_child.SetParentTransform(&m_parent);
 
 	Transform identityTransform;
 	DebugDrawTransform(identityTransform, 99999.f, &m_parent);
 	DebugDrawTransform(identityTransform, 99999.f, &m_child);
+
+	Vector3 startingAngles = Vector3(45.f, 60.f, 15.f);
+
+	Quaternion quatFromAngles = Quaternion::CreateFromEulerAnglesDegrees(startingAngles);
+
+	Matrix3 mat3FromAngles = Matrix3::MakeRotationFromEulerAnglesDegrees(startingAngles);
+	Matrix3 mat3FromQuat = Matrix3(quatFromAngles);
+
+	Matrix4 mat4FromAngles = Matrix4::MakeRotationFromEulerAnglesDegrees(startingAngles);
+	Matrix4 mat4FromQuat = Matrix4::MakeRotation(quatFromAngles);
+	Matrix4 mat4FromMat3 = Matrix4(mat3FromAngles);
+
+	Vector3 anglesFromQuat = quatFromAngles.GetAsEulerAnglesDegrees();
+	Vector3 anglesFromMat3Angles = Matrix3::ExtractRotationAsEulerAnglesDegrees(mat3FromAngles);
+	Vector3 anglesFromMat3Quat = Matrix3::ExtractRotationAsEulerAnglesDegrees(mat3FromQuat);
+
+	Vector3 anglesFromMat4Angles = Matrix4::ExtractRotationAsEulerAnglesDegrees(mat4FromAngles);
+	Vector3 anglesFromMat4Mat3 = Matrix4::ExtractRotationAsEulerAnglesDegrees(mat4FromMat3);
+	Vector3 anglesFromMat4Quat = Matrix4::ExtractRotationAsEulerAnglesDegrees(mat4FromQuat);
 }
 
 
@@ -115,9 +135,9 @@ void Game::ProcessInput()
 	IntVector2 mouseDelta = mouse.GetMouseDelta();
 	Vector2 rot = Vector2((float)mouseDelta.y, (float)mouseDelta.x); // Flip X and Y
 
-	const float rotSpeed = 120.f;
-	Vector3 deltaRot = Vector3(rot.x, rot.y, 0.f) * rotSpeed * deltaSeconds;
-	m_gameCamera->SetRotation(m_gameCamera->GetRotation() + deltaRot);
+	const float degreesPerSecond = 120.f;
+	Vector3 deltaDegrees = Vector3(rot.x, rot.y, 0.f) * degreesPerSecond * deltaSeconds;
+	m_gameCamera->RotateEulerAnglesDegrees(deltaDegrees);
 }
 
 
