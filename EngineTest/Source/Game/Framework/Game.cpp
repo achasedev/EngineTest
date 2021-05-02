@@ -84,6 +84,18 @@ Game::Game()
 	Vector3 anglesFromMat4Angles = Matrix4::ExtractRotationAsEulerAnglesDegrees(mat4FromAngles);
 	Vector3 anglesFromMat4Mat3 = Matrix4::ExtractRotationAsEulerAnglesDegrees(mat4FromMat3);
 	Vector3 anglesFromMat4Quat = Matrix4::ExtractRotationAsEulerAnglesDegrees(mat4FromQuat);
+
+	Matrix4 inv1 = mat4FromAngles;
+	inv1.FastInverse();
+	Matrix4 test1 = mat4FromAngles * inv1;
+
+	Matrix4 inv2 = mat4FromQuat;
+	inv2.FastInverse();
+	Matrix4 test2 = mat4FromQuat * inv2;
+
+	Matrix4 inv3 = mat4FromMat3;
+	inv3.FastInverse();
+	Matrix4 test3 = mat4FromMat3 * inv3;
 }
 
 
@@ -137,7 +149,8 @@ void Game::ProcessInput()
 
 	const float degreesPerSecond = 120.f;
 	Vector3 deltaDegrees = Vector3(rot.x, rot.y, 0.f) * degreesPerSecond * deltaSeconds;
-	m_gameCamera->RotateEulerAnglesDegrees(deltaDegrees);
+	//m_gameCamera->RotateEulerAnglesDegrees(deltaDegrees);
+	m_gameCamera->SetRotationEulerAnglesDegrees(m_gameCamera->GetRotationAsEulerAnglesDegrees() + deltaDegrees);
 }
 
 
