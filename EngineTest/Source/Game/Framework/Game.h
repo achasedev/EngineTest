@@ -8,6 +8,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Engine/Math/Transform.h"
 #include "Engine/Physics/Particle/ParticleForceRegistry.h"
 #include <vector>
 
@@ -71,6 +72,9 @@ private:
 	Clock*					m_gameClock = nullptr;
 
 	ParticleWorld*			m_particleWorld = nullptr;
+
+	Transform m_child;
+	Transform m_parent;
 };
 
 

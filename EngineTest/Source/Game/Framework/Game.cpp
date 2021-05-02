@@ -48,13 +48,22 @@
 /// CLASS IMPLEMENTATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 //-------------------------------------------------------------------------------------------------
 Game::Game()
 {
 	SetupFramework();
 	SetupRendering();
 	SetupParticles();
+
+	m_parent.position = Vector3(0.f, 10.f, -10.f);
+	//m_parent.rotation = Quaternion::CreateFromAxisAndDegreeAngle(Vector3::ONES, 90.f);
+	m_child.position = Vector3(2.f, 0.f, 0.f);
+	m_child.rotation = Quaternion::CreateFromEulerAngles(45.f, 0.f, 0.f);
+	m_child.SetParentTransform(&m_parent);
+
+	Transform identityTransform;
+	DebugDrawTransform(identityTransform, 99999.f, &m_parent);
+	DebugDrawTransform(identityTransform, 99999.f, &m_child);
 }
 
 
@@ -120,6 +129,12 @@ void Game::Update()
 	// Generate forces
 	m_particleWorld->DoPhysicsStep(deltaSeconds);
 	m_particleWorld->DebugDrawParticles();
+
+	const float radiansPerSecond = PI;
+	const float deltaRadians = radiansPerSecond * deltaSeconds;
+
+	m_parent.Rotate(Quaternion::CreateFromAxisAndRadianAngle(Vector3::ONES, deltaRadians), RELATIVE_TO_WORLD);
+	//m_child.RotateRadians(Vector3(0.f, deltaRadians, 0.f), RELATIVE_TO_WORLD);
 }
 
 
@@ -176,13 +191,13 @@ void Game::SetupParticles()
 	m_particleWorld->AddParticle(moveParticle);
 	m_particleWorld->AddParticle(moveParticle2);
 
-	ParticleRod* rod = new ParticleRod(anchorParticle, moveParticle, 1.0f);
-	ParticleRod* rod2 = new ParticleRod(moveParticle2, moveParticle, 2.0f);
-	m_particleWorld->AddContactGenerator(rod);
-	m_particleWorld->AddContactGenerator(rod2);
+	//ParticleRod* rod = new ParticleRod(anchorParticle, moveParticle, 1.0f);
+	//ParticleRod* rod2 = new ParticleRod(moveParticle, moveParticle2, 2.0f);
+	//m_particleWorld->AddContactGenerator(rod);
+	//m_particleWorld->AddContactGenerator(rod2);
 
-	//ParticleCable* cable = new ParticleCable(moveParticle, anchorParticle, 3.0f, 0.75f);
-	//ParticleCable* cable2 = new ParticleCable(moveParticle, moveParticle2, 1.0f, 0.75f);
-	//m_particleWorld->AddContactGenerator(cable);
-	//m_particleWorld->AddContactGenerator(cable2);
+	ParticleCable* cable = new ParticleCable(moveParticle, anchorParticle, 3.0f, 0.75f);
+	ParticleCable* cable2 = new ParticleCable(moveParticle, moveParticle2, 1.0f, 0.75f);
+	m_particleWorld->AddContactGenerator(cable);
+	m_particleWorld->AddContactGenerator(cable2);
 }
