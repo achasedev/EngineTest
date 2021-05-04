@@ -23,6 +23,8 @@ class Camera;
 class Clock;
 class Particle;
 class ParticleWorld;
+class RigidBody;
+class RigidBodyScene;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -59,6 +61,7 @@ private:
 	void SetupFramework();
 	void SetupRendering();
 	void SetupParticles();
+	void SetupRigidBodies();
 
 
 private:
@@ -72,6 +75,10 @@ private:
 	Clock*					m_gameClock = nullptr;
 
 	ParticleWorld*			m_particleWorld = nullptr;
+
+	const Vector3			m_bodyExtents = Vector3::ONES;
+	RigidBody*				m_body = nullptr;
+	RigidBodyScene*			m_rigidBodyScene = nullptr;
 
 	Transform m_child;
 	Transform m_parent;

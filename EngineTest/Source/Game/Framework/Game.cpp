@@ -19,6 +19,9 @@
 #include "Engine/Physics/Particle/ParticleBuoyancy.h"
 #include "Engine/Physics/Particle/ParticleSpring.h"
 #include "Engine/Physics/Particle/ParticleWorld.h"
+#include "Engine/Physics/RigidBody/RigidBody.h"
+#include "Engine/Physics/RigidBody/RigidBodyScene.h"
+#include "Engine/Physics/RigidBody/RigidBodyAnchoredSpring.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Render/Camera.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
@@ -55,11 +58,12 @@ Game::Game()
 	SetupFramework();
 	SetupRendering();
 	SetupParticles();
+	SetupRigidBodies();
 
 	m_parent.position = Vector3(0.f, 10.f, -10.f);
 	//m_parent.rotation = Quaternion::CreateFromAxisAndDegreeAngle(Vector3::ONES, 90.f);
 	m_child.position = Vector3(2.f, 0.f, 0.f);
-	m_child.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 0.f, 0.f);
+	//m_child.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 0.f, 0.f);
 	m_child.SetParentTransform(&m_parent);
 
 	Transform identityTransform;
@@ -104,22 +108,12 @@ Game::~Game()
 {
 	g_debugRenderSystem->SetCamera(nullptr);
 
+	SAFE_DELETE(m_rigidBodyScene);
 	SAFE_DELETE(m_particleWorld);
 	SAFE_DELETE(m_uiCamera);
 	SAFE_DELETE(m_gameCamera);
 	SAFE_DELETE(m_gameClock);
 }
-
-
-struct AxisResult
-{
-	float m_distance;
-	Plane3 m_plane;
-	const HalfEdge* m_edgeA;
-	const HalfEdge* m_edgeB;
-	Vector3 m_supportPoint;
-	float m_distanceCenterToPlane;
-};
 
 
 //-------------------------------------------------------------------------------------------------
@@ -163,10 +157,14 @@ void Game::Update()
 	m_particleWorld->DoPhysicsStep(deltaSeconds);
 	m_particleWorld->DebugDrawParticles();
 
+	m_rigidBodyScene->BeginFrame();
+	m_rigidBodyScene->DoPhysicsStep(deltaSeconds);
+	DebugDrawCube(Vector3::ZERO, m_bodyExtents, Rgba::WHITE, 0.f, &m_body->transform);
+
 	const float radiansPerSecond = PI;
 	const float deltaRadians = radiansPerSecond * deltaSeconds;
 
-	m_parent.Rotate(Quaternion::CreateFromAxisAndRadianAngle(Vector3::ONES, deltaRadians), RELATIVE_TO_WORLD);
+	m_parent.Rotate(Quaternion::CreateFromAxisAndRadianAngle(Vector3::Y_AXIS, deltaRadians), RELATIVE_TO_WORLD);
 	//m_child.RotateRadians(Vector3(0.f, deltaRadians, 0.f), RELATIVE_TO_WORLD);
 }
 
@@ -234,3 +232,28 @@ void Game::SetupParticles()
 	m_particleWorld->AddContactGenerator(cable);
 	m_particleWorld->AddContactGenerator(cable2);
 }
+
+
+//-------------------------------------------------------------------------------------------------
+void Game::SetupRigidBodies()
+{
+	m_rigidBodyScene = new RigidBodyScene();
+
+	m_body = new RigidBody();
+	m_body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
+	
+	const float mass = 1.0f;
+
+	m_body->SetInverseMass((1.f / mass));
+	Matrix3 inertiaTensor;
+	inertiaTensor.Ix = (1.f / 12.f) * mass * (m_bodyExtents.y * m_bodyExtents.y + m_bodyExtents.z * m_bodyExtents.z);
+	inertiaTensor.Jy = (1.f / 12.f) * mass * (m_bodyExtents.x * m_bodyExtents.x + m_bodyExtents.z * m_bodyExtents.z);
+	inertiaTensor.Kz = (1.f / 12.f) * mass * (m_bodyExtents.x * m_bodyExtents.x + m_bodyExtents.y * m_bodyExtents.y);
+	m_body->SetInverseInertiaTensor(inertiaTensor.GetInverse());
+
+	RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(Vector3::ONES, Vector3::ZERO, 0.75f, 5.f);
+
+	m_rigidBodyScene->AddRigidbody(m_body);
+	m_rigidBodyScene->AddForceGenerator(spring, m_body);
+}
+
