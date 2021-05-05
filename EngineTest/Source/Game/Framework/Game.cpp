@@ -241,8 +241,8 @@ void Game::SetupRigidBodies()
 
 	m_body = new RigidBody();
 	m_body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
-	
-	const float mass = 1.0f;
+	m_body->transform.position = Vector3(-1.f, 6.f, -1.f);
+	const float mass = 10.0f;
 
 	m_body->SetInverseMass((1.f / mass));
 	Matrix3 inertiaTensor;
@@ -250,8 +250,10 @@ void Game::SetupRigidBodies()
 	inertiaTensor.Jy = (1.f / 12.f) * mass * (m_bodyExtents.x * m_bodyExtents.x + m_bodyExtents.z * m_bodyExtents.z);
 	inertiaTensor.Kz = (1.f / 12.f) * mass * (m_bodyExtents.x * m_bodyExtents.x + m_bodyExtents.y * m_bodyExtents.y);
 	m_body->SetInverseInertiaTensor(inertiaTensor.GetInverse());
+	m_body->SetAngularDamping(0.4f);
+	m_body->SetLinearDamping(0.75f);
 
-	RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(Vector3::ONES, Vector3::ZERO, 0.75f, 5.f);
+	RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(Vector3(0.f, -1.f, 0.f), Vector3::ZERO, 15.f, 5.f);
 
 	m_rigidBodyScene->AddRigidbody(m_body);
 	m_rigidBodyScene->AddForceGenerator(spring, m_body);
