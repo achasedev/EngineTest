@@ -108,7 +108,18 @@ Game::~Game()
 {
 	g_debugRenderSystem->SetCamera(nullptr);
 
+	for (int i = 0; i < 10; ++i)
+	{
+		m_collisionScene->RemoveEntity(m_entities[i]);
+	}
+
 	SAFE_DELETE(m_collisionScene);
+
+	for (int i = 0; i < 10; ++i)
+	{
+		SAFE_DELETE(m_entities[i]);
+	}
+
 	SAFE_DELETE(m_rigidBodyScene);
 	SAFE_DELETE(m_particleWorld);
 	SAFE_DELETE(m_uiCamera);
@@ -183,6 +194,8 @@ void Game::Render()
 	}
 
 	g_renderContext->EndCamera();
+
+	m_collisionScene->DebugRenderBoundingHierarchy();
 }
 
 
@@ -247,7 +260,7 @@ void Game::SetupRigidBodies()
 
 	for (int i = 0; i < 10; ++i)
 	{
-		Vector3 pos = Vector3(5.f * m_bodyExtents.x, -2.f, 0.f);
+		Vector3 pos = Vector3(5.f * m_bodyExtents.x * (float) i, -2.f * (float) i, 0.f);
 		m_entities[i] = new Entity();
 
 		RigidBody* body = new RigidBody(&m_entities[i]->transform);
@@ -265,7 +278,7 @@ void Game::SetupRigidBodies()
 		body->SetLinearDamping(0.75f);
 
 		m_rigidBodyScene->AddRigidbody(body);
-		RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(m_bodyExtents, Vector3(pos.x, 0.f, pos.z), 15.f, 3.f);
+		RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(m_bodyExtents, Vector3(pos.x, 0.f, pos.z), 15.f, 3.f * (float)i);
 
 		m_rigidBodyScene->AddForceGenerator(spring, body);
 
@@ -273,5 +286,7 @@ void Game::SetupRigidBodies()
 		m_entities[i]->renderShapeLs = AABB3(Vector3::ZERO, m_bodyExtents.x, m_bodyExtents.y, m_bodyExtents.z);
 		m_entities[i]->physicsShapeLs = m_entities[i]->renderShapeLs;
 		m_entities[i]->physicsBoundingShapeLs = BoundingVolumeSphere(Sphere3D(Vector3::ZERO, m_bodyExtents.GetLength()));
+
+		m_collisionScene->AddEntity(m_entities[i]);
 	}
 }

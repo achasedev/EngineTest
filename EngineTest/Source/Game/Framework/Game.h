@@ -78,7 +78,7 @@ private:
 
 	ParticleWorld*								m_particleWorld = nullptr;
 
-	const Vector3								m_bodyExtents = Vector3(2.f, 1.f, 6.f);
+	const Vector3								m_bodyExtents = Vector3(1.f, 1.f, 1.f);
 	PhysicsScene*								m_rigidBodyScene = nullptr;
 	CollisionScene<BoundingVolumeSphere>*		m_collisionScene = nullptr;
 	Entity*										m_entities[10];
