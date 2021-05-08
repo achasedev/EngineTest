@@ -9,7 +9,8 @@
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Engine/Math/Transform.h"
-#include "Engine/Physics/Particle/ParticleForceRegistry.h"
+#include "Engine/Collision/BoundingVolumeHierarchy/BoundingVolume.h"
+#include "Engine/Collision/CollisionScene.h"
 #include <vector>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -21,10 +22,11 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Camera;
 class Clock;
+class Entity;
 class Particle;
 class ParticleWorld;
+class PhysicsScene;
 class RigidBody;
-class RigidBodyScene;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -68,18 +70,18 @@ private:
 	//-----Private Data-----
 
 	// Rendering
-	Camera*					m_gameCamera = nullptr;
-	Camera*					m_uiCamera = nullptr;
+	Camera*										m_gameCamera = nullptr;
+	Camera*										m_uiCamera = nullptr;
 
 	// Framework
-	Clock*					m_gameClock = nullptr;
+	Clock*										m_gameClock = nullptr;
 
-	ParticleWorld*			m_particleWorld = nullptr;
+	ParticleWorld*								m_particleWorld = nullptr;
 
-	const Vector3			m_bodyExtents = Vector3(2.f, 1.f, 6.f);
-	RigidBody*				m_body = nullptr;
-	RigidBodyScene*			m_rigidBodyScene = nullptr;
-
+	const Vector3								m_bodyExtents = Vector3(2.f, 1.f, 6.f);
+	PhysicsScene*								m_rigidBodyScene = nullptr;
+	CollisionScene<BoundingVolumeSphere>*		m_collisionScene = nullptr;
+	Entity*										m_entities[10];
 	Transform m_child;
 	Transform m_parent;
 };

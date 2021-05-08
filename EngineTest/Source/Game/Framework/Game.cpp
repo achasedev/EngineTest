@@ -20,7 +20,7 @@
 #include "Engine/Physics/Particle/ParticleSpring.h"
 #include "Engine/Physics/Particle/ParticleWorld.h"
 #include "Engine/Physics/RigidBody/RigidBody.h"
-#include "Engine/Physics/RigidBody/RigidBodyScene.h"
+#include "Engine/Physics/RigidBody/PhysicsScene.h"
 #include "Engine/Physics/RigidBody/RigidBodyAnchoredSpring.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Render/Camera.h"
@@ -108,6 +108,7 @@ Game::~Game()
 {
 	g_debugRenderSystem->SetCamera(nullptr);
 
+	SAFE_DELETE(m_collisionScene);
 	SAFE_DELETE(m_rigidBodyScene);
 	SAFE_DELETE(m_particleWorld);
 	SAFE_DELETE(m_uiCamera);
@@ -159,8 +160,6 @@ void Game::Update()
 
 	m_rigidBodyScene->BeginFrame();
 	m_rigidBodyScene->DoPhysicsStep(deltaSeconds);
-	DebugDrawCube(Vector3::ZERO, m_bodyExtents, Rgba::WHITE, 0.f, &m_body->transform);
-	DebugDrawLine3D(m_body->transform.TransformPosition(m_bodyExtents), Vector3::ZERO, Rgba::RED, 0.f);
 
 	const float radiansPerSecond = PI;
 	const float deltaRadians = radiansPerSecond * deltaSeconds;
@@ -178,6 +177,10 @@ void Game::Render()
 	g_renderContext->ClearDepth();
 
 	// Draw here
+	for (int i = 0; i < 10; ++i)
+	{
+		m_entities[i]->Render();
+	}
 
 	g_renderContext->EndCamera();
 }
@@ -232,31 +235,43 @@ void Game::SetupParticles()
 	ParticleCable* cable2 = new ParticleCable(moveParticle, moveParticle2, 1.0f, 0.75f);
 	m_particleWorld->AddContactGenerator(cable);
 	m_particleWorld->AddContactGenerator(cable2);
+
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void Game::SetupRigidBodies()
 {
-	m_rigidBodyScene = new RigidBodyScene();
+	m_collisionScene = new CollisionScene<BoundingVolumeSphere>();
+	m_rigidBodyScene = new PhysicsScene(m_collisionScene);
 
-	m_body = new RigidBody();
-	m_body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
-	m_body->transform.position = Vector3(-1.f, -2.f, -1.f);
-	const float mass = 10.0f;
+	for (int i = 0; i < 10; ++i)
+	{
+		Vector3 pos = Vector3(5.f * m_bodyExtents.x, -2.f, 0.f);
+		m_entities[i] = new Entity();
 
-	m_body->SetInverseMass((1.f / mass));
-	Matrix3 inertiaTensor;
-	inertiaTensor.Ix = (1.f / 12.f) * mass * (m_bodyExtents.y * m_bodyExtents.y + m_bodyExtents.z * m_bodyExtents.z);
-	inertiaTensor.Jy = (1.f / 12.f) * mass * (m_bodyExtents.x * m_bodyExtents.x + m_bodyExtents.z * m_bodyExtents.z);
-	inertiaTensor.Kz = (1.f / 12.f) * mass * (m_bodyExtents.x * m_bodyExtents.x + m_bodyExtents.y * m_bodyExtents.y);
-	m_body->SetInverseInertiaTensor(inertiaTensor.GetInverse());
-	m_body->SetAngularDamping(0.4f);
-	m_body->SetLinearDamping(0.75f);
+		RigidBody* body = new RigidBody(&m_entities[i]->transform);
+		body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
+		body->transform->position = pos;
+		const float mass = 10.0f;
 
-	RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(m_bodyExtents, Vector3::ZERO, 15.f, 5.f);
+		body->SetInverseMass((1.f / mass));
+		Matrix3 inertiaTensor;
+		inertiaTensor.Ix = (1.f / 12.f) * mass * (m_bodyExtents.y * m_bodyExtents.y + m_bodyExtents.z * m_bodyExtents.z);
+		inertiaTensor.Jy = (1.f / 12.f) * mass * (m_bodyExtents.x * m_bodyExtents.x + m_bodyExtents.z * m_bodyExtents.z);
+		inertiaTensor.Kz = (1.f / 12.f) * mass * (m_bodyExtents.x * m_bodyExtents.x + m_bodyExtents.y * m_bodyExtents.y);
+		body->SetInverseInertiaTensor(inertiaTensor.GetInverse());
+		body->SetAngularDamping(0.4f);
+		body->SetLinearDamping(0.75f);
 
-	m_rigidBodyScene->AddRigidbody(m_body);
-	m_rigidBodyScene->AddForceGenerator(spring, m_body);
+		m_rigidBodyScene->AddRigidbody(body);
+		RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(m_bodyExtents, Vector3(pos.x, 0.f, pos.z), 15.f, 3.f);
+
+		m_rigidBodyScene->AddForceGenerator(spring, body);
+
+		m_entities[i]->rigidBody = body;
+		m_entities[i]->renderShapeLs = AABB3(Vector3::ZERO, m_bodyExtents.x, m_bodyExtents.y, m_bodyExtents.z);
+		m_entities[i]->physicsShapeLs = m_entities[i]->renderShapeLs;
+		m_entities[i]->physicsBoundingShapeLs = BoundingVolumeSphere(Sphere3D(Vector3::ZERO, m_bodyExtents.GetLength()));
+	}
 }
-
