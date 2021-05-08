@@ -76,7 +76,7 @@ private:
 
 	ParticleWorld*			m_particleWorld = nullptr;
 
-	const Vector3			m_bodyExtents = Vector3::ONES;
+	const Vector3			m_bodyExtents = Vector3(2.f, 1.f, 6.f);
 	RigidBody*				m_body = nullptr;
 	RigidBodyScene*			m_rigidBodyScene = nullptr;
 

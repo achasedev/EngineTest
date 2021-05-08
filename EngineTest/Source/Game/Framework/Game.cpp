@@ -160,6 +160,7 @@ void Game::Update()
 	m_rigidBodyScene->BeginFrame();
 	m_rigidBodyScene->DoPhysicsStep(deltaSeconds);
 	DebugDrawCube(Vector3::ZERO, m_bodyExtents, Rgba::WHITE, 0.f, &m_body->transform);
+	DebugDrawLine3D(m_body->transform.TransformPosition(m_bodyExtents), Vector3::ZERO, Rgba::RED, 0.f);
 
 	const float radiansPerSecond = PI;
 	const float deltaRadians = radiansPerSecond * deltaSeconds;
@@ -241,7 +242,7 @@ void Game::SetupRigidBodies()
 
 	m_body = new RigidBody();
 	m_body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
-	m_body->transform.position = Vector3(-1.f, 6.f, -1.f);
+	m_body->transform.position = Vector3(-1.f, -2.f, -1.f);
 	const float mass = 10.0f;
 
 	m_body->SetInverseMass((1.f / mass));
@@ -253,7 +254,7 @@ void Game::SetupRigidBodies()
 	m_body->SetAngularDamping(0.4f);
 	m_body->SetLinearDamping(0.75f);
 
-	RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(Vector3(0.f, -1.f, 0.f), Vector3::ZERO, 15.f, 5.f);
+	RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(m_bodyExtents, Vector3::ZERO, 15.f, 5.f);
 
 	m_rigidBodyScene->AddRigidbody(m_body);
 	m_rigidBodyScene->AddForceGenerator(spring, m_body);
