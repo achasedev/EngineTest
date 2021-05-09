@@ -51,6 +51,7 @@
 /// CLASS IMPLEMENTATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Engine/Math/Matrix3.h"
+#include "Engine/Math/OBB3.h"
 
 //-------------------------------------------------------------------------------------------------
 Game::Game()
@@ -100,6 +101,21 @@ Game::Game()
 	Matrix4 inv3 = mat4FromMat3;
 	inv3.FastInverse();
 	Matrix4 test3 = mat4FromMat3 * inv3;
+
+
+	OBB3 box = OBB3(Vector3(0.f, 10.f, -20.f), Vector3::ONES, Quaternion::CreateFromEulerAnglesDegrees(0.f, 90.f, 0.f));
+
+	Vector3 boxVerts[8];
+	box.GetPoints(boxVerts);
+
+	for (int i = 0; i < 8; ++i)
+	{
+		DebugDrawPoint3D(boxVerts[i], Rgba::MAGENTA);
+	}
+
+	Vector3 point = Vector3(0.f, 10.f, -7.f);
+	Vector3 posRelative = box.TransformPositionIntoSpace(point);
+
 }
 
 
@@ -284,7 +300,6 @@ void Game::SetupRigidBodies()
 
 		m_entities[i]->rigidBody = body;
 		m_entities[i]->renderShapeLs = AABB3(Vector3::ZERO, m_bodyExtents.x, m_bodyExtents.y, m_bodyExtents.z);
-		m_entities[i]->physicsShapeLs = m_entities[i]->renderShapeLs;
 		m_entities[i]->physicsBoundingShapeLs = BoundingVolumeSphere(Sphere3D(Vector3::ZERO, m_bodyExtents.GetLength()));
 
 		m_collisionScene->AddEntity(m_entities[i]);
