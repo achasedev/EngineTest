@@ -276,7 +276,8 @@ void Game::SetupRigidBodies()
 
 	for (int i = 0; i < 10; ++i)
 	{
-		Vector3 pos = Vector3(5.f * m_bodyExtents.x * (float) i, -2.f * (float) i, 0.f);
+		Vector3 extents(0.5f);
+		Vector3 pos = Vector3(5.f * extents.x * (float) i, -2.f * (float) i, 0.f);
 		m_entities[i] = new Entity();
 
 		RigidBody* body = new RigidBody(&m_entities[i]->transform);
@@ -286,21 +287,20 @@ void Game::SetupRigidBodies()
 
 		body->SetInverseMass((1.f / mass));
 		Matrix3 inertiaTensor;
-		inertiaTensor.Ix = (1.f / 12.f) * mass * (m_bodyExtents.y * m_bodyExtents.y + m_bodyExtents.z * m_bodyExtents.z);
-		inertiaTensor.Jy = (1.f / 12.f) * mass * (m_bodyExtents.x * m_bodyExtents.x + m_bodyExtents.z * m_bodyExtents.z);
-		inertiaTensor.Kz = (1.f / 12.f) * mass * (m_bodyExtents.x * m_bodyExtents.x + m_bodyExtents.y * m_bodyExtents.y);
+		inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
+		inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
+		inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);
 		body->SetInverseInertiaTensor(inertiaTensor.GetInverse());
 		body->SetAngularDamping(0.4f);
 		body->SetLinearDamping(0.75f);
 
 		m_rigidBodyScene->AddRigidbody(body);
-		RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(m_bodyExtents, Vector3(pos.x, 0.f, pos.z), 15.f, 3.f * (float)i);
+		RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(extents, Vector3(pos.x, 0.f, pos.z), 15.f, 3.f * (float)i);
 
 		m_rigidBodyScene->AddForceGenerator(spring, body);
 
 		m_entities[i]->rigidBody = body;
-		m_entities[i]->renderShapeLs = AABB3(Vector3::ZERO, m_bodyExtents.x, m_bodyExtents.y, m_bodyExtents.z);
-		m_entities[i]->physicsBoundingShapeLs = BoundingVolumeSphere(Sphere3D(Vector3::ZERO, m_bodyExtents.GetLength()));
+		m_entities[i]->renderShapeLs = AABB3(Vector3::ZERO, extents.x, extents.y, extents.z);
 
 		m_collisionScene->AddEntity(m_entities[i]);
 	}
