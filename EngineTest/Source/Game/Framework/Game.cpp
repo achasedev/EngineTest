@@ -290,7 +290,7 @@ void Game::SetupRigidBodies()
 		inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
 		inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
 		inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);
-		body->SetInverseInertiaTensor(inertiaTensor.GetInverse());
+		body->SetLocalInverseInertiaTensor(inertiaTensor.GetInverse());
 		body->SetAngularDamping(0.4f);
 		body->SetLinearDamping(0.75f);
 
