@@ -124,18 +124,7 @@ Game::~Game()
 {
 	g_debugRenderSystem->SetCamera(nullptr);
 
-	for (int i = 0; i < 10; ++i)
-	{
-		m_collisionScene->RemoveEntity(m_entities[i]);
-	}
-
 	SAFE_DELETE(m_collisionScene);
-
-	for (int i = 0; i < 10; ++i)
-	{
-		SAFE_DELETE(m_entities[i]);
-	}
-
 	SAFE_DELETE(m_rigidBodyScene);
 	SAFE_DELETE(m_particleWorld);
 	SAFE_DELETE(m_uiCamera);
@@ -173,6 +162,11 @@ void Game::ProcessInput()
 	Vector3 deltaDegrees = Vector3(rot.x, rot.y, 0.f) * degreesPerSecond * deltaSeconds;
 	//m_gameCamera->RotateEulerAnglesDegrees(deltaDegrees);
 	m_gameCamera->SetRotationEulerAnglesDegrees(m_gameCamera->GetRotationAsEulerAnglesDegrees() + deltaDegrees);
+
+	if (g_inputSystem->WasKeyJustPressed(InputSystem::KEYBOARD_F3))
+	{
+		m_pausePhysics = !m_pausePhysics;
+	}
 }
 
 
@@ -184,9 +178,12 @@ void Game::Update()
 	// Generate forces
 	m_particleWorld->DoPhysicsStep(deltaSeconds);
 	m_particleWorld->DebugDrawParticles();
-
-	m_rigidBodyScene->BeginFrame();
-	m_rigidBodyScene->DoPhysicsStep(deltaSeconds);
+	
+	if (!m_pausePhysics)
+	{
+		m_rigidBodyScene->BeginFrame();
+		m_rigidBodyScene->DoPhysicsStep(deltaSeconds);
+	}
 
 	const float radiansPerSecond = PI;
 	const float deltaRadians = radiansPerSecond * deltaSeconds;
@@ -206,7 +203,7 @@ void Game::Render()
 	// Draw here
 	for (int i = 0; i < 10; ++i)
 	{
-		m_entities[i]->Render();
+		m_box->Render();
 	}
 
 	g_renderContext->EndCamera();
@@ -274,34 +271,35 @@ void Game::SetupRigidBodies()
 	m_collisionScene = new CollisionScene<BoundingVolumeSphere>();
 	m_rigidBodyScene = new PhysicsScene(m_collisionScene);
 
-	for (int i = 0; i < 10; ++i)
-	{
-		Vector3 extents(0.5f);
-		Vector3 pos = Vector3(5.f * extents.x * (float) i, -2.f * (float) i, 0.f);
-		m_entities[i] = new Entity();
 
-		RigidBody* body = new RigidBody(&m_entities[i]->transform);
-		body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
-		body->transform->position = pos;
-		const float mass = 10.0f;
+	m_ground = new Entity();
+	m_ground->collisionPrimitive = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
+	m_collisionScene->AddEntity(m_ground);
 
-		body->SetInverseMass((1.f / mass));
-		Matrix3 inertiaTensor;
-		inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
-		inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
-		inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);
-		body->SetLocalInverseInertiaTensor(inertiaTensor.GetInverse());
-		body->SetAngularDamping(0.4f);
-		body->SetLinearDamping(0.75f);
 
-		m_rigidBodyScene->AddRigidbody(body);
-		RigidBodyAnchoredSpring* spring = new RigidBodyAnchoredSpring(extents, Vector3(pos.x, 0.f, pos.z), 15.f, 3.f * (float)i);
+	Vector3 extents(0.5f);
+	Vector3 pos = Vector3(0.f, 5.f, 0.f);
+	m_box = new Entity();
 
-		m_rigidBodyScene->AddForceGenerator(spring, body);
+	RigidBody* body = new RigidBody(&m_box->transform);
+	body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
+	body->transform->position = pos;
+	const float mass = 10.0f;
 
-		m_entities[i]->rigidBody = body;
-		m_entities[i]->renderShapeLs = AABB3(Vector3::ZERO, extents.x, extents.y, extents.z);
+	body->SetInverseMass((1.f / mass));
+	Matrix3 inertiaTensor;
+	inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
+	inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
+	inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);
+	body->SetLocalInverseInertiaTensor(inertiaTensor.GetInverse());
+	body->SetAngularDamping(0.4f);
+	body->SetLinearDamping(0.75f);
 
-		m_collisionScene->AddEntity(m_entities[i]);
-	}
+	m_rigidBodyScene->AddRigidbody(body);
+	m_box->rigidBody = body;
+	m_box->renderShapeLs = AABB3(Vector3::ZERO, extents.x, extents.y, extents.z);
+	m_box->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 20.f, 60.f);
+
+	m_box->collisionPrimitive = new BoxCollider(m_box, OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
+	m_collisionScene->AddEntity(m_box);
 }

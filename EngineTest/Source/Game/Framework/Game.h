@@ -78,9 +78,12 @@ private:
 
 	ParticleWorld*								m_particleWorld = nullptr;
 
+	bool										m_pausePhysics = false;
 	PhysicsScene*								m_rigidBodyScene = nullptr;
 	CollisionScene<BoundingVolumeSphere>*		m_collisionScene = nullptr;
-	Entity*										m_entities[10];
+	Entity*										m_box = nullptr;
+	Entity*										m_ground = nullptr;
+
 	Transform m_child;
 	Transform m_parent;
 
