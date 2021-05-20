@@ -2,7 +2,7 @@
 	resolution="2333.3, 1000.0" 
 	match_mode="blend" 
 	blend_value="1.0">
-	<background_panel 
+	<active_panel 
 		anchor_preset="top_left" 
 		pivot="0.0, 1.0" 
 		position="2.0, -1.0" 
@@ -73,15 +73,36 @@
 				align="bottom_left">
 			</popup_text>
 		</popup_panel>
-		<fps_text 
+	</active_panel>
+	<inactive_panel 
+		anchor_preset="top_left" 
+		pivot="0.0, 1.0" 
+		position="2.0, -1.0" 
+		dimensions="2329.3, 998.0">
+		<message_scrollview 
+			anchor_preset="top_left" 
+			pivot="0.0, 1.0" 
+			position="0.0, 0.0" 
+			dimensions="2329.3, 998.0"
+			scroll_speed="50.0" 
+			button_size="20.0" 
+			font="Data/Font/Prototype.ttf" 
+			font_size="20.0" 
+			text=""
+			text_color="0.8, 0.8, 0.8, 1.0" 
+			align="top_left"
+			vertical_scrollbar="none"
+			horizontal_scrollbar="none">
+		</message_scrollview>
+	</inactive_panel>
+	<fps_text 
 			anchor_preset="top_right" 
 			pivot="1.0, 1.0" 
-			position="-20.0, 0.0" 
+			position="0.0, 0.0" 
 			dimensions="500.0, 25.0"
 			font="Data/Font/Prototype.ttf" 
 			font_size="20.0" 
 			text="Placeholder!"
 			align="top_right">
-		</fps_text>
-	</background_panel>
+	</fps_text>
 </canvas>

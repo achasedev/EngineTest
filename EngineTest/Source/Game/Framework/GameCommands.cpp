@@ -38,5 +38,5 @@ void Command_Exit(CommandArgs& args)
 {
 	UNUSED(args);
 	g_app->Quit();
-	ConsolePrintf("Exiting...");
+	ConsoleLogf("Exiting...");
 }

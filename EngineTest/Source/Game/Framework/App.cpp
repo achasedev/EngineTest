@@ -198,11 +198,7 @@ void App::ProcessInput()
 void App::Update()
 {
 	m_game->Update();
-	
-	if (g_devConsole->IsActive())
-	{
-		g_devConsole->Update();
-	}
+	g_devConsole->Update();
 }
 
 

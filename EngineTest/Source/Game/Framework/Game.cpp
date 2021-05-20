@@ -115,7 +115,6 @@ Game::Game()
 
 	Vector3 point = Vector3(0.f, 10.f, -7.f);
 	Vector3 posRelative = box.TransformPositionIntoSpace(point);
-
 }
 
 
@@ -172,8 +171,16 @@ void Game::ProcessInput()
 
 //-------------------------------------------------------------------------------------------------
 void Game::Update()
-{
+{	
+	static float test = 0.f;
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
+	test += deltaSeconds;
+
+	if (test > 1.0f)
+	{
+		test -= 1.0f;
+		ConsolePrintf(Rgba::GetRandomColor(), 10.f, "Hello!");
+	}
 
 	// Generate forces
 	m_particleWorld->DoPhysicsStep(deltaSeconds);
