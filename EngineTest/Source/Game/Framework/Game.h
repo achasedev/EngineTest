@@ -83,7 +83,7 @@ private:
 	CollisionScene<BoundingVolumeSphere>*		m_collisionScene = nullptr;
 	Entity*										m_box = nullptr;
 	Entity*										m_ground = nullptr;
-
+	Transform m_boxStartingTransform;
 	Transform m_child;
 	Transform m_parent;
 

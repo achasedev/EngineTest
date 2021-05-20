@@ -162,9 +162,17 @@ void Game::ProcessInput()
 	//m_gameCamera->RotateEulerAnglesDegrees(deltaDegrees);
 	m_gameCamera->SetRotationEulerAnglesDegrees(m_gameCamera->GetRotationAsEulerAnglesDegrees() + deltaDegrees);
 
-	if (g_inputSystem->WasKeyJustPressed(InputSystem::KEYBOARD_F3))
+	if (g_inputSystem->WasKeyJustPressed('P'))
 	{
 		m_pausePhysics = !m_pausePhysics;
+	}
+
+	if (g_inputSystem->WasKeyJustPressed('R'))
+	{
+		m_box->transform = m_boxStartingTransform;
+		m_box->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f));
+		m_box->rigidBody->SetVelocityWs(Vector3::ZERO);
+		m_box->rigidBody->SetAngularVelocityRadiansWs(Vector3::ZERO);
 	}
 }
 
@@ -172,15 +180,7 @@ void Game::ProcessInput()
 //-------------------------------------------------------------------------------------------------
 void Game::Update()
 {	
-	static float test = 0.f;
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
-	test += deltaSeconds;
-
-	if (test > 1.0f)
-	{
-		test -= 1.0f;
-		ConsolePrintf(Rgba::GetRandomColor(), 10.f, "Hello!");
-	}
 
 	// Generate forces
 	m_particleWorld->DoPhysicsStep(deltaSeconds);
@@ -309,4 +309,6 @@ void Game::SetupRigidBodies()
 
 	m_box->collisionPrimitive = new BoxCollider(m_box, OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
 	m_collisionScene->AddEntity(m_box);
+
+	m_boxStartingTransform = m_box->transform;
 }
