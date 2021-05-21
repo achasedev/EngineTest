@@ -215,7 +215,7 @@ void Game::Render()
 
 	g_renderContext->EndCamera();
 
-	m_collisionScene->DebugRenderBoundingHierarchy();
+	//m_collisionScene->DebugRenderBoundingHierarchy();
 }
 
 
