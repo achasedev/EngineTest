@@ -103,7 +103,7 @@ Game::Game()
 	Matrix4 test3 = mat4FromMat3 * inv3;
 
 
-	OBB3 box = OBB3(Vector3(0.f, 10.f, -20.f), Vector3::ONES, Quaternion::CreateFromEulerAnglesDegrees(0.f, 90.f, 0.f));
+	OBB3 box = OBB3(Vector3(0.f), Vector3(1.f, 2.f, 3.f), Quaternion::IDENTITY);
 
 	Vector3 boxVerts[8];
 	box.GetPoints(boxVerts);
@@ -180,8 +180,13 @@ void Game::ProcessInput()
 	{
 		for (int i = 0; i < NUM_BOXES; ++i)
 		{
-			m_boxes[i]->transform.position = Vector3(0.f, 3.f + 2.f * (float)i, 0.f);
-			m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f));
+			m_boxes[i]->transform.position = Vector3(0.f, 0.5f + 2.f * (float)i, 0.f);
+			//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f));
+			m_boxes[i]->transform.rotation = Quaternion::IDENTITY;
+			if (i == 1)
+			{
+				m_boxes[i]->transform.RotateDegrees(0.f, 90.f, 0.f);
+			}
 			m_boxes[i]->rigidBody->SetVelocityWs(Vector3::ZERO);
 			m_boxes[i]->rigidBody->SetAngularVelocityRadiansWs(Vector3::ZERO);
 			m_boxes[i]->rigidBody->SetIsAwake(true);
@@ -195,12 +200,12 @@ void Game::ProcessInput()
 		RigidBody* body = new RigidBody(&box->transform);
 		body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
 		body->transform->position = Vector3(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector() * 2.f);
-		body->SetVelocityWs(m_gameCamera->GetForwardVector() * 50.f);
+		body->SetVelocityWs(m_gameCamera->GetForwardVector() * 30.f);
 
-		const float mass = 1.0f;
+		const float mass = 100.0f;
 
 		body->SetInverseMass((1.f / mass));
-		Vector3 extents(0.5f);
+		Vector3 extents(2.f, 0.5f, 0.5f);
 		Matrix3 inertiaTensor;
 		inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
 		inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
@@ -330,7 +335,7 @@ void Game::SetupRigidBodies()
 	m_ground = new Entity();
 	m_ground->collisionPrimitive = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
 
-	Vector3 extents(0.5f);
+	Vector3 extents(0.5f, 0.5f, 0.5f);
 
 	for (int i = 0; i < NUM_BOXES; ++i)
 	{
@@ -340,6 +345,12 @@ void Game::SetupRigidBodies()
 		RigidBody* body = new RigidBody(&m_boxes[i]->transform);
 		body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
 		body->transform->position = pos;
+
+		if (i == 1)
+		{
+			body->transform->RotateDegrees(0.f, 90.f, 0.f, RELATIVE_TO_WORLD);
+		}
+
 		const float mass = 10.0f;
 
 		body->SetInverseMass((1.f / mass));
