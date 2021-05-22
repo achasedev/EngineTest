@@ -184,6 +184,7 @@ void Game::ProcessInput()
 			m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f));
 			m_boxes[i]->rigidBody->SetVelocityWs(Vector3::ZERO);
 			m_boxes[i]->rigidBody->SetAngularVelocityRadiansWs(Vector3::ZERO);
+			m_boxes[i]->rigidBody->SetIsAwake(true);
 		}
 	}
 
@@ -199,7 +200,7 @@ void Game::ProcessInput()
 		const float mass = 1.0f;
 
 		body->SetInverseMass((1.f / mass));
-		Vector3 extents(0.1f);
+		Vector3 extents(0.5f);
 		Matrix3 inertiaTensor;
 		inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
 		inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
