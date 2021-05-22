@@ -81,9 +81,10 @@ private:
 	bool										m_pausePhysics = true;
 	PhysicsScene*								m_rigidBodyScene = nullptr;
 	CollisionScene<BoundingVolumeSphere>*		m_collisionScene = nullptr;
-	static constexpr int NUM_BOXES = 10;
+	static constexpr int NUM_BOXES = 5;
 	Entity*										m_boxes[NUM_BOXES];
 	Entity*										m_ground = nullptr;
+	std::vector<Entity*>						m_projectiles;
 	Transform m_boxStartingTransform;
 	Transform m_child;
 	Transform m_parent;
