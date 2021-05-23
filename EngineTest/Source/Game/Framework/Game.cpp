@@ -110,7 +110,7 @@ Game::Game()
 
 	for (int i = 0; i < 8; ++i)
 	{
-		DebugDrawPoint3D(boxVerts[i], Rgba::MAGENTA);
+		//DebugDrawPoint3D(boxVerts[i], Rgba::MAGENTA);
 	}
 
 	Vector3 point = Vector3(0.f, 10.f, -7.f);
@@ -180,7 +180,7 @@ void Game::ProcessInput()
 	{
 		for (int i = 0; i < NUM_BOXES; ++i)
 		{
-			m_boxes[i]->transform.position = Vector3(0.f, 0.5f + 2.f * (float)i, 0.f);
+			m_boxes[i]->transform.position = Vector3(0.f, 2.5f + 6.f * (float)i, 0.f);
 			//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f));
 			m_boxes[i]->transform.rotation = Quaternion::IDENTITY;
 			if (i == 1)
@@ -205,7 +205,7 @@ void Game::ProcessInput()
 		const float mass = 100.0f;
 
 		body->SetInverseMass((1.f / mass));
-		Vector3 extents(2.f, 0.5f, 0.5f);
+		Vector3 extents(0.5f);
 		Matrix3 inertiaTensor;
 		inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
 		inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
@@ -232,14 +232,16 @@ void Game::Update()
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
 
 	// Generate forces
-	m_particleWorld->DoPhysicsStep(deltaSeconds);
-	m_particleWorld->DebugDrawParticles();
+	m_particleWorld->DoPhysicsStep(0.1f * deltaSeconds);
+	//m_particleWorld->DebugDrawParticles();
 	
 	if (!m_pausePhysics)
 	{
 		m_rigidBodyScene->BeginFrame();
 		m_rigidBodyScene->DoPhysicsStep(deltaSeconds);
 	}
+
+	m_collisionScene->DebugDrawContacts();
 
 	const float radiansPerSecond = PI;
 	const float deltaRadians = radiansPerSecond * deltaSeconds;
@@ -335,29 +337,40 @@ void Game::SetupRigidBodies()
 	m_ground = new Entity();
 	m_ground->collisionPrimitive = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
 
-	Vector3 extents(0.5f, 0.5f, 0.5f);
 
 	for (int i = 0; i < NUM_BOXES; ++i)
 	{
-		Vector3 pos = Vector3(0.f, 3.f + 2.f * (float)i, 0.f);
+		Vector3 pos = Vector3(0.f, 2.5f + 6.f * (float)i, 0.f);
 		m_boxes[i] = new Entity();
 
 		RigidBody* body = new RigidBody(&m_boxes[i]->transform);
 		body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
-		body->transform->position = pos;
+		Vector3 extents(0.5f, 0.5f, 0.5f);
 
+		float mass = 10.0f;
 		if (i == 1)
 		{
-			body->transform->RotateDegrees(0.f, 90.f, 0.f, RELATIVE_TO_WORLD);
+			//body->transform->RotateDegrees(0.f, 90.f, 0.f, RELATIVE_TO_WORLD);
+			extents = Vector3(2.5f);
+		}
+		else
+		{
+			mass = 1000.f;
+			extents = Vector3(0.5f, 2.f, 0.5f);
 		}
 
-		const float mass = 10.0f;
+		body->transform->position = pos;
 
 		body->SetInverseMass((1.f / mass));
 		Matrix3 inertiaTensor;
 		inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
 		inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
 		inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);
+		float radius = 1.0f;
+		//Matrix3 inertiaTensor;
+		//inertiaTensor.Ix = (2.f / 5.f) * mass * (radius * radius);
+		//inertiaTensor.Jy = (1.f / 12.f) * mass * (radius * radius);
+		//inertiaTensor.Kz = (1.f / 12.f) * mass * (radius * radius);
 		body->SetLocalInverseInertiaTensor(inertiaTensor.GetInverse());
 		body->SetAngularDamping(0.4f);
 		body->SetLinearDamping(0.75f);
@@ -368,6 +381,7 @@ void Game::SetupRigidBodies()
 		//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 20.f, 60.f);
 
 		m_boxes[i]->collisionPrimitive = new BoxCollider(m_boxes[i], OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
+		//m_boxes[i]->collisionPrimitive = new SphereCollider(m_boxes[i], Sphere3D(Vector3::ZERO, radius));
 		m_collisionScene->AddEntity(m_boxes[i]);
 
 		m_boxStartingTransform = m_boxes[i]->transform;
