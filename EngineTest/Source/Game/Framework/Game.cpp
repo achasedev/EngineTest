@@ -180,7 +180,7 @@ void Game::ProcessInput()
 	{
 		for (int i = 0; i < NUM_BOXES; ++i)
 		{
-			Vector3 pos = Vector3(0.f, 1.f + 1.f * (float)i, 0.f);
+			Vector3 pos = Vector3(0.f, 1.f + 2.5f * (float)i, 0.f);
 			m_boxes[i]->transform.position = pos;
 			//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f));
 			m_boxes[i]->transform.rotation = Quaternion::IDENTITY;
@@ -206,7 +206,7 @@ void Game::ProcessInput()
 		body->transform->position = Vector3(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector() * 2.f);
 		body->SetVelocityWs(m_gameCamera->GetForwardVector() * 30.f);
 
-		const float mass = 100.0f;
+		const float mass = 2.0f;
 
 		body->SetInverseMass((1.f / mass));
 
@@ -353,7 +353,7 @@ void Game::SetupRigidBodies()
 
 	for (int i = 0; i < NUM_BOXES; ++i)
 	{
-		Vector3 pos = Vector3(0.f, 1.f + 1.f * (float)i, 0.f);
+		Vector3 pos = Vector3(0.f, 1.f + 2.5f * (float)i, 0.f);
 		m_boxes[i] = new Entity();
 
 		RigidBody* body = new RigidBody(&m_boxes[i]->transform);
@@ -364,8 +364,8 @@ void Game::SetupRigidBodies()
 		if (i == 0)
 		{
 			//body->transform->RotateDegrees(0.f, 90.f, 0.f, RELATIVE_TO_WORLD);
-			extents = Vector3(2.5f);
-			mass = 10000.f;
+			extents = Vector3(2.21f, 1.57, 4.4f);
+			//mass = 10000.f;
 		}
 		//else
 		//{
@@ -391,8 +391,11 @@ void Game::SetupRigidBodies()
 		body->SetAngularDamping(0.4f);
 		body->SetLinearDamping(0.75f);
 
-		m_rigidBodyScene->AddRigidbody(body);
-		m_boxes[i]->rigidBody = body;
+		if (i != 0)
+		{
+			m_rigidBodyScene->AddRigidbody(body);
+			m_boxes[i]->rigidBody = body;
+		}
 		
 
 		m_boxes[i]->renderShapeLs = AABB3(Vector3::ZERO, extents.x, extents.y, extents.z);
@@ -405,5 +408,5 @@ void Game::SetupRigidBodies()
 		m_boxStartingTransform = m_boxes[i]->transform;
 	}
 
-	m_collisionScene->AddEntity(m_ground);
+	//m_collisionScene->AddEntity(m_ground);
 }
