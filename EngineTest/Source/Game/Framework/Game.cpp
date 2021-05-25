@@ -180,16 +180,20 @@ void Game::ProcessInput()
 	{
 		for (int i = 0; i < NUM_BOXES; ++i)
 		{
-			m_boxes[i]->transform.position = Vector3(0.f, 2.5f + 6.f * (float)i, 0.f);
+			Vector3 pos = Vector3(0.f, 1.f + 1.f * (float)i, 0.f);
+			m_boxes[i]->transform.position = pos;
 			//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f));
 			m_boxes[i]->transform.rotation = Quaternion::IDENTITY;
 			if (i == 1)
 			{
 				m_boxes[i]->transform.RotateDegrees(0.f, 90.f, 0.f);
 			}
-			m_boxes[i]->rigidBody->SetVelocityWs(Vector3::ZERO);
-			m_boxes[i]->rigidBody->SetAngularVelocityRadiansWs(Vector3::ZERO);
-			m_boxes[i]->rigidBody->SetIsAwake(true);
+			if (m_boxes[i]->rigidBody != nullptr)
+			{
+				m_boxes[i]->rigidBody->SetVelocityWs(Vector3::ZERO);
+				m_boxes[i]->rigidBody->SetAngularVelocityRadiansWs(Vector3::ZERO);
+				m_boxes[i]->rigidBody->SetIsAwake(true);
+			}
 		}
 	}
 
@@ -205,21 +209,30 @@ void Game::ProcessInput()
 		const float mass = 100.0f;
 
 		body->SetInverseMass((1.f / mass));
-		Vector3 extents(0.5f);
+
+		float radius = 1.f;
 		Matrix3 inertiaTensor;
-		inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
-		inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
-		inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);
+		inertiaTensor.Ix = (2.f / 5.f) * mass * (radius * radius);
+		inertiaTensor.Jy = (2.f / 5.f) * mass * (radius * radius);
+		inertiaTensor.Kz = (2.f / 5.f) * mass * (radius * radius);
+
+		//Vector3 extents(0.5f);
+		//Matrix3 inertiaTensor;
+		//inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
+		//inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
+		//inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);
 		body->SetLocalInverseInertiaTensor(inertiaTensor.GetInverse());
 		body->SetAngularDamping(0.4f);
 		body->SetLinearDamping(0.75f);
 
 		m_rigidBodyScene->AddRigidbody(body);
 		box->rigidBody = body;
-		box->renderShapeLs = AABB3(Vector3::ZERO, extents.x, extents.y, extents.z);
+		//box->renderShapeLs = AABB3(Vector3::ZERO, extents.x, extents.y, extents.z);
 		//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 20.f, 60.f);
 
-		box->collisionPrimitive = new BoxCollider(box, OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
+		//box->collisionPrimitive = new BoxCollider(box, OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
+		box->collisionPrimitive = new SphereCollider(box, Sphere3D(Vector3::ZERO, radius));
+
 		m_collisionScene->AddEntity(box);
 		m_projectiles.push_back(box);
 	}
@@ -340,7 +353,7 @@ void Game::SetupRigidBodies()
 
 	for (int i = 0; i < NUM_BOXES; ++i)
 	{
-		Vector3 pos = Vector3(0.f, 2.5f + 6.f * (float)i, 0.f);
+		Vector3 pos = Vector3(0.f, 1.f + 1.f * (float)i, 0.f);
 		m_boxes[i] = new Entity();
 
 		RigidBody* body = new RigidBody(&m_boxes[i]->transform);
@@ -348,16 +361,19 @@ void Game::SetupRigidBodies()
 		Vector3 extents(0.5f, 0.5f, 0.5f);
 
 		float mass = 10.0f;
-		if (i == 1)
+		if (i == 0)
 		{
 			//body->transform->RotateDegrees(0.f, 90.f, 0.f, RELATIVE_TO_WORLD);
 			extents = Vector3(2.5f);
+			mass = 10000.f;
 		}
-		else
-		{
-			mass = 1000.f;
-			extents = Vector3(0.5f, 2.f, 0.5f);
-		}
+		//else
+		//{
+		//	extents = Vector3(0.5f, 2.f, 0.5f);
+		//	mass = 1.0f;
+		//	//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 0.f, 0.f);
+		//	//pos += Vector3(2.5f, 0.f, 0.f);
+		//}
 
 		body->transform->position = pos;
 
@@ -369,14 +385,16 @@ void Game::SetupRigidBodies()
 		float radius = 1.0f;
 		//Matrix3 inertiaTensor;
 		//inertiaTensor.Ix = (2.f / 5.f) * mass * (radius * radius);
-		//inertiaTensor.Jy = (1.f / 12.f) * mass * (radius * radius);
-		//inertiaTensor.Kz = (1.f / 12.f) * mass * (radius * radius);
+		//inertiaTensor.Jy = (2.f / 5.f) * mass * (radius * radius);
+		//inertiaTensor.Kz = (2.f / 5.f) * mass * (radius * radius);
 		body->SetLocalInverseInertiaTensor(inertiaTensor.GetInverse());
 		body->SetAngularDamping(0.4f);
 		body->SetLinearDamping(0.75f);
 
 		m_rigidBodyScene->AddRigidbody(body);
 		m_boxes[i]->rigidBody = body;
+		
+
 		m_boxes[i]->renderShapeLs = AABB3(Vector3::ZERO, extents.x, extents.y, extents.z);
 		//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 20.f, 60.f);
 
