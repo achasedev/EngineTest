@@ -129,6 +129,11 @@ Game::~Game()
 		SAFE_DELETE(m_boxes[i]);
 	}
 
+	for (Entity* proj : m_projectiles)
+	{
+		m_collisionScene->RemoveEntity(proj);
+	}
+
 	SafeDeleteVector(m_projectiles);
 
 	m_collisionScene->RemoveEntity(m_ground);
@@ -181,13 +186,18 @@ void Game::ProcessInput()
 		for (int i = 0; i < NUM_BOXES; ++i)
 		{
 			Vector3 pos = Vector3(0.f, 1.f + 2.5f * (float)i, 0.f);
-			m_boxes[i]->transform.position = pos;
 			//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f), GetRandomFloatInRange(0.f, 90.f));
 			m_boxes[i]->transform.rotation = Quaternion::IDENTITY;
 			if (i == 1)
 			{
-				m_boxes[i]->transform.RotateDegrees(0.f, 90.f, 0.f);
+				//	extents = Vector3(0.5f, 2.f, 0.5f);
+				//	mass = 1.0f;
+				//	m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 0.f, 0.f);
+				//pos += Vector3(2.5f, 0.f, 0.f);
 			}
+
+			m_boxes[i]->transform.position = pos;
+
 			if (m_boxes[i]->rigidBody != nullptr)
 			{
 				m_boxes[i]->rigidBody->SetVelocityWs(Vector3::ZERO);
@@ -204,24 +214,29 @@ void Game::ProcessInput()
 		RigidBody* body = new RigidBody(&box->transform);
 		body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
 		body->transform->position = Vector3(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector() * 2.f);
-		body->SetVelocityWs(m_gameCamera->GetForwardVector() * 30.f);
+		body->transform->rotation = Quaternion::CreateFromEulerAnglesDegrees(m_gameCamera->GetRotationAsEulerAnglesDegrees());
+		body->transform->RotateDegrees(0.f, 0.f, 90.f, RELATIVE_TO_SELF);
 
+		//body->SetVelocityWs(m_gameCamera->GetForwardVector() * 30.f);
+		//body->SetAngularVelocityRadiansWs(Vector3(GetRandomFloatInRange(-5.f, 5.f), GetRandomFloatInRange(-5.f, 5.f), GetRandomFloatInRange(-5.f, 5.f)));
 		const float mass = 2.0f;
 
 		body->SetInverseMass((1.f / mass));
 
 		float radius = 1.f;
-		Matrix3 inertiaTensor;
-		inertiaTensor.Ix = (2.f / 5.f) * mass * (radius * radius);
-		inertiaTensor.Jy = (2.f / 5.f) * mass * (radius * radius);
-		inertiaTensor.Kz = (2.f / 5.f) * mass * (radius * radius);
-
-		//Vector3 extents(0.5f);
 		//Matrix3 inertiaTensor;
-		//inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
-		//inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
-		//inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);
-		body->SetLocalInverseInertiaTensor(inertiaTensor.GetInverse());
+		//inertiaTensor.Ix = (2.f / 5.f) * mass * (radius * radius);
+		//inertiaTensor.Jy = (2.f / 5.f) * mass * (radius * radius);
+		//inertiaTensor.Kz = (2.f / 5.f) * mass * (radius * radius);
+
+	/*	Vector3 extents(0.5f);
+		Matrix3 inertiaTensor;
+		inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
+		inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
+		inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);*/
+		//body->SetInverseInertiaTensor(inertiaTensor.GetInverse());
+
+		body->SetInertiaTensor_Capsule(1.f, 0.5f);
 		body->SetAngularDamping(0.4f);
 		body->SetLinearDamping(0.75f);
 
@@ -231,7 +246,8 @@ void Game::ProcessInput()
 		//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 20.f, 60.f);
 
 		//box->collisionPrimitive = new BoxCollider(box, OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
-		box->collisionPrimitive = new SphereCollider(box, Sphere3D(Vector3::ZERO, radius));
+		box->collisionPrimitive = new CapsuleCollider(box, Capsule3D(Vector3(0.f, -0.5f, 0.f), Vector3(0.f, 0.5f, 0.f), 0.5f));
+		//box->collisionPrimitive = new SphereCollider(box, Sphere3D(Vector3::ZERO, radius));
 
 		m_collisionScene->AddEntity(box);
 		m_projectiles.push_back(box);
@@ -353,60 +369,51 @@ void Game::SetupRigidBodies()
 
 	for (int i = 0; i < NUM_BOXES; ++i)
 	{
-		Vector3 pos = Vector3(0.f, 1.f + 2.5f * (float)i, 0.f);
+		Vector3 extents(2.f);
+		extents /= (2.f * ((float)i + 1));
+
+		Vector3 pos = Vector3(0.f, 2.f * (float)(i + 1), 0.f);
+
+		float mass = 10.f * (float)(i + 1) * 0.25f;
+
 		m_boxes[i] = new Entity();
 
 		RigidBody* body = new RigidBody(&m_boxes[i]->transform);
 		body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
-		Vector3 extents(0.5f, 0.5f, 0.5f);
 
-		float mass = 10.0f;
-		if (i == 0)
-		{
-			//body->transform->RotateDegrees(0.f, 90.f, 0.f, RELATIVE_TO_WORLD);
-			extents = Vector3(2.21f, 1.57, 4.4f);
-			//mass = 10000.f;
-		}
-		//else
-		//{
-		//	extents = Vector3(0.5f, 2.f, 0.5f);
-		//	mass = 1.0f;
-		//	//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 0.f, 0.f);
-		//	//pos += Vector3(2.5f, 0.f, 0.f);
-		//}
+
 
 		body->transform->position = pos;
-
+		body->transform->rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 0.f, 0.f);
 		body->SetInverseMass((1.f / mass));
-		Matrix3 inertiaTensor;
-		inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
-		inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
-		inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);
-		float radius = 1.0f;
+		//Matrix3 inertiaTensor;
+		//inertiaTensor.Ix = (1.f / 12.f) * mass * (extents.y * extents.y + extents.z * extents.z);
+		//inertiaTensor.Jy = (1.f / 12.f) * mass * (extents.x * extents.x + extents.z * extents.z);
+		//inertiaTensor.Kz = (1.f / 12.f) * mass * (extents.x * extents.x + extents.y * extents.y);
+		//float radius = 1.0f;
 		//Matrix3 inertiaTensor;
 		//inertiaTensor.Ix = (2.f / 5.f) * mass * (radius * radius);
 		//inertiaTensor.Jy = (2.f / 5.f) * mass * (radius * radius);
 		//inertiaTensor.Kz = (2.f / 5.f) * mass * (radius * radius);
-		body->SetLocalInverseInertiaTensor(inertiaTensor.GetInverse());
+		//body->SetInverseInertiaTensor(inertiaTensor.GetInverse());
+
+		body->SetInertiaTensor_Capsule(1.f, 0.5f);
 		body->SetAngularDamping(0.4f);
 		body->SetLinearDamping(0.75f);
 
-		if (i != 0)
-		{
-			m_rigidBodyScene->AddRigidbody(body);
-			m_boxes[i]->rigidBody = body;
-		}
+		//m_rigidBodyScene->AddRigidbody(body);
+		//m_boxes[i]->rigidBody = body;
 		
-
 		m_boxes[i]->renderShapeLs = AABB3(Vector3::ZERO, extents.x, extents.y, extents.z);
 		//m_boxes[i]->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(45.f, 20.f, 60.f);
 
-		m_boxes[i]->collisionPrimitive = new BoxCollider(m_boxes[i], OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
+		//m_boxes[i]->collisionPrimitive = new BoxCollider(m_boxes[i], OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
+		m_boxes[i]->collisionPrimitive = new CapsuleCollider(m_boxes[i], Capsule3D(Vector3(0.f, -0.5f, 0.f), Vector3(0.f, 0.5f, 0.f), 0.5f));
 		//m_boxes[i]->collisionPrimitive = new SphereCollider(m_boxes[i], Sphere3D(Vector3::ZERO, radius));
 		m_collisionScene->AddEntity(m_boxes[i]);
 
 		m_boxStartingTransform = m_boxes[i]->transform;
 	}
 
-	//m_collisionScene->AddEntity(m_ground);
+	m_collisionScene->AddEntity(m_ground);
 }
