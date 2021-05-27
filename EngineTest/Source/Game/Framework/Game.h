@@ -62,8 +62,11 @@ private:
 
 	void SetupFramework();
 	void SetupRendering();
-	void SetupParticles();
-	void SetupRigidBodies();
+	void SetupPhysics();
+
+	void SpawnCapsule(float cylinderHeight, float radius, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
+	void SpawnBox(const Vector3& extents, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
+	void SpawnSphere(float radius, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
 
 
 private:
@@ -76,19 +79,11 @@ private:
 	// Framework
 	Clock*										m_gameClock = nullptr;
 
-	ParticleWorld*								m_particleWorld = nullptr;
-
 	bool										m_pausePhysics = true;
-	PhysicsScene*								m_rigidBodyScene = nullptr;
+	PhysicsScene*								m_physicsScene = nullptr;
 	CollisionScene<BoundingVolumeSphere>*		m_collisionScene = nullptr;
-	static constexpr int NUM_BOXES = 1;
-	Entity*										m_boxes[NUM_BOXES];
-	Entity*										m_ground = nullptr;
-	std::vector<Entity*>						m_projectiles;
-	Transform m_boxStartingTransform;
-	Transform m_child;
-	Transform m_parent;
 
+	std::vector<Entity*>						m_entities;
 
 };
 
