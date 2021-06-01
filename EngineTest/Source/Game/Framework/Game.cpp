@@ -69,7 +69,10 @@ Game::~Game()
 
 	for (Entity* entity : m_entities)
 	{
-		m_collisionScene->RemoveEntity(entity);
+		if (!entity->collider->IsOfType<HalfSpaceCollider>())
+		{
+			m_collisionScene->RemoveEntity(entity);
+		}
 	}
 
 	SafeDeleteVector(m_entities);
@@ -98,7 +101,7 @@ void Game::ProcessInput()
 	moveDir.SafeNormalize(moveDir);
 
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
-	const float speed = (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_SHIFT) ? 5.f : 25.f);
+	const float speed = (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_SHIFT) ? 1.f : 8.f);
 
 	m_gameCamera->Translate(moveDir * speed * deltaSeconds);
 
@@ -117,17 +120,12 @@ void Game::ProcessInput()
 		m_pausePhysics = !m_pausePhysics;
 	}
 
-	if (g_inputSystem->WasKeyJustPressed('B'))
-	{
-		int breakpoint = 0.f;
-		breakpoint = 4.f;
-	}
-
-	float mass = 10.f;
+	float mass = 1.f;
 	float iMass = (1.f / mass);
-	Vector3 spawnPosition = m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector() * 5.f;
-	Vector3 spawnRotation = Vector3(0.f, 0.f, 90.f);
-	Vector3 spawnVelocity = m_gameCamera->GetForwardVector() * 15.f;
+	Vector3 spawnPosition = m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector() * 1.f;
+	DebugDrawPoint3D(spawnPosition, Rgba::YELLOW, 0.f);
+	Vector3 spawnRotation = m_gameCamera->GetRotationAsEulerAnglesDegrees();
+	Vector3 spawnVelocity = m_gameCamera->GetForwardVector() * 8.f;
 	//Vector3 spawnVelocity = Vector3::ZERO;
 	Vector3 spawnAngularVelocityDegrees = Vector3::ZERO;
 
@@ -159,7 +157,7 @@ void Game::Update()
 		m_physicsScene->DoPhysicsStep(deltaSeconds);
 	}
 
-	m_collisionScene->DebugDrawContacts();
+	m_collisionScene->DebugRenderBoundingHierarchy();
 }
 
 
@@ -213,12 +211,16 @@ void Game::SetupPhysics()
 {
 	m_collisionScene = new CollisionScene<BoundingVolumeSphere>();
 	m_physicsScene = new PhysicsScene(m_collisionScene);
+	//m_physicsScene->SetGravityEnabled(false);
 
 	Entity* ground = new Entity();
-	ground->collider = new HalfSpaceCollider(ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
+	HalfSpaceCollider* halfSpace = new HalfSpaceCollider(ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
+	ground->collider = halfSpace;
 
-	m_collisionScene->AddEntity(ground);
+	m_collisionScene->AddHalfSpace(halfSpace);
 	m_entities.push_back(ground);
+
+	SpawnBox(Vector3(10.f), (1.f / 10000.f), Vector3::ZERO);
 }
 
 
@@ -235,6 +237,7 @@ void Game::SpawnCapsule(float cylinderHeight, float radius, float inverseMass, c
 	body->SetVelocityWs(velocity);
 	body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
 	body->SetAffectedByGravity(hasGravity);
+	body->SetRotationLocked(true);
 
 	entity->rigidBody = body;
 	entity->collider = new CapsuleCollider(entity, Capsule3D(Vector3(0.f, -cylinderHeight, 0.f), Vector3(0.f, cylinderHeight, 0.f), radius));
@@ -281,11 +284,6 @@ void Game::SpawnSphere(float radius, float inverseMass, const Vector3& position,
 	body->SetVelocityWs(velocity);
 	body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
 	body->SetAffectedByGravity(hasGravity);
-
-	if (hasGravity)
-	{
-		body->SetAcceleration(Vector3(0.f, -10.f, 0.f));
-	}
 
 	entity->rigidBody = body;
 	entity->collider = new SphereCollider(entity, Sphere3D(Vector3::ZERO, radius));
