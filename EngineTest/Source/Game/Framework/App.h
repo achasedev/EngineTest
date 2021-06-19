@@ -52,14 +52,12 @@ private:
 	void Update();
 	void Render();
 
-	void RegisterGameCommands();
-
 
 private:
 	//-----Private Data-----
 
-	bool m_isQuitting = false;
-	Game* m_game = nullptr;
+	bool	m_isQuitting = false;
+	Game*	m_game = nullptr;
 
 };
 

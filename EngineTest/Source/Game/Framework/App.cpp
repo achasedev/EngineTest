@@ -11,19 +11,12 @@
 #include <windows.h>
 #include "Game/Framework/App.h"
 #include "Game/Framework/Game.h"
-#include "Game/Framework/GameCommands.h"
 #include "Game/Framework/GameCommon.h"
 #include "Engine/Event/EventSystem.h"
-#include "Engine/Core/ConsoleCommand.h"
-#include "Engine/Core/DevConsole.h"
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Core/Window.h"
 #include "Engine/IO/InputSystem.h"
 #include "Engine/Job/JobSystem.h"
-#include "Engine/Render/DX11Common.h"
-#include "Engine/Render/RenderContext.h"
-#include "Engine/Render/Debug/DebugRenderSystem.h"
-#include "Engine/Resource/ResourceSystem.h"
 #include "Engine/Time/Clock.h"
 #include "Engine/Utility/StringID.h"
 
@@ -114,18 +107,13 @@ void App::Initialize()
 
 	StringIdSystem::Initialize();
 	EventSystem::Initialize();
-	Window::Initialize((21.f / 9.f), "Hello");
+	Window::Initialize((16.f / 9.f), "Vulkan - Test");
 	g_window->RegisterMessageHandler(AppMessageHandler);
 	Clock::ResetMaster();
-	RenderContext::Initialize();
 	InputSystem::Initialize();
 	JobSystem::Initialize();
-	ResourceSystem::Initialize();
-	DevConsole::Initialize();
-	DebugRenderSystem::Initialize();
 
 	g_app->m_game = new Game();
-	g_app->RegisterGameCommands();
 }
 
 
@@ -134,12 +122,8 @@ void App::Shutdown()
 {
 	SAFE_DELETE(g_app->m_game);
 
-	DebugRenderSystem::Shutdown();
-	ResourceSystem::Shutdown();
-	DevConsole::Shutdown();
 	JobSystem::Shutdown();
 	InputSystem::Shutdown();
-	RenderContext::Shutdown();
 	g_window->UnregisterMessageHandler(AppMessageHandler);
 	Window::Shutdown();
 	EventSystem::Shutdown();
@@ -157,8 +141,6 @@ void App::RunFrame()
 
 	// Begin Frames...
 	g_inputSystem->BeginFrame();
-	g_renderContext->BeginFrame();
-	g_devConsole->BeginFrame();
 	g_eventSystem->BeginFrame();
 
 	// Game Frame
@@ -167,8 +149,6 @@ void App::RunFrame()
 	Render();
 
 	// End Frames...
-	g_devConsole->EndFrame();
-	g_renderContext->EndFrame();
 	g_inputSystem->EndFrame();
 }
 
@@ -183,14 +163,7 @@ void App::Quit()
 //-------------------------------------------------------------------------------------------------
 void App::ProcessInput()
 {
-	if (g_devConsole->IsActive())
-	{
-		g_devConsole->ProcessInput();
-	}
-	else
-	{
-		m_game->ProcessInput();
-	}
+	m_game->ProcessInput();
 }
 
 
@@ -198,7 +171,6 @@ void App::ProcessInput()
 void App::Update()
 {
 	m_game->Update();
-	g_devConsole->Update();
 }
 
 
@@ -206,13 +178,4 @@ void App::Update()
 void App::Render()
 {
 	m_game->Render();
-	g_debugRenderSystem->Render();
-	g_devConsole->Render();
-}
-
-
-//-------------------------------------------------------------------------------------------------
-void App::RegisterGameCommands()
-{
-	ConsoleCommand::Register(SID("exit"), "Shuts down the program", "exit (NO_PARAMS)", Command_Exit, false);
 }
