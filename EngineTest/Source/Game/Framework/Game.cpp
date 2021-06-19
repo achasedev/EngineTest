@@ -69,7 +69,7 @@ Game::~Game()
 
 	for (Entity* entity : m_entities)
 	{
-		if (!entity->collider->IsOfType<HalfSpaceCollider>())
+		if (!entity->collider->IsOfType<HalfSpaceCollider>() && !entity->collider->IsOfType<PlaneCollider>())
 		{
 			m_collisionScene->RemoveEntity(entity);
 		}
@@ -125,7 +125,7 @@ void Game::ProcessInput()
 	Vector3 spawnPosition = m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector() * 1.f;
 	DebugDrawPoint3D(spawnPosition, Rgba::YELLOW, 0.f);
 	Vector3 spawnRotation = m_gameCamera->GetRotationAsEulerAnglesDegrees();
-	Vector3 spawnVelocity = m_gameCamera->GetForwardVector() * 8.f;
+	Vector3 spawnVelocity = m_gameCamera->GetForwardVector() * 20.f;
 	//Vector3 spawnVelocity = Vector3::ZERO;
 	Vector3 spawnAngularVelocityDegrees = Vector3::ZERO;
 
@@ -157,7 +157,7 @@ void Game::Update()
 		m_physicsScene->DoPhysicsStep(deltaSeconds);
 	}
 
-	m_collisionScene->DebugRenderBoundingHierarchy();
+	//m_collisionScene->DebugRenderBoundingHierarchy();
 }
 
 
@@ -214,10 +214,12 @@ void Game::SetupPhysics()
 	//m_physicsScene->SetGravityEnabled(false);
 
 	Entity* ground = new Entity();
-	HalfSpaceCollider* halfSpace = new HalfSpaceCollider(ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
-	ground->collider = halfSpace;
+	//HalfSpaceCollider* halfSpace = new HalfSpaceCollider(ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
+	PlaneCollider* planeCol = new PlaneCollider(ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
+	ground->collider = planeCol;
 
-	m_collisionScene->AddHalfSpace(halfSpace);
+	//m_collisionScene->AddHalfSpace(planeCol);
+	m_collisionScene->AddPlane(planeCol);
 	m_entities.push_back(ground);
 
 	SpawnBox(Vector3(10.f), (1.f / 10000.f), Vector3::ZERO);
@@ -237,7 +239,6 @@ void Game::SpawnCapsule(float cylinderHeight, float radius, float inverseMass, c
 	body->SetVelocityWs(velocity);
 	body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
 	body->SetAffectedByGravity(hasGravity);
-	body->SetRotationLocked(true);
 
 	entity->rigidBody = body;
 	entity->collider = new CapsuleCollider(entity, Capsule3D(Vector3(0.f, -cylinderHeight, 0.f), Vector3(0.f, cylinderHeight, 0.f), radius));
