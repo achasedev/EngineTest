@@ -99,7 +99,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)../MechroEngine/Source/;$(SolutionDir)Source/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\MechroEngine\Source\;$(SolutionDir)Source\</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
       <ShowIncludes>false</ShowIncludes>
@@ -107,9 +107,10 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)../MechroEngine/Source/;$(SolutionDir)Source/</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\MechroCat22\Desktop\EngineTest\MechroEngine\Source\ThirdParty\Vulkan\Lib;$(SolutionDir)..\MechroEngine\Source\;$(SolutionDir)Source\</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -125,7 +126,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)../MechroEngine/Source/;$(SolutionDir)Source/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\MechroEngine\Source\;$(SolutionDir)Source\</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>
       </DisableSpecificWarnings>
@@ -134,9 +135,10 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)../MechroEngine/Source/;$(SolutionDir)Source/</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\MechroCat22\Desktop\EngineTest\MechroEngine\Source\ThirdParty\Vulkan\Lib;$(SolutionDir)..\MechroEngine\Source\;$(SolutionDir)Source\</AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>

@@ -4,6 +4,9 @@
 /// Description: Interface/Manager between Game code and Engine code
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #pragma once
+#define VK_USE_PLATFORM_WIN32_KHR
+#include "ThirdParty/Vulkan/Include/vulkan/vulkan.h"
+
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
@@ -52,6 +55,12 @@ private:
 	void Update();
 	void Render();
 
+	void InitVulkan();
+	void CreateVulkanInstance();
+	void SetupVulkanDebugMessenger();
+
+	void ShutdownVulkan();
+
 
 private:
 	//-----Private Data-----
@@ -59,6 +68,10 @@ private:
 	bool	m_isQuitting = false;
 	Game*	m_game = nullptr;
 
+	// Vulkan
+	VkInstance m_vkInstance;
+	bool m_enableValidationLayers = true;
+	VkDebugUtilsMessengerEXT m_vkDebugMessenger;
 };
 
 
