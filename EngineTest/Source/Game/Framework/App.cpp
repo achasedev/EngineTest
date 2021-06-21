@@ -225,6 +225,7 @@ void App::InitVulkan()
 	CreateVulkanInstance();
 	SetupVulkanDebugMessenger();
 	PickPhysicalDevice();
+	CreateLogicalDevice();
 }
 
 
@@ -416,8 +417,43 @@ void App::PickPhysicalDevice()
 
 
 //-------------------------------------------------------------------------------------------------
+void App::CreateLogicalDevice()
+{
+	QueueFamilyIndices indices = FindQueueFamilies(m_vkPhysicalDevice);
+
+	VkDeviceQueueCreateInfo queueCreateInfo{};
+
+	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+	queueCreateInfo.queueCount = 1;
+
+	float queuePriority = 1.0f;
+	queueCreateInfo.pQueuePriorities = &queuePriority;
+
+	// No features for now
+	VkPhysicalDeviceFeatures deviceFeatures{};
+
+	// Create the logical device
+	VkDeviceCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	createInfo.pQueueCreateInfos = &queueCreateInfo;
+	createInfo.queueCreateInfoCount = 1;
+	createInfo.pEnabledFeatures = &deviceFeatures;
+	createInfo.enabledExtensionCount = 0;
+	createInfo.enabledLayerCount = 0; // Technically don't need to set validation layers here, but *should* for older implementation compatibility
+
+	VkResult result = vkCreateDevice(m_vkPhysicalDevice, &createInfo, nullptr, &m_vkDevice);
+	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create logical device!");
+
+
+}
+
+
+//-------------------------------------------------------------------------------------------------
 void App::ShutdownVulkan()
 {
+	vkDestroyDevice(m_vkDevice, nullptr);
+
 	if (m_enableValidationLayers)
 	{
 		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_vkInstance, "vkDestroyDebugUtilsMessengerEXT");
