@@ -19,6 +19,7 @@
 #include "Engine/Job/JobSystem.h"
 #include "Engine/Time/Clock.h"
 #include "Engine/Utility/StringID.h"
+#include <optional>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -223,6 +224,7 @@ void App::InitVulkan()
 
 	CreateVulkanInstance();
 	SetupVulkanDebugMessenger();
+	PickPhysicalDevice();
 }
 
 
@@ -331,6 +333,85 @@ void App::SetupVulkanDebugMessenger()
 	
 	VkResult result = func(m_vkInstance, &createInfo, nullptr, &m_vkDebugMessenger);
 	ASSERT_OR_DIE(result == VK_SUCCESS, "Failed to create debug messenger!");
+}
+
+
+//-------------------------------------------------------------------------------------------------
+struct QueueFamilyIndices
+{
+	std::optional<uint32_t> graphicsFamily;
+
+	bool IsComplete() const { return graphicsFamily.has_value(); }
+};
+
+
+//-------------------------------------------------------------------------------------------------
+QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices;
+
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+	int i = 0;
+	for (const auto& queueFamily : queueFamilies) 
+	{
+		if (indices.IsComplete())
+			break;
+
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			indices.graphicsFamily = i;
+		}
+
+		i++;
+	}
+
+	return indices;
+}
+
+
+//-------------------------------------------------------------------------------------------------
+bool IsDeviceSuitable(VkPhysicalDevice device)
+{
+	VkPhysicalDeviceProperties deviceProperties;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+	// Example on features
+	//VkPhysicalDeviceFeatures deviceFeatures;
+	//vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+	QueueFamilyIndices indices = FindQueueFamilies(device);
+
+	// For now just ensure we're using the graphics card
+	return indices.IsComplete() && deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void App::PickPhysicalDevice()
+{
+	uint32_t deviceCount = 0;
+	vkEnumeratePhysicalDevices(m_vkInstance, &deviceCount, nullptr);
+
+	ASSERT_OR_DIE(deviceCount > 0, "No devices that support Vulkan!");
+
+	std::vector<VkPhysicalDevice> devices(deviceCount);
+	vkEnumeratePhysicalDevices(m_vkInstance, &deviceCount, devices.data());
+
+
+	for (const auto& device : devices)
+	{
+		if (IsDeviceSuitable(device))
+		{
+			m_vkPhysicalDevice = device;
+			break;
+		}
+	}
+
+	ASSERT_OR_DIE(m_vkPhysicalDevice != VK_NULL_HANDLE, "Could not find a suitable device!");
 }
 
 

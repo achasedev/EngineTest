@@ -58,6 +58,7 @@ private:
 	void InitVulkan();
 	void CreateVulkanInstance();
 	void SetupVulkanDebugMessenger();
+	void PickPhysicalDevice();
 
 	void ShutdownVulkan();
 
@@ -72,6 +73,7 @@ private:
 	VkInstance m_vkInstance;
 	bool m_enableValidationLayers = true;
 	VkDebugUtilsMessengerEXT m_vkDebugMessenger;
+	VkPhysicalDevice m_vkPhysicalDevice = VK_NULL_HANDLE;
 };
 
 
