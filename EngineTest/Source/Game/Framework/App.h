@@ -61,6 +61,7 @@ private:
 	void PickPhysicalDevice();
 	void CreateLogicalDevice();
 	void CreateWindowSurface();
+	void CreateSwapChain();
 
 	void ShutdownVulkan();
 
