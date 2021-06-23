@@ -60,6 +60,7 @@ private:
 	void SetupVulkanDebugMessenger();
 	void PickPhysicalDevice();
 	void CreateLogicalDevice();
+	void CreateWindowSurface();
 
 	void ShutdownVulkan();
 
@@ -70,12 +71,17 @@ private:
 	bool	m_isQuitting = false;
 	Game*	m_game = nullptr;
 
+public:
+
 	// Vulkan
 	VkInstance m_vkInstance;
 	bool m_enableValidationLayers = true;
 	VkDebugUtilsMessengerEXT m_vkDebugMessenger;
 	VkPhysicalDevice m_vkPhysicalDevice = VK_NULL_HANDLE;
 	VkDevice m_vkDevice;
+	VkQueue m_vkGraphicsQueue;
+	VkQueue m_vkPresentQueue;
+	VkSurfaceKHR m_vkSurface;
 };
 
 

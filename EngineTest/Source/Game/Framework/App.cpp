@@ -224,6 +224,7 @@ void App::InitVulkan()
 
 	CreateVulkanInstance();
 	SetupVulkanDebugMessenger();
+	CreateWindowSurface();
 	PickPhysicalDevice();
 	CreateLogicalDevice();
 }
@@ -232,6 +233,9 @@ void App::InitVulkan()
 //-------------------------------------------------------------------------------------------------
 static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) 
 {
+	UNUSED(messageType);
+	UNUSED(pUserData);
+
 	const char* prefix = "";
 	switch (messageSeverity)
 	{
@@ -341,13 +345,14 @@ void App::SetupVulkanDebugMessenger()
 struct QueueFamilyIndices
 {
 	std::optional<uint32_t> graphicsFamily;
+	std::optional<uint32_t> presentFamily;
 
-	bool IsComplete() const { return graphicsFamily.has_value(); }
+	bool IsComplete() const { return graphicsFamily.has_value() && presentFamily.has_value(); }
 };
 
 
 //-------------------------------------------------------------------------------------------------
-QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device)
+QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device, App* app)
 {
 	QueueFamilyIndices indices;
 
@@ -357,7 +362,7 @@ QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device)
 	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-	int i = 0;
+	int queueFamilyIndex = 0;
 	for (const auto& queueFamily : queueFamilies) 
 	{
 		if (indices.IsComplete())
@@ -365,10 +370,18 @@ QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device)
 
 		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 		{
-			indices.graphicsFamily = i;
+			indices.graphicsFamily = queueFamilyIndex;
 		}
 
-		i++;
+		VkBool32 presentSupport = false;
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, queueFamilyIndex, app->m_vkSurface, &presentSupport);
+
+		if (presentSupport)
+		{
+			indices.presentFamily = queueFamilyIndex;
+		}
+
+		queueFamilyIndex++;
 	}
 
 	return indices;
@@ -376,7 +389,7 @@ QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device)
 
 
 //-------------------------------------------------------------------------------------------------
-bool IsDeviceSuitable(VkPhysicalDevice device)
+bool IsDeviceSuitable(VkPhysicalDevice device, App* app)
 {
 	VkPhysicalDeviceProperties deviceProperties;
 	vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -384,7 +397,7 @@ bool IsDeviceSuitable(VkPhysicalDevice device)
 	//VkPhysicalDeviceFeatures deviceFeatures;
 	//vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
-	QueueFamilyIndices indices = FindQueueFamilies(device);
+	QueueFamilyIndices indices = FindQueueFamilies(device, app);
 
 	// For now just ensure we're using the graphics card
 	return indices.IsComplete() && deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
@@ -405,7 +418,7 @@ void App::PickPhysicalDevice()
 
 	for (const auto& device : devices)
 	{
-		if (IsDeviceSuitable(device))
+		if (IsDeviceSuitable(device, this))
 		{
 			m_vkPhysicalDevice = device;
 			break;
@@ -417,18 +430,25 @@ void App::PickPhysicalDevice()
 
 
 //-------------------------------------------------------------------------------------------------
+#include <set>
 void App::CreateLogicalDevice()
 {
-	QueueFamilyIndices indices = FindQueueFamilies(m_vkPhysicalDevice);
+	QueueFamilyIndices indices = FindQueueFamilies(m_vkPhysicalDevice, this);
 
-	VkDeviceQueueCreateInfo queueCreateInfo{};
-
-	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-	queueCreateInfo.queueCount = 1;
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
 	float queuePriority = 1.0f;
-	queueCreateInfo.pQueuePriorities = &queuePriority;
+	for (uint32_t queueFamily : uniqueQueueFamilies)
+	{
+		VkDeviceQueueCreateInfo queueCreateInfo{};
+		queueCreateInfo.sType =
+			VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = queueFamily;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfos.push_back(queueCreateInfo);
+	}
 
 	// No features for now
 	VkPhysicalDeviceFeatures deviceFeatures{};
@@ -436,8 +456,8 @@ void App::CreateLogicalDevice()
 	// Create the logical device
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	createInfo.pQueueCreateInfos = &queueCreateInfo;
-	createInfo.queueCreateInfoCount = 1;
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
+	createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 	createInfo.pEnabledFeatures = &deviceFeatures;
 	createInfo.enabledExtensionCount = 0;
 	createInfo.enabledLayerCount = 0; // Technically don't need to set validation layers here, but *should* for older implementation compatibility
@@ -445,7 +465,21 @@ void App::CreateLogicalDevice()
 	VkResult result = vkCreateDevice(m_vkPhysicalDevice, &createInfo, nullptr, &m_vkDevice);
 	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create logical device!");
 
+	vkGetDeviceQueue(m_vkDevice, indices.graphicsFamily.value(), 0, &m_vkGraphicsQueue);
+	vkGetDeviceQueue(m_vkDevice, indices.presentFamily.value(), 0, &m_vkPresentQueue);
+}
 
+
+//-------------------------------------------------------------------------------------------------
+void App::CreateWindowSurface()
+{
+	VkWin32SurfaceCreateInfoKHR createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	createInfo.hwnd = (HWND) g_window->GetWindowContext();
+	createInfo.hinstance = GetModuleHandle(nullptr);
+
+	VkResult result = vkCreateWin32SurfaceKHR(m_vkInstance, &createInfo, nullptr, &m_vkSurface);
+	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create surface!");
 }
 
 
@@ -453,6 +487,8 @@ void App::CreateLogicalDevice()
 void App::ShutdownVulkan()
 {
 	vkDestroyDevice(m_vkDevice, nullptr);
+
+	vkDestroySurfaceKHR(m_vkInstance, m_vkSurface, nullptr);
 
 	if (m_enableValidationLayers)
 	{
