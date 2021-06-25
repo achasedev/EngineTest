@@ -230,6 +230,7 @@ void App::InitVulkan()
 	CreateSwapChainImageViews();
 	CreateRenderPass();
 	CreateGraphicsPipeline();
+	CreateFrameBuffers();
 }
 
 
@@ -917,8 +918,37 @@ void App::CreateGraphicsPipeline()
 
 
 //-------------------------------------------------------------------------------------------------
+void App::CreateFrameBuffers()
+{
+	m_vkFramebuffers.resize(m_vkSwapChainImageViews.size());
+
+	for (size_t i = 0; i < m_vkSwapChainImageViews.size(); i++)
+	{
+		VkImageView attachments[] = { m_vkSwapChainImageViews[i] };
+		
+		VkFramebufferCreateInfo framebufferInfo{};
+		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebufferInfo.renderPass = m_vkRenderPass; // For compatibility
+		framebufferInfo.attachmentCount = 1;
+		framebufferInfo.pAttachments = attachments;
+		framebufferInfo.width = m_vkSwapChainExtent.width;
+		framebufferInfo.height = m_vkSwapChainExtent.height;
+		framebufferInfo.layers = 1;
+		
+		VkResult result = vkCreateFramebuffer(m_vkLogicalDevice, &framebufferInfo, nullptr, &m_vkFramebuffers[i]);
+		ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create framebuffer!");
+	}
+}
+
+
+//-------------------------------------------------------------------------------------------------
 void App::ShutdownVulkan()
 {
+	for (VkFramebuffer framebuffer : m_vkFramebuffers)
+	{
+		vkDestroyFramebuffer(m_vkLogicalDevice, framebuffer, nullptr);
+	}
+
 	vkDestroyPipeline(m_vkLogicalDevice, m_vkGraphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(m_vkLogicalDevice, m_vkPipelineLayout, nullptr);
 	vkDestroyRenderPass(m_vkLogicalDevice, m_vkRenderPass, nullptr);

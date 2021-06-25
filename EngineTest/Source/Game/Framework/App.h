@@ -65,6 +65,7 @@ private:
 	void CreateSwapChainImageViews();
 	void CreateRenderPass();
 	void CreateGraphicsPipeline();
+	void CreateFrameBuffers();
 
 	void ShutdownVulkan();
 
@@ -92,7 +93,7 @@ public:
 	VkFormat m_vkSwapChainImageFormat;
 	VkExtent2D m_vkSwapChainExtent;
 	VkRenderPass m_vkRenderPass;
-	VkPipelineLayout m_vkPipelineLayout;	VkPipeline m_vkGraphicsPipeline;};
+	VkPipelineLayout m_vkPipelineLayout;	VkPipeline m_vkGraphicsPipeline;	std::vector<VkFramebuffer> m_vkFramebuffers;};
 
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
