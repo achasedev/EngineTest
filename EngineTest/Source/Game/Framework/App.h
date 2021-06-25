@@ -63,6 +63,7 @@ private:
 	void CreateWindowSurface();
 	void CreateSwapChain();
 	void CreateSwapChainImageViews();
+	void CreateGraphicsPipeline();
 
 	void ShutdownVulkan();
 
@@ -89,6 +90,7 @@ public:
 	std::vector<VkImageView> m_vkSwapChainImageViews;
 	VkFormat m_vkSwapChainImageFormat;
 	VkExtent2D m_vkSwapChainExtent;
+	VkPipelineLayout m_vkPipelineLayout;
 };
 
 
