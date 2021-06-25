@@ -6,7 +6,7 @@
 #pragma once
 #define VK_USE_PLATFORM_WIN32_KHR
 #include "ThirdParty/Vulkan/Include/vulkan/vulkan.h"
-
+#include <vector>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
@@ -79,10 +79,14 @@ public:
 	bool m_enableValidationLayers = true;
 	VkDebugUtilsMessengerEXT m_vkDebugMessenger;
 	VkPhysicalDevice m_vkPhysicalDevice = VK_NULL_HANDLE;
-	VkDevice m_vkDevice;
+	VkDevice m_vkLogicalDevice;
 	VkQueue m_vkGraphicsQueue;
 	VkQueue m_vkPresentQueue;
 	VkSurfaceKHR m_vkSurface;
+	VkSwapchainKHR m_vkSwapChain;
+	std::vector<VkImage> m_vkSwapChainImages;
+	VkFormat m_vkSwapChainImageFormat;
+	VkExtent2D m_vkSwapChainExtent;
 };
 
 

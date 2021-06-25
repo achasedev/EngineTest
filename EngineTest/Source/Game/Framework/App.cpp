@@ -491,8 +491,7 @@ VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
 	}
 	else 
 	{
-		//VkExtent2D actualExtent = { (uint32_t) clientDimensions.x, (uint32_t) clientDimensions.y };
-		VkExtent2D actualExtent = { clientDimensions.x, clientDimensions.y };
+		VkExtent2D actualExtent = { (uint32_t) clientDimensions.x, (uint32_t) clientDimensions.y };
 	
 		actualExtent.width = Max(capabilities.minImageExtent.width, Min(capabilities.maxImageExtent.width, actualExtent.width));
 		actualExtent.height = Max(capabilities.minImageExtent.height, Min(capabilities.maxImageExtent.height, actualExtent.height));
@@ -586,11 +585,11 @@ void App::CreateLogicalDevice()
 	createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 	createInfo.enabledLayerCount = 0; // Technically don't need to set validation layers here, but *should* for older implementation compatibility
 
-	VkResult result = vkCreateDevice(m_vkPhysicalDevice, &createInfo, nullptr, &m_vkDevice);
+	VkResult result = vkCreateDevice(m_vkPhysicalDevice, &createInfo, nullptr, &m_vkLogicalDevice);
 	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create logical device!");
 
-	vkGetDeviceQueue(m_vkDevice, indices.graphicsFamily.value(), 0, &m_vkGraphicsQueue);
-	vkGetDeviceQueue(m_vkDevice, indices.presentFamily.value(), 0, &m_vkPresentQueue);
+	vkGetDeviceQueue(m_vkLogicalDevice, indices.graphicsFamily.value(), 0, &m_vkGraphicsQueue);
+	vkGetDeviceQueue(m_vkLogicalDevice, indices.presentFamily.value(), 0, &m_vkPresentQueue);
 }
 
 
@@ -610,14 +609,78 @@ void App::CreateWindowSurface()
 //-------------------------------------------------------------------------------------------------
 void App::CreateSwapChain()
 {
+	SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_vkPhysicalDevice, this);
 
+	VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
+	VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
+	VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
+
+	uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+	if (swapChainSupport.capabilities.maxImageCount > 0)
+	{
+		imageCount = Min(imageCount, swapChainSupport.capabilities.maxImageCount);
+	}
+
+	VkSwapchainCreateInfoKHR createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	createInfo.surface = m_vkSurface;
+
+	createInfo.minImageCount = imageCount;
+	createInfo.imageFormat = surfaceFormat.format;
+	createInfo.imageColorSpace = surfaceFormat.colorSpace;
+	createInfo.imageExtent = extent;
+	createInfo.imageArrayLayers = 1;
+	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+	QueueFamilyIndices indices = FindQueueFamilies(m_vkPhysicalDevice, this);
+	uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+	
+	// We need to specify how to handle swap chain images that will be used
+	// across multiple queue families.That will be the case in our application if the
+	// graphics queue family is different from the presentation queue. We’ll be drawing
+	// on the images in the swap chain from the graphics queue and then submitting
+	// them on the presentation queue.There are two ways to handle images that are
+	// accessed from multiple queues
+	
+	if (indices.graphicsFamily != indices.presentFamily) 
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT; // Image is shared, no transferring needed, but slower
+		createInfo.queueFamilyIndexCount = 2;
+		createInfo.pQueueFamilyIndices = queueFamilyIndices;
+	}
+	else
+	{
+		createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE; // Image is owned by one queue family at a time, ownership must be transferred
+		createInfo.queueFamilyIndexCount = 0; // Optional
+		createInfo.pQueueFamilyIndices = nullptr; // Optional
+	}
+
+	createInfo.preTransform = swapChainSupport.capabilities.currentTransform;	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR; // Blending with other windows, we don't want that
+
+	createInfo.presentMode = presentMode;
+	createInfo.clipped = VK_TRUE;
+	createInfo.oldSwapchain = VK_NULL_HANDLE;
+
+	VkResult result = vkCreateSwapchainKHR(m_vkLogicalDevice, &createInfo, nullptr, &m_vkSwapChain);
+	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create swap chain!");
+
+	// Get the images
+	uint32_t imageCount = 0;
+	vkGetSwapchainImagesKHR(m_vkLogicalDevice, m_vkSwapChain, &imageCount, nullptr);
+	m_vkSwapChainImages.resize(imageCount);
+	vkGetSwapchainImagesKHR(m_vkLogicalDevice, m_vkSwapChain, &imageCount, m_vkSwapChainImages.data());
+
+	m_vkSwapChainImageFormat = surfaceFormat.format;
+	m_vkSwapChainExtent = extent;
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void App::ShutdownVulkan()
 {
-	vkDestroyDevice(m_vkDevice, nullptr);
+	vkDestroySwapchainKHR(m_vkLogicalDevice, m_vkSwapChain, nullptr);
+
+	vkDestroyDevice(m_vkLogicalDevice, nullptr);
 
 	vkDestroySurfaceKHR(m_vkInstance, m_vkSurface, nullptr);
 
