@@ -228,6 +228,7 @@ void App::InitVulkan()
 	CreateLogicalDevice();
 	CreateSwapChain();
 	CreateSwapChainImageViews();
+	CreateRenderPass();
 	CreateGraphicsPipeline();
 }
 
@@ -708,6 +709,38 @@ void App::CreateSwapChainImageViews()
 
 
 //-------------------------------------------------------------------------------------------------
+void App::CreateRenderPass()
+{
+	VkAttachmentDescription colorAttachment{};
+	colorAttachment.format = m_vkSwapChainImageFormat;
+	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; // Clear the buffer at the start of the pass
+	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // Store the data at the end
+	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // No stencil yet
+	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // No stencil yet
+	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	VkAttachmentReference colorAttachmentRef{};
+	colorAttachmentRef.attachment = 0; // Index into the renderPassInfo.pAttachments array
+	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkSubpassDescription subpass{};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.colorAttachmentCount = 1;
+	subpass.pColorAttachments = &colorAttachmentRef; // This array is the one indexed in the fragment shader, with layout(location = 0)out vec4 outColor
+
+	VkRenderPassCreateInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.attachmentCount = 1;
+	renderPassInfo.pAttachments = &colorAttachment;
+	renderPassInfo.subpassCount = 1;
+	renderPassInfo.pSubpasses = &subpass;	VkResult result = vkCreateRenderPass(m_vkLogicalDevice, &renderPassInfo, nullptr, &m_vkRenderPass);
+	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create render pass!");
+}
+
+
+//-------------------------------------------------------------------------------------------------
 VkShaderModule CreateShaderModule(const char* byteCode, size_t size, VkDevice vkDevice)
 {
 	VkShaderModuleCreateInfo createInfo{};
@@ -727,14 +760,14 @@ VkShaderModule CreateShaderModule(const char* byteCode, size_t size, VkDevice vk
 void App::CreateGraphicsPipeline()
 {
 	File vertFile;
-	if (vertFile.Open("Data/Shader/vert.spv", "r"))
+	if (vertFile.Open("Data/Shader/vert.spv", "rb"))
 	{
 		vertFile.LoadFileToMemory();
 		vertFile.Close();
 	}
 
 	File fragFile;
-	if (fragFile.Open("Data/Shader/frag.spv", "r"))
+	if (fragFile.Open("Data/Shader/frag.spv", "rb"))
 	{
 		fragFile.LoadFileToMemory();
 		fragFile.Close();
@@ -856,6 +889,28 @@ void App::CreateGraphicsPipeline()
 	VkResult layoutResult = vkCreatePipelineLayout(m_vkLogicalDevice, &pipelineLayoutInfo, nullptr, &m_vkPipelineLayout);
 	ASSERT_OR_DIE(layoutResult == VK_SUCCESS, "Cannot create pipeline layout!");
 
+	VkGraphicsPipelineCreateInfo pipelineInfo{};
+	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipelineInfo.stageCount = 2;
+	pipelineInfo.pStages = shaderStages;
+	// Fixed-function stages
+	pipelineInfo.pVertexInputState = &vertexInputInfo;
+	pipelineInfo.pInputAssemblyState = &inputAssembly;
+	pipelineInfo.pViewportState = &viewportState;
+	pipelineInfo.pRasterizationState = &rasterizer;
+	pipelineInfo.pMultisampleState = &multisampling;
+	pipelineInfo.pDepthStencilState = nullptr; // Optional
+	pipelineInfo.pColorBlendState = &colorBlending;
+	pipelineInfo.pDynamicState = nullptr; // Optional
+	pipelineInfo.layout = m_vkPipelineLayout;
+	pipelineInfo.renderPass = m_vkRenderPass;
+	pipelineInfo.subpass = 0;
+	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
+	pipelineInfo.basePipelineIndex = -1; // Optional
+	
+	VkResult pipelineResult = vkCreateGraphicsPipelines(m_vkLogicalDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_vkGraphicsPipeline);
+	ASSERT_OR_DIE(pipelineResult == VK_SUCCESS, "Can't create graphics pipeline!");
+
 	vkDestroyShaderModule(m_vkLogicalDevice, vertModule, nullptr);
 	vkDestroyShaderModule(m_vkLogicalDevice, fragModule, nullptr);
 }
@@ -864,7 +919,9 @@ void App::CreateGraphicsPipeline()
 //-------------------------------------------------------------------------------------------------
 void App::ShutdownVulkan()
 {
+	vkDestroyPipeline(m_vkLogicalDevice, m_vkGraphicsPipeline, nullptr);
 	vkDestroyPipelineLayout(m_vkLogicalDevice, m_vkPipelineLayout, nullptr);
+	vkDestroyRenderPass(m_vkLogicalDevice, m_vkRenderPass, nullptr);
 
 	for (VkImageView view : m_vkSwapChainImageViews)
 	{
