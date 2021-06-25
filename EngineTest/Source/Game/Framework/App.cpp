@@ -226,6 +226,7 @@ void App::InitVulkan()
 	PickPhysicalDevice();
 	CreateLogicalDevice();
 	CreateSwapChain();
+	CreateSwapChainImageViews();
 }
 
 
@@ -665,7 +666,6 @@ void App::CreateSwapChain()
 	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create swap chain!");
 
 	// Get the images
-	uint32_t imageCount = 0;
 	vkGetSwapchainImagesKHR(m_vkLogicalDevice, m_vkSwapChain, &imageCount, nullptr);
 	m_vkSwapChainImages.resize(imageCount);
 	vkGetSwapchainImagesKHR(m_vkLogicalDevice, m_vkSwapChain, &imageCount, m_vkSwapChainImages.data());
@@ -676,9 +676,46 @@ void App::CreateSwapChain()
 
 
 //-------------------------------------------------------------------------------------------------
+void App::CreateSwapChainImageViews()
+{
+	m_vkSwapChainImageViews.resize(m_vkSwapChainImages.size());
+
+	for (size_t i = 0; i < m_vkSwapChainImages.size(); ++i)
+	{
+		VkImageViewCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		createInfo.image = m_vkSwapChainImages[i];
+
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		createInfo.format = m_vkSwapChainImageFormat;
+
+		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		createInfo.subresourceRange.baseMipLevel = 0;
+		createInfo.subresourceRange.levelCount = 1;
+		createInfo.subresourceRange.baseArrayLayer = 0;
+		createInfo.subresourceRange.layerCount = 1;
+
+		VkResult result = vkCreateImageView(m_vkLogicalDevice, &createInfo, nullptr, &m_vkSwapChainImageViews[i]);
+		ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create swap chain image views!");
+	}
+}
+
+
+//-------------------------------------------------------------------------------------------------
 void App::ShutdownVulkan()
 {
+	for (VkImageView view : m_vkSwapChainImageViews)
+	{
+		vkDestroyImageView(m_vkLogicalDevice, view, nullptr);
+	}
+	m_vkSwapChainImageViews.clear();
+
 	vkDestroySwapchainKHR(m_vkLogicalDevice, m_vkSwapChain, nullptr);
+	m_vkSwapChainImages.clear();
 
 	vkDestroyDevice(m_vkLogicalDevice, nullptr);
 

@@ -62,6 +62,7 @@ private:
 	void CreateLogicalDevice();
 	void CreateWindowSurface();
 	void CreateSwapChain();
+	void CreateSwapChainImageViews();
 
 	void ShutdownVulkan();
 
@@ -85,6 +86,7 @@ public:
 	VkSurfaceKHR m_vkSurface;
 	VkSwapchainKHR m_vkSwapChain;
 	std::vector<VkImage> m_vkSwapChainImages;
+	std::vector<VkImageView> m_vkSwapChainImageViews;
 	VkFormat m_vkSwapChainImageFormat;
 	VkExtent2D m_vkSwapChainExtent;
 };
