@@ -95,6 +95,7 @@ void RunMessagePump()
 //-------------------------------------------------------------------------------------------------
 App::App()
 {
+	
 }
 
 
@@ -112,6 +113,8 @@ void App::Initialize()
 
 	StringIdSystem::Initialize();
 	EventSystem::Initialize();
+	g_eventSystem->SubscribeEventCallbackObjectMethod("window-resize", &App::SignalSwapChainRebuild, *g_app);
+
 	Window::Initialize((16.f / 9.f), "Vulkan - Test");
 	g_window->RegisterMessageHandler(AppMessageHandler);
 	g_app->InitVulkan();
@@ -132,6 +135,8 @@ void App::Shutdown()
 	InputSystem::Shutdown();
 	g_window->UnregisterMessageHandler(AppMessageHandler);
 	Window::Shutdown();
+
+	g_eventSystem->UnsubscribeEventCallbackObjectMethod("window-resize", &App::SignalSwapChainRebuild, *g_app);
 	EventSystem::Shutdown();
 	StringIdSystem::Shutdown();
 
@@ -163,6 +168,16 @@ void App::RunFrame()
 void App::Quit()
 {
 	m_isQuitting = true;
+}
+
+
+//-------------------------------------------------------------------------------------------------
+bool App::SignalSwapChainRebuild(NamedProperties& args)
+{
+	UNUSED(args);
+
+	m_needSwapChainRebuild = true;
+	return false;
 }
 
 
@@ -241,7 +256,7 @@ void App::Render()
 	presentInfo.pResults = nullptr; // Optional
 
 	result = vkQueuePresentKHR(m_vkPresentQueue, &presentInfo);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_needSwapChainRebuild)
 	{
 		RecreateSwapChain();
 	}
@@ -768,6 +783,8 @@ void App::RecreateSwapChain()
 	CreateFrameBuffers();
 	CreateCommandPool();
 	CreateCommandBuffers();
+
+	m_needSwapChainRebuild = false;
 }
 
 
