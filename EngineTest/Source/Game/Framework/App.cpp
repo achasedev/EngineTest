@@ -187,7 +187,17 @@ void App::Render()
 
 	// Get the backbuffer
 	uint32_t imageIndex;
-	vkAcquireNextImageKHR(m_vkLogicalDevice, m_vkSwapChain, UINT64_MAX, m_vkImageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(m_vkLogicalDevice, m_vkSwapChain, UINT64_MAX, m_vkImageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		RecreateSwapChain();
+		return;
+	}
+	else
+	{
+		ASSERT_OR_DIE(result == VK_SUCCESS || result == VK_SUBOPTIMAL_KHR, "Couldn't acquire backbuffer!");
+	}
 
 	if (m_vkImagesInFlight[imageIndex] != VK_NULL_HANDLE)
 	{
@@ -215,7 +225,7 @@ void App::Render()
 
 	vkResetFences(m_vkLogicalDevice, 1, &m_vkInFlightFences[m_currentFrame]);
 
-	VkResult result = vkQueueSubmit(m_vkGraphicsQueue, 1, &submitInfo, m_vkInFlightFences[m_currentFrame]);
+	result = vkQueueSubmit(m_vkGraphicsQueue, 1, &submitInfo, m_vkInFlightFences[m_currentFrame]);
 	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't submit commands!");
 
 	// Present
@@ -230,7 +240,15 @@ void App::Render()
 	presentInfo.pImageIndices = &imageIndex;
 	presentInfo.pResults = nullptr; // Optional
 
-	vkQueuePresentKHR(m_vkPresentQueue, &presentInfo);
+	result = vkQueuePresentKHR(m_vkPresentQueue, &presentInfo);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	{
+		RecreateSwapChain();
+	}
+	else
+	{
+		ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't present!");
+	}
 
 	m_currentFrame = (m_currentFrame + 1) % m_MAX_FRAMES_IN_FLIGHT;
 }
@@ -740,6 +758,20 @@ void App::CreateSwapChain()
 
 
 //-------------------------------------------------------------------------------------------------
+void App::RecreateSwapChain()
+{
+	vkDeviceWaitIdle(m_vkLogicalDevice);
+	CreateSwapChain();
+	CreateSwapChainImageViews();
+	CreateRenderPass();
+	CreateGraphicsPipeline();
+	CreateFrameBuffers();
+	CreateCommandPool();
+	CreateCommandBuffers();
+}
+
+
+//-------------------------------------------------------------------------------------------------
 void App::CreateSwapChainImageViews()
 {
 	m_vkSwapChainImageViews.resize(m_vkSwapChainImages.size());
@@ -1124,7 +1156,7 @@ void App::CreateSyncObjects()
 //-------------------------------------------------------------------------------------------------
 void App::ShutdownVulkan()
 {
-	vkDeviceWaitIdle(m_vkLogicalDevice);
+	CleanUpSwapChain();
 
 	for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i)
 	{
@@ -1137,7 +1169,30 @@ void App::ShutdownVulkan()
 		vkDestroySemaphore(m_vkLogicalDevice, m_vkImageAvailableSemaphores[i], nullptr);
 	}
 
+
 	vkDestroyCommandPool(m_vkLogicalDevice, m_vkCommandPool, nullptr);
+
+	vkDestroyDevice(m_vkLogicalDevice, nullptr);
+
+	vkDestroySurfaceKHR(m_vkInstance, m_vkSurface, nullptr);
+
+	if (m_enableValidationLayers)
+	{
+		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_vkInstance, "vkDestroyDebugUtilsMessengerEXT");
+		ASSERT_OR_DIE(func != nullptr, "Failed to look up debug function!");
+		func(m_vkInstance, m_vkDebugMessenger, nullptr);
+	}
+
+	vkDestroyInstance(m_vkInstance, nullptr);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void App::CleanUpSwapChain()
+{
+	vkDeviceWaitIdle(m_vkLogicalDevice);
+
+	vkFreeCommandBuffers(m_vkLogicalDevice, m_vkCommandPool, (uint32_t)m_vkCommandBuffers.size(), m_vkCommandBuffers.data());
 
 	for (VkFramebuffer framebuffer : m_vkFramebuffers)
 	{
@@ -1156,17 +1211,4 @@ void App::ShutdownVulkan()
 
 	vkDestroySwapchainKHR(m_vkLogicalDevice, m_vkSwapChain, nullptr);
 	m_vkSwapChainImages.clear();
-
-	vkDestroyDevice(m_vkLogicalDevice, nullptr);
-
-	vkDestroySurfaceKHR(m_vkInstance, m_vkSurface, nullptr);
-
-	if (m_enableValidationLayers)
-	{
-		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_vkInstance, "vkDestroyDebugUtilsMessengerEXT");
-		ASSERT_OR_DIE(func != nullptr, "Failed to look up debug function!");
-		func(m_vkInstance, m_vkDebugMessenger, nullptr);
-	}
-
-	vkDestroyInstance(m_vkInstance, nullptr);
 }

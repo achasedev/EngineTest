@@ -62,6 +62,7 @@ private:
 	void CreateLogicalDevice();
 	void CreateWindowSurface();
 	void CreateSwapChain();
+	void RecreateSwapChain();
 	void CreateSwapChainImageViews();
 	void CreateRenderPass();
 	void CreateGraphicsPipeline();
@@ -71,6 +72,7 @@ private:
 	void CreateSyncObjects();
 
 	void ShutdownVulkan();
+	void CleanUpSwapChain();
 
 
 private:
