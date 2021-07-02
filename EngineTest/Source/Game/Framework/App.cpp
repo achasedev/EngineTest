@@ -316,6 +316,7 @@ void App::InitVulkan()
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	CreateCommandPool();
+	CreateVertexBuffer();
 	CreateCommandBuffers();
 	CreateSyncObjects();
 }
@@ -1093,6 +1094,58 @@ void App::CreateCommandPool()
 
 
 //-------------------------------------------------------------------------------------------------
+uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags propertyFlags, App* app)
+{
+	VkPhysicalDeviceMemoryProperties physProperties;
+	vkGetPhysicalDeviceMemoryProperties(app->m_vkPhysicalDevice, &physProperties);
+
+	for (uint32_t i = 0; i < physProperties.memoryTypeCount; ++i)
+	{
+		if ((typeFilter & (i << i)) && ((physProperties.memoryTypes[i].propertyFlags & propertyFlags) == propertyFlags)) // All property flags need to be set to be usable
+		{
+			return i;
+		}
+	}
+
+	ERROR_AND_DIE("Couldn't find suitable memory type!");
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void App::CreateVertexBuffer()
+{
+	VkBufferCreateInfo bufferInfo{};
+
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = sizeof(Vertex3D_PC) * 3;
+	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	bufferInfo.flags = 0; // Sparse buffer memory flags, don't use now
+
+	VkResult result = vkCreateBuffer(m_vkLogicalDevice, &bufferInfo, nullptr, &m_vkVertexBuffer);
+	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create vertex buffer!");
+
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements(m_vkLogicalDevice, m_vkVertexBuffer, &memRequirements);
+
+	VkMemoryAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size; // This may not == bufferInfo.size !!
+	allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this); // Make sure it can be written by the CPU
+
+	result = vkAllocateMemory(m_vkLogicalDevice, &allocInfo, nullptr, &m_vkVertexBufferMemory);
+	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't allocate memory!");
+
+	vkBindBufferMemory(m_vkLogicalDevice, m_vkVertexBuffer, m_vkVertexBufferMemory, 0);
+
+	void* data;
+	vkMapMemory(m_vkLogicalDevice, m_vkVertexBufferMemory, 0, bufferInfo.size, 0, &data);
+	memcpy(data, m_vertices, bufferInfo.size);
+	vkUnmapMemory(m_vkLogicalDevice, m_vkVertexBufferMemory);
+}
+
+
+//-------------------------------------------------------------------------------------------------
 void App::CreateCommandBuffers()
 {
 	m_vkCommandBuffers.resize(m_vkFramebuffers.size());
@@ -1132,6 +1185,10 @@ void App::CreateCommandBuffers()
 		vkCmdBeginRenderPass(m_vkCommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(m_vkCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_vkGraphicsPipeline);
+
+		VkBuffer vertexBuffers[] = { m_vkVertexBuffer };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(m_vkCommandBuffers[i], 0, 1, vertexBuffers, offsets);
 
 		vkCmdDraw(m_vkCommandBuffers[i], 3, 1, 0, 0);
 
@@ -1181,6 +1238,9 @@ void App::CreateSyncObjects()
 void App::ShutdownVulkan()
 {
 	CleanUpSwapChain();
+
+	vkDestroyBuffer(m_vkLogicalDevice, m_vkVertexBuffer, nullptr);
+	vkFreeMemory(m_vkLogicalDevice, m_vkVertexBufferMemory, nullptr);
 
 	for (int i = 0; i < m_MAX_FRAMES_IN_FLIGHT; ++i)
 	{
