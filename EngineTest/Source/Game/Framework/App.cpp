@@ -95,9 +95,17 @@ void RunMessagePump()
 //-------------------------------------------------------------------------------------------------
 App::App()
 {
-	m_vertices.push_back(Vertex3D_PC(Vector3(0.f, -0.5f, 0.f), Rgba::RED));
-	m_vertices.push_back(Vertex3D_PC(Vector3(0.5f, 0.5f, 0.f), Rgba::GREEN));
-	m_vertices.push_back(Vertex3D_PC(Vector3(-0.5f, 0.5f, 0.f), Rgba::BLUE));
+	m_vertices.push_back(Vertex3D_PC(Vector3(-0.5f, 0.5f, 0.f), Rgba::WHITE));
+	m_vertices.push_back(Vertex3D_PC(Vector3(-0.5f, -0.5f, 0.f), Rgba::RED));
+	m_vertices.push_back(Vertex3D_PC(Vector3(0.5f, -0.5f, 0.f), Rgba::GREEN));
+	m_vertices.push_back(Vertex3D_PC(Vector3(0.5f, 0.5f, 0.f), Rgba::BLUE));
+
+	m_indices.push_back(0);
+	m_indices.push_back(1);
+	m_indices.push_back(2);
+	m_indices.push_back(0);
+	m_indices.push_back(2);
+	m_indices.push_back(3);
 }
 
 
@@ -317,6 +325,7 @@ void App::InitVulkan()
 	CreateFrameBuffers();
 	CreateCommandPool();
 	CreateVertexBuffer();
+	CreateIndexBuffer();
 	CreateCommandBuffers();
 	CreateSyncObjects();
 }
@@ -1205,6 +1214,29 @@ void App::CreateVertexBuffer()
 
 
 //-------------------------------------------------------------------------------------------------
+void App::CreateIndexBuffer()
+{
+	VkDeviceSize bufferSize = sizeof(m_indices[0]) * m_indices.size();
+
+	VkBuffer vkStagingBuffer;
+	VkDeviceMemory vkStagingBufferMemory;
+
+	CreateVkBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vkStagingBuffer, vkStagingBufferMemory, this);
+
+	void* data;
+	vkMapMemory(m_vkLogicalDevice, vkStagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, m_indices.data(), bufferSize);
+	vkUnmapMemory(m_vkLogicalDevice, vkStagingBufferMemory);
+
+	CreateVkBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_vkIndexBuffer, m_vkIndexBufferMemory, this);
+	CopyBuffer(vkStagingBuffer, m_vkIndexBuffer, bufferSize, this);
+
+	vkDestroyBuffer(m_vkLogicalDevice, vkStagingBuffer, nullptr);
+	vkFreeMemory(m_vkLogicalDevice, vkStagingBufferMemory, nullptr);
+}
+
+
+//-------------------------------------------------------------------------------------------------
 void App::CreateCommandBuffers()
 {
 	m_vkCommandBuffers.resize(m_vkFramebuffers.size());
@@ -1248,9 +1280,10 @@ void App::CreateCommandBuffers()
 		VkBuffer vertexBuffers[] = { m_vkVertexBuffer };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(m_vkCommandBuffers[i], 0, 1, vertexBuffers, offsets);
+		vkCmdBindIndexBuffer(m_vkCommandBuffers[i], m_vkIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdDraw(m_vkCommandBuffers[i], 3, 1, 0, 0);
-
+		//vkCmdDraw(m_vkCommandBuffers[i], 3, 1, 0, 0);
+		vkCmdDrawIndexed(m_vkCommandBuffers[i], static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
 		vkCmdEndRenderPass(m_vkCommandBuffers[i]);
 
 		result = vkEndCommandBuffer(m_vkCommandBuffers[i]);
@@ -1297,6 +1330,9 @@ void App::CreateSyncObjects()
 void App::ShutdownVulkan()
 {
 	CleanUpSwapChain();
+
+	vkDestroyBuffer(m_vkLogicalDevice, m_vkIndexBuffer, nullptr);
+	vkFreeMemory(m_vkLogicalDevice, m_vkIndexBufferMemory, nullptr);
 
 	vkDestroyBuffer(m_vkLogicalDevice, m_vkVertexBuffer, nullptr);
 	vkFreeMemory(m_vkLogicalDevice, m_vkVertexBufferMemory, nullptr);
