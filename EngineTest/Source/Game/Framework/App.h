@@ -4,6 +4,7 @@
 /// Description: Interface/Manager between Game code and Engine code
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include "Engine/Math/Matrix4.h"
 #include "Engine/Render/VulkanCommon.h"
 #include "Engine/Render/Vertex.h"
 #include <vector>
@@ -25,6 +26,14 @@ class NamedProperties;
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------------------------
+struct CameraUniformLayout
+{
+	Matrix4 model;
+	Matrix4 view;
+	Matrix4 projection;
+};
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// CLASS DECLARATIONS
@@ -67,16 +76,22 @@ private:
 	void RecreateSwapChain();
 	void CreateSwapChainImageViews();
 	void CreateRenderPass();
+	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline();
 	void CreateFrameBuffers();
 	void CreateCommandPool();
 	void CreateVertexBuffer();
 	void CreateIndexBuffer();
+	void CreateUniformBuffers();
+	void CreateDescriptorPool();
+	void CreateDescriptorSets();
 	void CreateCommandBuffers();
 	void CreateSyncObjects();
 
 	void ShutdownVulkan();
 	void CleanUpSwapChain();
+
+	void UpdateCameraUBO(uint32_t imageIndex);
 
 
 private:
@@ -102,7 +117,8 @@ public:
 	VkFormat m_vkSwapChainImageFormat;
 	VkExtent2D m_vkSwapChainExtent;
 	VkRenderPass m_vkRenderPass;
-	VkPipelineLayout m_vkPipelineLayout;	VkPipeline m_vkGraphicsPipeline;	std::vector<VkFramebuffer> m_vkFramebuffers;	VkCommandPool m_vkCommandPool;	std::vector<VkCommandBuffer> m_vkCommandBuffers;	std::vector<VkSemaphore> m_vkImageAvailableSemaphores;	std::vector<VkSemaphore> m_vkRenderFinishedSemaphores;	std::vector<VkFence> m_vkInFlightFences;	std::vector<VkFence> m_vkImagesInFlight;	const int m_MAX_FRAMES_IN_FLIGHT = 2;	size_t m_currentFrame = 0;	bool m_needSwapChainRebuild = false;	std::vector<Vertex3D_PC> m_vertices;	std::vector<int> m_indices;	VkBuffer m_vkVertexBuffer;	VkDeviceMemory m_vkVertexBufferMemory;	VkBuffer m_vkIndexBuffer;	VkDeviceMemory m_vkIndexBufferMemory;};
+	VkDescriptorSetLayout m_vkDescriptorSetLayout;
+	VkPipelineLayout m_vkPipelineLayout;	VkPipeline m_vkGraphicsPipeline;	std::vector<VkFramebuffer> m_vkFramebuffers;	VkCommandPool m_vkCommandPool;	std::vector<VkCommandBuffer> m_vkCommandBuffers;	std::vector<VkSemaphore> m_vkImageAvailableSemaphores;	std::vector<VkSemaphore> m_vkRenderFinishedSemaphores;	std::vector<VkFence> m_vkInFlightFences;	std::vector<VkFence> m_vkImagesInFlight;	const int m_MAX_FRAMES_IN_FLIGHT = 2;	size_t m_currentFrame = 0;	bool m_needSwapChainRebuild = false;	std::vector<Vertex3D_PC> m_vertices;	std::vector<int> m_indices;	VkBuffer m_vkVertexBuffer;	VkDeviceMemory m_vkVertexBufferMemory;	VkBuffer m_vkIndexBuffer;	VkDeviceMemory m_vkIndexBufferMemory;	std::vector<VkBuffer> m_vkCameraUBOs;	std::vector<VkDeviceMemory> m_vkCameraUBOMemory;	VkDescriptorPool m_vkDescriptorPool;	std::vector<VkDescriptorSet> m_vkDescriptorSets;};
 
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------

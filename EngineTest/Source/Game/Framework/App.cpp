@@ -95,10 +95,10 @@ void RunMessagePump()
 //-------------------------------------------------------------------------------------------------
 App::App()
 {
-	m_vertices.push_back(Vertex3D_PC(Vector3(-0.5f, 0.5f, 0.f), Rgba::WHITE));
-	m_vertices.push_back(Vertex3D_PC(Vector3(-0.5f, -0.5f, 0.f), Rgba::RED));
-	m_vertices.push_back(Vertex3D_PC(Vector3(0.5f, -0.5f, 0.f), Rgba::GREEN));
-	m_vertices.push_back(Vertex3D_PC(Vector3(0.5f, 0.5f, 0.f), Rgba::BLUE));
+	m_vertices.push_back(Vertex3D_PC(Vector3(-0.5f, -0.5f, 0.f), Rgba::WHITE));
+	m_vertices.push_back(Vertex3D_PC(Vector3(-0.5f, 0.5f, 0.f), Rgba::RED));
+	m_vertices.push_back(Vertex3D_PC(Vector3(0.5f, 0.5f, 0.f), Rgba::GREEN));
+	m_vertices.push_back(Vertex3D_PC(Vector3(0.5f, -0.5f, 0.f), Rgba::BLUE));
 
 	m_indices.push_back(0);
 	m_indices.push_back(1);
@@ -231,6 +231,8 @@ void App::Render()
 
 	m_vkImagesInFlight[imageIndex] = m_vkInFlightFences[m_currentFrame];
 
+	UpdateCameraUBO(imageIndex);
+
 	// Specify the commands to queue
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -321,11 +323,15 @@ void App::InitVulkan()
 	CreateSwapChain();
 	CreateSwapChainImageViews();
 	CreateRenderPass();
+	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	CreateCommandPool();
 	CreateVertexBuffer();
 	CreateIndexBuffer();
+	CreateUniformBuffers();
+	CreateDescriptorPool();
+	CreateDescriptorSets();
 	CreateCommandBuffers();
 	CreateSyncObjects();
 }
@@ -788,12 +794,16 @@ void App::CreateSwapChain()
 void App::RecreateSwapChain()
 {
 	vkDeviceWaitIdle(m_vkLogicalDevice);
+
+	CleanUpSwapChain();
+
 	CreateSwapChain();
 	CreateSwapChainImageViews();
 	CreateRenderPass();
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
-	CreateCommandPool();
+	CreateUniformBuffers();
+	CreateDescriptorPool();
 	CreateCommandBuffers();
 
 	m_needSwapChainRebuild = false;
@@ -873,6 +883,28 @@ void App::CreateRenderPass()
 
 	VkResult result = vkCreateRenderPass(m_vkLogicalDevice, &renderPassInfo, nullptr, &m_vkRenderPass);
 	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create render pass!");
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void App::CreateDescriptorSetLayout()
+{
+	VkDescriptorSetLayoutBinding layoutBinding{};
+
+	layoutBinding.binding = 0;
+	layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	layoutBinding.descriptorCount = 1;
+	layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	layoutBinding.pImmutableSamplers = nullptr; // Optional
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings = &layoutBinding;
+
+	VkResult result = vkCreateDescriptorSetLayout(m_vkLogicalDevice, &layoutInfo, nullptr, &m_vkDescriptorSetLayout);
+	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create descriptor layout!");
 }
 
 
@@ -1028,8 +1060,8 @@ void App::CreateGraphicsPipeline()
 	// Pipeline layout (uniforms)
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 0; // Optional
-	pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &m_vkDescriptorSetLayout;
 	pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
 	pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
 
@@ -1237,6 +1269,81 @@ void App::CreateIndexBuffer()
 
 
 //-------------------------------------------------------------------------------------------------
+void App::CreateUniformBuffers()
+{
+	VkDeviceSize bufferSize = sizeof(CameraUniformLayout);
+
+	m_vkCameraUBOs.resize(m_vkSwapChainImages.size());
+	m_vkCameraUBOMemory.resize(m_vkSwapChainImages.size());
+
+	for (int i = 0; i < (int)m_vkSwapChainImages.size(); ++i)
+	{
+		CreateVkBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_vkCameraUBOs[i], m_vkCameraUBOMemory[i], this);
+	}
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void App::CreateDescriptorPool()
+{
+	VkDescriptorPoolSize poolSize{};
+
+	poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	poolSize.descriptorCount = static_cast<uint32_t>(m_vkSwapChainImages.size());
+
+	VkDescriptorPoolCreateInfo poolInfo{};
+
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = 1;
+	poolInfo.pPoolSizes = &poolSize;
+	poolInfo.maxSets = static_cast<uint32_t>(m_vkSwapChainImages.size());
+
+	VkResult result = vkCreateDescriptorPool(m_vkLogicalDevice, &poolInfo, nullptr, &m_vkDescriptorPool);
+	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create descriptor pool!");
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void App::CreateDescriptorSets()
+{
+	std::vector<VkDescriptorSetLayout> layouts(m_vkSwapChainImages.size(), m_vkDescriptorSetLayout); // Need an array of layouts to specify all the sets should have the same layout
+
+	VkDescriptorSetAllocateInfo allocInfo{};
+
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = m_vkDescriptorPool;
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(m_vkSwapChainImages.size());
+	allocInfo.pSetLayouts = layouts.data();
+
+	m_vkDescriptorSets.resize(static_cast<uint32_t>(m_vkSwapChainImages.size()));
+	VkResult result = vkAllocateDescriptorSets(m_vkLogicalDevice, &allocInfo, m_vkDescriptorSets.data());
+	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't allocate descriptor sets!");
+
+	// Now populate the sets to point to the right buffers
+	for (size_t i = 0; i < m_vkSwapChainImages.size(); ++i)
+	{
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = m_vkCameraUBOs[i];
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(CameraUniformLayout);
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = m_vkDescriptorSets[i];
+		descriptorWrite.dstBinding = 0;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+		descriptorWrite.pImageInfo = nullptr; // Optional
+		descriptorWrite.pTexelBufferView = nullptr; // Optional
+
+		vkUpdateDescriptorSets(m_vkLogicalDevice, 1, &descriptorWrite, 0, nullptr);
+	}
+}
+
+
+//-------------------------------------------------------------------------------------------------
 void App::CreateCommandBuffers()
 {
 	m_vkCommandBuffers.resize(m_vkFramebuffers.size());
@@ -1282,7 +1389,8 @@ void App::CreateCommandBuffers()
 		vkCmdBindVertexBuffers(m_vkCommandBuffers[i], 0, 1, vertexBuffers, offsets);
 		vkCmdBindIndexBuffer(m_vkCommandBuffers[i], m_vkIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-		//vkCmdDraw(m_vkCommandBuffers[i], 3, 1, 0, 0);
+
+		vkCmdBindDescriptorSets(m_vkCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_vkPipelineLayout, 0, 1, &m_vkDescriptorSets[i], 0, nullptr);
 		vkCmdDrawIndexed(m_vkCommandBuffers[i], static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
 		vkCmdEndRenderPass(m_vkCommandBuffers[i]);
 
@@ -1331,6 +1439,8 @@ void App::ShutdownVulkan()
 {
 	CleanUpSwapChain();
 
+	vkDestroyDescriptorSetLayout(m_vkLogicalDevice, m_vkDescriptorSetLayout, nullptr);
+
 	vkDestroyBuffer(m_vkLogicalDevice, m_vkIndexBuffer, nullptr);
 	vkFreeMemory(m_vkLogicalDevice, m_vkIndexBufferMemory, nullptr);
 
@@ -1371,6 +1481,14 @@ void App::CleanUpSwapChain()
 {
 	vkDeviceWaitIdle(m_vkLogicalDevice);
 
+	for (size_t i = 0; i < m_vkSwapChainImages.size(); ++i)
+	{
+		vkDestroyBuffer(m_vkLogicalDevice, m_vkCameraUBOs[i], nullptr);
+		vkFreeMemory(m_vkLogicalDevice, m_vkCameraUBOMemory[i], nullptr);
+	}
+
+	vkDestroyDescriptorPool(m_vkLogicalDevice, m_vkDescriptorPool, nullptr);
+
 	vkFreeCommandBuffers(m_vkLogicalDevice, m_vkCommandPool, (uint32_t)m_vkCommandBuffers.size(), m_vkCommandBuffers.data());
 
 	for (VkFramebuffer framebuffer : m_vkFramebuffers)
@@ -1390,4 +1508,22 @@ void App::CleanUpSwapChain()
 
 	vkDestroySwapchainKHR(m_vkLogicalDevice, m_vkSwapChain, nullptr);
 	m_vkSwapChainImages.clear();
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void App::UpdateCameraUBO(uint32_t imageIndex)
+{
+	float elapsedTime = Clock::GetMasterClock()->GetTotalSeconds();
+
+	CameraUniformLayout layout;
+	layout.model = Matrix4::MakeModelMatrix(Vector3::ZERO, Vector3(0.f, 0.f, 90.f * elapsedTime), Vector3::ONES);
+	layout.view = Matrix4::MakeLookAt(Vector3(-2.f, 0.f, -2.f), Vector3::ZERO).GetInverse();
+	layout.projection = Matrix4::MakePerspective(90.f, (float)m_vkSwapChainExtent.width / (float)m_vkSwapChainExtent.height, 0.1f, 10.f);
+	layout.projection.Jy *= -1.f;
+
+	void* data;
+	vkMapMemory(m_vkLogicalDevice, m_vkCameraUBOMemory[imageIndex], 0, sizeof(CameraUniformLayout), 0, &data);
+	memcpy(data, &layout, sizeof(CameraUniformLayout));
+	vkUnmapMemory(m_vkLogicalDevice, m_vkCameraUBOMemory[imageIndex]);
 }
