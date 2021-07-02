@@ -4,8 +4,8 @@
 /// Description: Interface/Manager between Game code and Engine code
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #pragma once
-#define VK_USE_PLATFORM_WIN32_KHR
-#include "ThirdParty/Vulkan/Include/vulkan/vulkan.h"
+#include "Engine/Render/VulkanCommon.h"
+#include "Engine/Render/Vertex.h"
 #include <vector>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ public:
 	VkFormat m_vkSwapChainImageFormat;
 	VkExtent2D m_vkSwapChainExtent;
 	VkRenderPass m_vkRenderPass;
-	VkPipelineLayout m_vkPipelineLayout;	VkPipeline m_vkGraphicsPipeline;	std::vector<VkFramebuffer> m_vkFramebuffers;	VkCommandPool m_vkCommandPool;	std::vector<VkCommandBuffer> m_vkCommandBuffers;	std::vector<VkSemaphore> m_vkImageAvailableSemaphores;	std::vector<VkSemaphore> m_vkRenderFinishedSemaphores;	std::vector<VkFence> m_vkInFlightFences;	std::vector<VkFence> m_vkImagesInFlight;	const int m_MAX_FRAMES_IN_FLIGHT = 2;	size_t m_currentFrame = 0;	bool m_needSwapChainRebuild = false;};
+	VkPipelineLayout m_vkPipelineLayout;	VkPipeline m_vkGraphicsPipeline;	std::vector<VkFramebuffer> m_vkFramebuffers;	VkCommandPool m_vkCommandPool;	std::vector<VkCommandBuffer> m_vkCommandBuffers;	std::vector<VkSemaphore> m_vkImageAvailableSemaphores;	std::vector<VkSemaphore> m_vkRenderFinishedSemaphores;	std::vector<VkFence> m_vkInFlightFences;	std::vector<VkFence> m_vkImagesInFlight;	const int m_MAX_FRAMES_IN_FLIGHT = 2;	size_t m_currentFrame = 0;	bool m_needSwapChainRebuild = false;	Vertex3D_PC m_vertices[3];};
 
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------

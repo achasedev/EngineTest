@@ -95,7 +95,9 @@ void RunMessagePump()
 //-------------------------------------------------------------------------------------------------
 App::App()
 {
-	
+	m_vertices[0] = Vertex3D_PC(Vector3(0.f, -0.5f, 0.f), Rgba::RED);
+	m_vertices[1] = Vertex3D_PC(Vector3(0.5f, 0.5f, 0.f), Rgba::GREEN);
+	m_vertices[2] = Vertex3D_PC(Vector3(-0.5f, 0.5f, 0.f), Rgba::BLUE);
 }
 
 
@@ -924,10 +926,15 @@ void App::CreateGraphicsPipeline()
 	// Vertex data is hard coded in the shader, so no vertex input needed yet
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 0;
-	vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+
+	VkVertexInputBindingDescription bindingDescription = Vertex3D_PC::LAYOUT.GetVkBindingDescription();
+	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+
+	std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+	Vertex3D_PC::LAYOUT.GetVkAttributeDescriptions(attributeDescriptions);
+	vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t)attributeDescriptions.size();
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
