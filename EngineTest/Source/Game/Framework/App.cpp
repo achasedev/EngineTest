@@ -95,9 +95,9 @@ void RunMessagePump()
 //-------------------------------------------------------------------------------------------------
 App::App()
 {
-	m_vertices[0] = Vertex3D_PC(Vector3(0.f, -0.5f, 0.f), Rgba::RED);
-	m_vertices[1] = Vertex3D_PC(Vector3(0.5f, 0.5f, 0.f), Rgba::GREEN);
-	m_vertices[2] = Vertex3D_PC(Vector3(-0.5f, 0.5f, 0.f), Rgba::BLUE);
+	m_vertices.push_back(Vertex3D_PC(Vector3(0.f, -0.5f, 0.f), Rgba::RED));
+	m_vertices.push_back(Vertex3D_PC(Vector3(0.5f, 0.5f, 0.f), Rgba::GREEN));
+	m_vertices.push_back(Vertex3D_PC(Vector3(-0.5f, 0.5f, 0.f), Rgba::BLUE));
 }
 
 
@@ -1112,36 +1112,95 @@ uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags propertyFlags
 
 
 //-------------------------------------------------------------------------------------------------
-void App::CreateVertexBuffer()
+void CreateVkBuffer(VkDeviceSize vkSize, VkBufferUsageFlags vkUsage, VkMemoryPropertyFlags vkPropertyFlags, VkBuffer& vkBuffer, VkDeviceMemory& vkBufferMemory, App* app)
 {
 	VkBufferCreateInfo bufferInfo{};
 
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = sizeof(Vertex3D_PC) * 3;
-	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	bufferInfo.size = vkSize;
+	bufferInfo.usage = vkUsage;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	bufferInfo.flags = 0; // Sparse buffer memory flags, don't use now
 
-	VkResult result = vkCreateBuffer(m_vkLogicalDevice, &bufferInfo, nullptr, &m_vkVertexBuffer);
+	VkResult result = vkCreateBuffer(app->m_vkLogicalDevice, &bufferInfo, nullptr, &vkBuffer);
 	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't create vertex buffer!");
 
 	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements(m_vkLogicalDevice, m_vkVertexBuffer, &memRequirements);
+	vkGetBufferMemoryRequirements(app->m_vkLogicalDevice, vkBuffer, &memRequirements);
 
 	VkMemoryAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize = memRequirements.size; // This may not == bufferInfo.size !!
-	allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this); // Make sure it can be written by the CPU
+	allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, vkPropertyFlags, app); // Make sure it can be written by the CPU
 
-	result = vkAllocateMemory(m_vkLogicalDevice, &allocInfo, nullptr, &m_vkVertexBufferMemory);
+	result = vkAllocateMemory(app->m_vkLogicalDevice, &allocInfo, nullptr, &vkBufferMemory);
 	ASSERT_OR_DIE(result == VK_SUCCESS, "Couldn't allocate memory!");
 
-	vkBindBufferMemory(m_vkLogicalDevice, m_vkVertexBuffer, m_vkVertexBufferMemory, 0);
+	vkBindBufferMemory(app->m_vkLogicalDevice, vkBuffer, vkBufferMemory, 0);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, App* app)
+{
+	// Create a temporary command for the transfer
+	VkCommandBufferAllocateInfo allocInfo{};
+
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = app->m_vkCommandPool;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(app->m_vkLogicalDevice, &allocInfo, &commandBuffer);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+	VkBufferCopy copyRegion{};
+	copyRegion.srcOffset = 0;
+	copyRegion.dstOffset = 0;
+	copyRegion.size = size;
+	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+	vkEndCommandBuffer(commandBuffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(app->m_vkGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE); // Graphics and compute queues implicitly support copy commands
+	vkQueueWaitIdle(app->m_vkGraphicsQueue);
+
+	vkFreeCommandBuffers(app->m_vkLogicalDevice, app->m_vkCommandPool, 1, &commandBuffer);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void App::CreateVertexBuffer()
+{
+	VkDeviceSize bufferSize = sizeof(Vertex3D_PC) * m_vertices.size();
+
+	// Send the vertex data to a staging buffer first
+	// Then copy to the actual vertex buffer
+	VkBuffer vkStagingBuffer;
+	VkDeviceMemory vkStagingBufferMemory;
+
+	CreateVkBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vkStagingBuffer, vkStagingBufferMemory, this);
 
 	void* data;
-	vkMapMemory(m_vkLogicalDevice, m_vkVertexBufferMemory, 0, bufferInfo.size, 0, &data);
-	memcpy(data, m_vertices, bufferInfo.size);
-	vkUnmapMemory(m_vkLogicalDevice, m_vkVertexBufferMemory);
+	vkMapMemory(m_vkLogicalDevice, vkStagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, m_vertices.data(), bufferSize);
+	vkUnmapMemory(m_vkLogicalDevice, vkStagingBufferMemory);
+
+	CreateVkBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_vkVertexBuffer, m_vkVertexBufferMemory, this);
+	CopyBuffer(vkStagingBuffer, m_vkVertexBuffer, bufferSize, this);
+
+	vkDestroyBuffer(m_vkLogicalDevice, vkStagingBuffer, nullptr);
+	vkFreeMemory(m_vkLogicalDevice, vkStagingBufferMemory, nullptr);
 }
 
 

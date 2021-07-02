@@ -101,7 +101,7 @@ public:
 	VkFormat m_vkSwapChainImageFormat;
 	VkExtent2D m_vkSwapChainExtent;
 	VkRenderPass m_vkRenderPass;
-	VkPipelineLayout m_vkPipelineLayout;	VkPipeline m_vkGraphicsPipeline;	std::vector<VkFramebuffer> m_vkFramebuffers;	VkCommandPool m_vkCommandPool;	std::vector<VkCommandBuffer> m_vkCommandBuffers;	std::vector<VkSemaphore> m_vkImageAvailableSemaphores;	std::vector<VkSemaphore> m_vkRenderFinishedSemaphores;	std::vector<VkFence> m_vkInFlightFences;	std::vector<VkFence> m_vkImagesInFlight;	const int m_MAX_FRAMES_IN_FLIGHT = 2;	size_t m_currentFrame = 0;	bool m_needSwapChainRebuild = false;	Vertex3D_PC m_vertices[3];	VkBuffer m_vkVertexBuffer;	VkDeviceMemory m_vkVertexBufferMemory;};
+	VkPipelineLayout m_vkPipelineLayout;	VkPipeline m_vkGraphicsPipeline;	std::vector<VkFramebuffer> m_vkFramebuffers;	VkCommandPool m_vkCommandPool;	std::vector<VkCommandBuffer> m_vkCommandBuffers;	std::vector<VkSemaphore> m_vkImageAvailableSemaphores;	std::vector<VkSemaphore> m_vkRenderFinishedSemaphores;	std::vector<VkFence> m_vkInFlightFences;	std::vector<VkFence> m_vkImagesInFlight;	const int m_MAX_FRAMES_IN_FLIGHT = 2;	size_t m_currentFrame = 0;	bool m_needSwapChainRebuild = false;	std::vector<Vertex3D_PC> m_vertices;	VkBuffer m_vkVertexBuffer;	VkDeviceMemory m_vkVertexBufferMemory;};
 
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
