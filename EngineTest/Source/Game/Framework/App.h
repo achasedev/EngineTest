@@ -80,6 +80,7 @@ private:
 	void CreateGraphicsPipeline();
 	void CreateFrameBuffers();
 	void CreateCommandPool();
+	void CreateTexture();
 	void CreateVertexBuffer();
 	void CreateIndexBuffer();
 	void CreateUniformBuffers();
@@ -118,7 +119,7 @@ public:
 	VkExtent2D m_vkSwapChainExtent;
 	VkRenderPass m_vkRenderPass;
 	VkDescriptorSetLayout m_vkDescriptorSetLayout;
-	VkPipelineLayout m_vkPipelineLayout;	VkPipeline m_vkGraphicsPipeline;	std::vector<VkFramebuffer> m_vkFramebuffers;	VkCommandPool m_vkCommandPool;	std::vector<VkCommandBuffer> m_vkCommandBuffers;	std::vector<VkSemaphore> m_vkImageAvailableSemaphores;	std::vector<VkSemaphore> m_vkRenderFinishedSemaphores;	std::vector<VkFence> m_vkInFlightFences;	std::vector<VkFence> m_vkImagesInFlight;	const int m_MAX_FRAMES_IN_FLIGHT = 2;	size_t m_currentFrame = 0;	bool m_needSwapChainRebuild = false;	std::vector<Vertex3D_PC> m_vertices;	std::vector<int> m_indices;	VkBuffer m_vkVertexBuffer;	VkDeviceMemory m_vkVertexBufferMemory;	VkBuffer m_vkIndexBuffer;	VkDeviceMemory m_vkIndexBufferMemory;	std::vector<VkBuffer> m_vkCameraUBOs;	std::vector<VkDeviceMemory> m_vkCameraUBOMemory;	VkDescriptorPool m_vkDescriptorPool;	std::vector<VkDescriptorSet> m_vkDescriptorSets;};
+	VkPipelineLayout m_vkPipelineLayout;	VkPipeline m_vkGraphicsPipeline;	std::vector<VkFramebuffer> m_vkFramebuffers;	VkCommandPool m_vkCommandPool;	std::vector<VkCommandBuffer> m_vkCommandBuffers;	std::vector<VkSemaphore> m_vkImageAvailableSemaphores;	std::vector<VkSemaphore> m_vkRenderFinishedSemaphores;	std::vector<VkFence> m_vkInFlightFences;	std::vector<VkFence> m_vkImagesInFlight;	const int m_MAX_FRAMES_IN_FLIGHT = 2;	size_t m_currentFrame = 0;	bool m_needSwapChainRebuild = false;	std::vector<Vertex3D_PC> m_vertices;	std::vector<int> m_indices;	VkBuffer m_vkVertexBuffer;	VkDeviceMemory m_vkVertexBufferMemory;	VkBuffer m_vkIndexBuffer;	VkDeviceMemory m_vkIndexBufferMemory;	std::vector<VkBuffer> m_vkCameraUBOs;	std::vector<VkDeviceMemory> m_vkCameraUBOMemory;	VkDescriptorPool m_vkDescriptorPool;	std::vector<VkDescriptorSet> m_vkDescriptorSets;	VkImage m_vkImage;	VkDeviceMemory m_vkImageMemory;};
 
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
