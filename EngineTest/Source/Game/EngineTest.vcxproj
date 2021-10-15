@@ -200,6 +200,7 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Entity\Player.cpp" />
     <ClCompile Include="Framework\App.cpp" />
     <ClCompile Include="Framework\GameCommands.cpp" />
     <ClCompile Include="Framework\GameJobs.cpp" />
@@ -212,6 +213,7 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Entity\Player.h" />
     <ClInclude Include="Framework\App.h" />
     <ClInclude Include="Framework\Game.h" />
     <ClInclude Include="Framework\GameCommands.h" />

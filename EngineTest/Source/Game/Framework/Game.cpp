@@ -7,6 +7,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Game/Entity/Player.h"
 #include "Game/Framework/Game.h"
 #include "Engine/Core/DevConsole.h"
 #include "Engine/Core/EngineCommon.h"
@@ -58,7 +59,7 @@ Game::Game()
 {
 	SetupFramework();
 	SetupRendering();
-	SetupPhysics();
+	SpawnEntities();
 }
 
 
@@ -69,9 +70,10 @@ Game::~Game()
 
 	for (Entity* entity : m_entities)
 	{
-		if (!entity->collider->IsOfType<HalfSpaceCollider>() && !entity->collider->IsOfType<PlaneCollider>())
-		{
+		if (entity->collider != nullptr)
+		{	
 			m_collisionScene->RemoveEntity(entity);
+			SAFE_DELETE(entity->collider);
 		}
 	}
 
@@ -88,61 +90,30 @@ Game::~Game()
 //-------------------------------------------------------------------------------------------------
 void Game::ProcessInput()
 {
-	static Vector3 vel = Vector3::ZERO;
+	m_player->ProcessInput(m_gameClock->GetDeltaSeconds());
+	//float mass = 1.f;
+	//float iMass = (1.f / mass);
 
-	// Translating the camera
-	Vector3 moveDir = Vector3::ZERO;
-	if (g_inputSystem->IsKeyPressed('W')) { moveDir.z += 1.f; }		// Forward
-	if (g_inputSystem->IsKeyPressed('S')) { moveDir.z -= 1.f; }		// Left
-	if (g_inputSystem->IsKeyPressed('A')) { moveDir.x -= 1.f; }		// Back
-	if (g_inputSystem->IsKeyPressed('D')) { moveDir.x += 1.f; }		// Right
-	if (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_SPACEBAR)) { moveDir.y += 1.f; }		// Up
-	if (g_inputSystem->IsKeyPressed('X')) { moveDir.y -= 1.f; }		// Down
-	moveDir.SafeNormalize(moveDir);
+	//Vector3 spawnPosition = m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector() * 1.f;
+	//Vector3 spawnRotation = m_gameCamera->GetRotationAsEulerAnglesDegrees();
+	//Vector3 spawnVelocity = m_gameCamera->GetForwardVector() * 20.f;
+	////Vector3 spawnVelocity = Vector3::ZERO;
+	//Vector3 spawnAngularVelocityDegrees = Vector3::ZERO;
 
-	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
-	const float speed = (g_inputSystem->IsKeyPressed(InputSystem::KEYBOARD_SHIFT) ? 1.f : 8.f);
+	//if (mouse.WasButtonJustPressed(MOUSEBUTTON_LEFT))
+	//{
+	//	SpawnBox(Vector3(0.5f), iMass, spawnPosition, spawnRotation, spawnVelocity, spawnAngularVelocityDegrees, true);
+	//}
 
-	m_gameCamera->Translate(moveDir * speed * deltaSeconds);
+	//if (mouse.WasButtonJustPressed(MOUSEBUTTON_RIGHT))
+	//{
+	//	SpawnSphere(0.5f, iMass, spawnPosition, spawnRotation, spawnVelocity, spawnAngularVelocityDegrees, true);
+	//}
 
-	// Rotating the camera
-	Mouse& mouse = InputSystem::GetMouse();
-	IntVector2 mouseDelta = mouse.GetMouseDelta();
-	Vector2 rot = Vector2((float)mouseDelta.y, (float)mouseDelta.x); // Flip X and Y
-
-	const float degreesPerSecond = 120.f;
-	Vector3 deltaDegrees = Vector3(rot.x, rot.y, 0.f) * degreesPerSecond * deltaSeconds;
-	//m_gameCamera->RotateEulerAnglesDegrees(deltaDegrees);
-	m_gameCamera->SetRotationEulerAnglesDegrees(m_gameCamera->GetRotationAsEulerAnglesDegrees() + deltaDegrees);
-
-	if (g_inputSystem->WasKeyJustPressed('P'))
-	{
-		m_pausePhysics = !m_pausePhysics;
-	}
-
-	float mass = 1.f;
-	float iMass = (1.f / mass);
-	Vector3 spawnPosition = m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector() * 1.f;
-	DebugDrawPoint3D(spawnPosition, Rgba::YELLOW, 0.f);
-	Vector3 spawnRotation = m_gameCamera->GetRotationAsEulerAnglesDegrees();
-	Vector3 spawnVelocity = m_gameCamera->GetForwardVector() * 20.f;
-	//Vector3 spawnVelocity = Vector3::ZERO;
-	Vector3 spawnAngularVelocityDegrees = Vector3::ZERO;
-
-	if (mouse.WasButtonJustPressed(MOUSEBUTTON_LEFT))
-	{
-		SpawnBox(Vector3(0.5f), iMass, spawnPosition, spawnRotation, spawnVelocity, spawnAngularVelocityDegrees, true);
-	}
-
-	if (mouse.WasButtonJustPressed(MOUSEBUTTON_RIGHT))
-	{
-		SpawnSphere(0.5f, iMass, spawnPosition, spawnRotation, spawnVelocity, spawnAngularVelocityDegrees, true);
-	}
-
-	if (mouse.WasButtonJustPressed(MOUSEBUTTON_MIDDLE))
-	{
-		SpawnCapsule(1.f, 0.5f, iMass, spawnPosition, spawnRotation, spawnVelocity, spawnAngularVelocityDegrees, true);
-	}
+	//if (mouse.WasButtonJustPressed(MOUSEBUTTON_MIDDLE))
+	//{
+	//	SpawnCapsule(1.f, 0.5f, iMass, spawnPosition, spawnRotation, spawnVelocity, spawnAngularVelocityDegrees, true);
+	//}
 }
 
 
@@ -151,13 +122,13 @@ void Game::Update()
 {	
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
 	
-	if (!m_pausePhysics)
+	for (Entity* entity : m_entities)
 	{
-		m_physicsScene->BeginFrame();
-		m_physicsScene->DoPhysicsStep(deltaSeconds);
+		entity->Update(deltaSeconds);
 	}
 
-	//m_collisionScene->DebugRenderBoundingHierarchy();
+	m_physicsScene->BeginFrame();
+	m_physicsScene->DoPhysicsStep(deltaSeconds);
 }
 
 
@@ -172,8 +143,6 @@ void Game::Render()
 	{
 		entity->Render();
 	}
-
-	//m_collisionScene->DebugRenderLeafBoundingVolumes();
 
 	g_renderContext->EndCamera();
 }
@@ -207,22 +176,25 @@ void Game::SetupRendering()
 
 
 //-------------------------------------------------------------------------------------------------
-void Game::SetupPhysics()
+void Game::SpawnEntities()
 {
 	m_collisionScene = new CollisionScene<BoundingVolumeSphere>();
 	m_physicsScene = new PhysicsScene(m_collisionScene);
-	//m_physicsScene->SetGravityEnabled(false);
 
 	Entity* ground = new Entity();
-	//HalfSpaceCollider* halfSpace = new HalfSpaceCollider(ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
-	PlaneCollider* planeCol = new PlaneCollider(ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
-	ground->collider = planeCol;
+	ground->collider = new HalfSpaceCollider(ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));;
 
-	//m_collisionScene->AddHalfSpace(planeCol);
-	m_collisionScene->AddPlane(planeCol);
+	m_collisionScene->AddEntity(ground);
 	m_entities.push_back(ground);
 
-	SpawnBox(Vector3(10.f), (1.f / 10000.f), Vector3::ZERO);
+	SpawnBox(Vector3(1.f),	(1.f / 1.f),	Vector3(-10.f, 1.f, 0.f));
+	SpawnBox(Vector3(2.f), (1.f / 8.f),		Vector3(0.f, 2.f, 0.f));
+	SpawnBox(Vector3(4.f), (1.f / 64.f),	Vector3(10.f, 4.f, 0.f));
+
+	m_player = new Player(m_gameCamera);
+	m_collisionScene->AddEntity(m_player);
+	m_physicsScene->AddRigidbody(m_player->rigidBody);
+	m_entities.push_back(m_player);
 }
 
 

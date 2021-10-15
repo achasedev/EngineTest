@@ -22,6 +22,9 @@
     <ClCompile Include="Framework\GameCommands.cpp">
       <Filter>General</Filter>
     </ClCompile>
+    <ClCompile Include="Entity\Player.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\App.h" />
@@ -29,5 +32,6 @@
     <ClInclude Include="Framework\GameJobs.h" />
     <ClInclude Include="Framework\GameCommon.h" />
     <ClInclude Include="Framework\GameCommands.h" />
+    <ClInclude Include="Entity\Player.h" />
   </ItemGroup>
 </Project>
