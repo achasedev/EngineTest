@@ -144,6 +144,11 @@ void Game::Render()
 		entity->Render();
 	}
 
+	Material* skyboxMaterial = g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material");
+	Mesh* skyboxMesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
+
+	g_renderContext->DrawMeshWithMaterial(*skyboxMesh, skyboxMaterial);
+	
 	g_renderContext->EndCamera();
 }
 

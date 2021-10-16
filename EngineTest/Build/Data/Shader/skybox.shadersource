@@ -1,0 +1,43 @@
+
+struct VInput
+{
+  float3 position : POSITION;
+  float4 color : COLOR;
+  float2 uv : UV;
+};
+
+struct VOut
+{
+    float3 worldPosition : POSITION;
+	  float4 position : SV_POSITION;
+};
+
+cbuffer cameraConstants : register(b2)
+{
+   float4x4 CAMERA;
+   float4x4 VIEW; 
+   float4x4 PROJECTION; 
+};
+
+
+VOut VertexFunction(VInput input)
+{
+    float4 localPos = float4(input.position, 0.0f); // Set W to 0 to not translate it, only rotation
+    float4 viewPos = mul( VIEW, localPos ); 
+    float4 clipPos = mul( PROJECTION, viewPos ); 
+
+    VOut output;
+    output.worldPosition = input.position;
+    output.position = clipPos;
+    output.position.z = output.position.w; // Ensure depth is at 1.0
+
+    return output;
+}
+
+TextureCube tAlbedo : register(t0);
+SamplerState sAlbedo : register(s0);
+
+float4 FragmentFunction( VOut input ) : SV_Target0
+{
+   return tAlbedo.Sample( sAlbedo, input.worldPosition ); 
+}
