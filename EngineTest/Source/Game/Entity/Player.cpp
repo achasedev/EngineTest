@@ -41,8 +41,7 @@ float Player::s_maxMoveSpeed = 5.0f;
 Player::Player(Camera* camera)
 	: m_camera(camera)
 {
-	m_camera->transform.SetParentTransform(&transform);
-	m_camera->SetPosition(s_cameraOffset);
+	m_camera->SetPosition(transform.position + s_cameraOffset);
 	m_camera->SetRotationEulerAnglesDegrees(Vector3::ZERO);
 
 	collider = new CapsuleCollider(this, Capsule3D(Vector3(0.f, 0.5f, 0.f), Vector3(0.f, 1.5f, 0.f), 0.5f));
@@ -97,7 +96,7 @@ void Player::ProcessInput(float deltaSeconds)
 	Vector3 deltaDegrees = Vector3(rot.x, rot.y, 0.f) * degreesPerSecond * deltaSeconds;
 	transform.SetRotation(transform.GetWorldRotation().GetAsEulerAnglesDegrees() + Vector3(0.f, deltaDegrees.y, 0.f));
 
-	Vector3 cameraDegrees = m_camera->GetRotationAsEulerAnglesDegrees() + Vector3(deltaDegrees.x, 0.f, 0.f);
+	Vector3 cameraDegrees = m_camera->GetRotationAsEulerAnglesDegrees() + Vector3(deltaDegrees.x, deltaDegrees.y, 0.f);
 	cameraDegrees.x = Clamp(cameraDegrees.x, -70.f, 70.f);
 
 	m_camera->SetRotationEulerAnglesDegrees(cameraDegrees);
@@ -111,9 +110,18 @@ void Player::ProcessInput(float deltaSeconds)
 
 
 //-------------------------------------------------------------------------------------------------
-void Player::Update(float deltaSeconds)
+void Player::PreUpdate(float deltaSeconds)
 {
-	Entity::Update(deltaSeconds);
+	Entity::PreUpdate(deltaSeconds);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void Player::PostUpdate(float deltaSeconds)
+{
+	Entity::PostUpdate(deltaSeconds);
+
+	m_camera->SetPosition(transform.position + s_cameraOffset);
 }
 
 

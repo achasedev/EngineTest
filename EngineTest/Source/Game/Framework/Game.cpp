@@ -122,13 +122,9 @@ void Game::Update()
 {	
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
 	
-	for (Entity* entity : m_entities)
-	{
-		entity->Update(deltaSeconds);
-	}
-
-	m_physicsScene->BeginFrame();
-	m_physicsScene->DoPhysicsStep(deltaSeconds);
+	PreUpdate(deltaSeconds);
+	PhysicsUpdate(deltaSeconds);
+	PostUpdate(deltaSeconds);
 }
 
 
@@ -215,6 +211,34 @@ void Game::SpawnEntities()
 	BlockObject* obj = new BlockObject();
 	obj->transform.position = Vector3(0.f, 1.5f, 0.f);
 	m_entities.push_back(obj);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void Game::PreUpdate(float deltaSeconds)
+{
+	for (Entity* entity : m_entities)
+	{
+		entity->PreUpdate(deltaSeconds);
+	}
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void Game::PhysicsUpdate(float deltaSeconds)
+{
+	m_physicsScene->BeginFrame();
+	m_physicsScene->DoPhysicsStep(deltaSeconds);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void Game::PostUpdate(float deltaSeconds)
+{
+	for (Entity* entity : m_entities)
+	{
+		entity->PostUpdate(deltaSeconds);
+	}
 }
 
 

@@ -40,7 +40,7 @@ public:
 	BlockObject();
 	~BlockObject();
 
-	virtual void Update(float deltaSeconds) override;
+	virtual void PreUpdate(float deltaSeconds) override;
 	virtual void Render() const override;
 
 	void UpdateMesh();

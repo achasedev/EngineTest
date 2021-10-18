@@ -37,7 +37,8 @@ public:
 	~Player();
 
 	void			ProcessInput(float deltaSeconds);
-	virtual void	Update(float deltaSeconds) override;
+	virtual void	PreUpdate(float deltaSeconds) override;
+	virtual void	PostUpdate(float deltaSeconds) override;
 	virtual void	Render() const override;
 
 

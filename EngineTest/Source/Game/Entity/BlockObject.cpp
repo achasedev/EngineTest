@@ -46,9 +46,9 @@ BlockObject::BlockObject()
 
 
 //-------------------------------------------------------------------------------------------------
-void BlockObject::Update(float deltaSeconds)
+void BlockObject::PreUpdate(float deltaSeconds)
 {
-	Entity::Update(deltaSeconds);
+	Entity::PreUpdate(deltaSeconds);
 
 	if (m_blocksDirty)
 	{
