@@ -7,6 +7,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Game/Entity/BlockObject.h"
 #include "Game/Entity/Player.h"
 #include "Game/Framework/Game.h"
 #include "Engine/Core/DevConsole.h"
@@ -26,11 +27,10 @@
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Render/Camera.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
+#include "Engine/Render/Renderable.h"
 #include "Engine/Render/RenderContext.h"
 #include "Engine/Resource/ResourceSystem.h"
 #include "Engine/Time/Clock.h"
-#include "Engine/Physics/Particle/ParticleRod.h"
-#include "Engine/Physics/Particle/ParticleCable.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -147,6 +147,17 @@ void Game::Render()
 	Material* skyboxMaterial = g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material");
 	Mesh* skyboxMesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
 
+	Vector3 pos = m_player->transform.position;
+	pos.y = 0.f;
+	Mesh* quad = g_resourceSystem->CreateOrGetMesh("horizontal_quad");
+	Matrix4 model = Matrix4::MakeModelMatrix(pos, Vector3::ZERO, Vector3(100.f));
+	Renderable rend;
+	rend.SetRenderableMatrix(model);
+
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/ground.material");
+	rend.AddDraw(quad, material);
+	g_renderContext->DrawRenderable(rend);
+
 	g_renderContext->DrawMeshWithMaterial(*skyboxMesh, skyboxMaterial);
 	
 	g_renderContext->EndCamera();
@@ -186,20 +197,24 @@ void Game::SpawnEntities()
 	m_collisionScene = new CollisionScene<BoundingVolumeSphere>();
 	m_physicsScene = new PhysicsScene(m_collisionScene);
 
-	Entity* ground = new Entity();
-	ground->collider = new HalfSpaceCollider(ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));;
+	m_ground = new Entity();
+	m_ground->collider = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));;
 
-	m_collisionScene->AddEntity(ground);
-	m_entities.push_back(ground);
+	m_collisionScene->AddEntity(m_ground);
+	m_entities.push_back(m_ground);
 
 	SpawnBox(Vector3(1.f),	(1.f / 1.f),	Vector3(-10.f, 1.f, 0.f));
-	SpawnBox(Vector3(2.f), (1.f / 8.f),		Vector3(0.f, 2.f, 0.f));
+	//SpawnBox(Vector3(2.f), (1.f / 8.f),		Vector3(0.f, 2.f, 0.f));
 	SpawnBox(Vector3(4.f), (1.f / 64.f),	Vector3(10.f, 4.f, 0.f));
 
 	m_player = new Player(m_gameCamera);
 	m_collisionScene->AddEntity(m_player);
 	m_physicsScene->AddRigidbody(m_player->rigidBody);
 	m_entities.push_back(m_player);
+
+	BlockObject* obj = new BlockObject();
+	obj->transform.position = Vector3(0.f, 1.5f, 0.f);
+	m_entities.push_back(obj);
 }
 
 

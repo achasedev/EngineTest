@@ -1,0 +1,57 @@
+struct VInput
+{
+	float3 position : POSITION;
+	float4 color : COLOR;
+	float2 uv : UV;
+};
+
+struct VOut
+{
+	  float4 worldPosition : POSITION;
+    float4 position : SV_POSITION;
+};
+
+Texture2D<float4> tAlbedo : register(t0);
+SamplerState sAlbedo : register(s0);
+
+cbuffer cameraConstants : register(b2)
+{
+   float4x4 CAMERA;
+   float4x4 VIEW; 
+   float4x4 PROJECTION; 
+};
+
+cbuffer modelConstant : register(b3)
+{
+   float4x4 MODEL; 
+};
+
+VOut VertexFunction(VInput input)
+{
+    float4 localPos = float4(input.position, 1.0f);
+    float4 worldPos = mul( MODEL, localPos );
+    float4 viewPos = mul( VIEW, worldPos ); 
+    float4 clipPos = mul( PROJECTION, viewPos ); 
+
+    VOut output;
+    output.worldPosition = worldPos;
+    output.position = clipPos;
+
+    return output;
+}
+
+float4 FragmentFunction( VOut input ) : SV_Target0
+{
+    float4 backgroundColor = float4(0.095f, 0.130f, 0.350f, 1.000f);
+    float4 gridColor = float4(0.8f, 0.8f, 0.8f, 1.f);
+
+      // Pick a coordinate to visualize in a grid
+    float2 coord = input.worldPosition.xz;
+
+    // Compute anti-aliased world-space grid lines
+    float2 grid = abs(frac(coord - 0.5f) - 0.5f) / fwidth(coord);
+    float l = min(grid.x, grid.y);
+
+    float t = min(l, 1.0f);
+    return lerp(gridColor, backgroundColor, t);
+}

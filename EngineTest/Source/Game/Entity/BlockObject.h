@@ -1,6 +1,6 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// Author: Andrew Chase
-/// Date Created: December 14th, 2019
+/// Date Created: October 16th, 2021
 /// Description: 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #pragma once
@@ -8,10 +8,10 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-#include "Engine/Math/Transform.h"
-#include "Engine/Collision/BoundingVolumeHierarchy/BoundingVolume.h"
-#include "Engine/Collision/CollisionScene.h"
-#include <vector>
+#include "Game/Block/Block.h"
+#include "Engine/Core/Entity.h"
+#include "Engine/Math/IntVector3.h"
+#include <map>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -20,14 +20,8 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-class Camera;
-class Clock;
-class Entity;
-class Particle;
-class ParticleWorld;
-class PhysicsScene;
-class Player;
-class RigidBody;
+typedef std::map<IntVector3, Block>::iterator BlockIter;
+class Mesh;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -38,61 +32,28 @@ class RigidBody;
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-class Game
+class BlockObject : public Entity
 {
 public:
 	//-----Public Methods-----
 
+	BlockObject();
+	~BlockObject();
 
-private:
-	//-----Private Methods-----
+	virtual void Update(float deltaSeconds) override;
+	virtual void Render() const override;
 
-	friend class App;
-
-	Game();
-	~Game();
-	Game(const Game& copy) = delete;
-
-	void ProcessInput();
-	void Update();
-	void Render();
-
-
-private:
-	//-----Private Methods-----
-
-	void SetupFramework();
-	void SetupRendering();
-	void SpawnEntities();
-
-	// Physics helpers
-	void SpawnCapsule(float cylinderHeight, float radius, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
-	void SpawnBox(const Vector3& extents, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
-	void SpawnSphere(float radius, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
-
+	void UpdateMesh();
 
 private:
 	//-----Private Data-----
 
-	// Rendering
-	Camera*										m_gameCamera = nullptr;
-	Camera*										m_uiCamera = nullptr;
+	bool m_blocksDirty = true;
+	std::map<IntVector3, Block> m_blocks;
 
-	// Framework
-	Clock*										m_gameClock = nullptr;
-
-	// Physics/collision
-	bool										m_pausePhysics = true;
-	PhysicsScene*								m_physicsScene = nullptr;
-	CollisionScene<BoundingVolumeSphere>*		m_collisionScene = nullptr;
-
-	// Entities
-	Player*										m_player = nullptr;
-	Entity*										m_ground = nullptr;
-	std::vector<Entity*>						m_entities;
+	Mesh* m_mesh = nullptr;
 
 };
-
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// C FUNCTIONS
