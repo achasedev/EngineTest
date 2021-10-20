@@ -23,11 +23,14 @@
 class Camera;
 class Clock;
 class Entity;
+class ForwardRenderer;
 class Particle;
 class ParticleWorld;
 class PhysicsScene;
 class Player;
+class RenderScene;
 class RigidBody;
+class Skybox;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -81,6 +84,9 @@ private:
 	// Rendering
 	Camera*										m_gameCamera = nullptr;
 	Camera*										m_uiCamera = nullptr;
+	ForwardRenderer*							m_renderer = nullptr;
+	RenderScene*								m_renderScene = nullptr;
+	Skybox*										m_skybox = nullptr;
 
 	// Framework
 	Clock*										m_gameClock = nullptr;

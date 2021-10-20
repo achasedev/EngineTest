@@ -1,0 +1,6 @@
+<material>
+	<shader file="Data/Shader/default_alpha.shader"/>
+	<texture>
+		<albedo name="Data/Image/debug.png"/>
+	</texture>
+</material>

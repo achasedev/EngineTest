@@ -27,10 +27,13 @@
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Render/Camera.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
+#include "Engine/Render/ForwardRenderer.h"
 #include "Engine/Render/Renderable.h"
 #include "Engine/Render/RenderContext.h"
+#include "Engine/Render/RenderScene.h"
 #include "Engine/Resource/ResourceSystem.h"
 #include "Engine/Time/Clock.h"
+#include "Engine/Render/Skybox.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -81,6 +84,8 @@ Game::~Game()
 
 	SAFE_DELETE(m_collisionScene);
 	SAFE_DELETE(m_physicsScene);
+	SAFE_DELETE(m_renderer);
+	SAFE_DELETE(m_renderScene);
 	SAFE_DELETE(m_uiCamera);
 	SAFE_DELETE(m_gameCamera);
 	SAFE_DELETE(m_gameClock);
@@ -131,32 +136,29 @@ void Game::Update()
 //-------------------------------------------------------------------------------------------------
 void Game::Render()
 {
-	g_renderContext->BeginCamera(m_gameCamera);
-	g_renderContext->ClearScreen(Rgba::BLACK);
-	g_renderContext->ClearDepth();
+	//g_renderContext->BeginCamera(m_gameCamera);
+	//g_renderContext->ClearScreen(Rgba::BLACK);
+	//g_renderContext->ClearDepth();
 
-	for (Entity* entity : m_entities)
-	{
-		entity->Render();
-	}
+	//for (Entity* entity : m_entities)
+	//{
+	//	entity->Render();
+	//}
+	//
+	//// Draw the ground
+	//Vector3 pos = m_player->transform.position;
+	//pos.y = 0.f;
+	//Mesh* quad = g_resourceSystem->CreateOrGetMesh("horizontal_quad");
+	//Matrix4 model = Matrix4::MakeModelMatrix(pos, Vector3::ZERO, Vector3(100.f));
+	//Renderable rend;
+	//rend.SetRenderableMatrix(model);
 
-	Material* skyboxMaterial = g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material");
-	Mesh* skyboxMesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
+	//Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/ground.material");
+	//rend.AddDraw(quad, material);
+	//g_renderContext->DrawRenderable(rend);
 
-	Vector3 pos = m_player->transform.position;
-	pos.y = 0.f;
-	Mesh* quad = g_resourceSystem->CreateOrGetMesh("horizontal_quad");
-	Matrix4 model = Matrix4::MakeModelMatrix(pos, Vector3::ZERO, Vector3(100.f));
-	Renderable rend;
-	rend.SetRenderableMatrix(model);
-
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/ground.material");
-	rend.AddDraw(quad, material);
-	g_renderContext->DrawRenderable(rend);
-
-	g_renderContext->DrawMeshWithMaterial(*skyboxMesh, skyboxMaterial);
-	
-	g_renderContext->EndCamera();
+	//g_renderContext->EndCamera();
+	m_renderer->Render(m_renderScene);
 }
 
 
@@ -184,6 +186,15 @@ void Game::SetupRendering()
 
 	m_uiCamera = new Camera();
 	m_uiCamera->SetProjectionOrthographic((float)g_window->GetClientPixelHeight(), g_window->GetClientAspect());
+
+
+	m_skybox = new Skybox(g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material"));
+
+	m_renderScene = new RenderScene("Game");
+	m_renderScene->AddCamera(m_gameCamera);
+	m_renderScene->SetSkybox(m_skybox);
+
+	m_renderer = new ForwardRenderer();
 }
 
 
@@ -197,11 +208,10 @@ void Game::SpawnEntities()
 	m_ground->collider = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));;
 
 	m_collisionScene->AddEntity(m_ground);
-	m_entities.push_back(m_ground);
 
-	SpawnBox(Vector3(1.f),	(1.f / 1.f),	Vector3(-10.f, 1.f, 0.f));
+	SpawnBox(Vector3(1.f),	(1.f / 1.f),	Vector3(-10.f, 1.f, 5.f));
 	//SpawnBox(Vector3(2.f), (1.f / 8.f),		Vector3(0.f, 2.f, 0.f));
-	SpawnBox(Vector3(4.f), (1.f / 64.f),	Vector3(10.f, 4.f, 0.f));
+	SpawnBox(Vector3(4.f), (1.f / 64.f),	Vector3(10.f, 4.f, 5.f));
 
 	m_player = new Player(m_gameCamera);
 	m_collisionScene->AddEntity(m_player);
@@ -209,8 +219,44 @@ void Game::SpawnEntities()
 	m_entities.push_back(m_player);
 
 	BlockObject* obj = new BlockObject();
-	obj->transform.position = Vector3(0.f, 1.5f, 0.f);
+	obj->transform.position = Vector3(0.f, 1.5f, 5.f);
 	m_entities.push_back(obj);
+
+	// Set up renderables
+	for (int i = 0; i < (int)m_entities.size(); ++i)
+	{
+		Mesh* entityMesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
+		Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/entity.material");
+		Entity* entity = m_entities[i];
+
+		if (entity == m_player)
+		{
+			continue;
+		}
+
+		Renderable rend(entity->GetId());
+
+		rend.SetRenderableMatrix(entity->transform.GetModelMatrix());
+		rend.AddDraw(entityMesh, material);
+	
+		m_renderScene->AddRenderable(entity->GetId(), rend);
+	}
+
+	m_entities.push_back(m_ground);
+
+	Vector3 pos = m_player->transform.position;
+	pos.y = 0.f;
+	Mesh* quad = g_resourceSystem->CreateOrGetMesh("horizontal_quad");
+	m_ground->transform.position = pos;
+
+	Renderable rend(m_ground->GetId());
+	Matrix4 rendModel = Matrix4::MakeModelMatrix(m_ground->transform.position, Vector3::ZERO, Vector3(100.f));
+	rend.SetRenderableMatrix(rendModel);
+
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/ground.material");
+	rend.AddDraw(quad, material);
+
+	m_renderScene->AddRenderable(m_ground->GetId(), rend);
 }
 
 
@@ -239,6 +285,15 @@ void Game::PostUpdate(float deltaSeconds)
 	{
 		entity->PostUpdate(deltaSeconds);
 	}
+
+	Vector3 pos = m_player->transform.position;
+	pos.y = 0.f;
+	m_ground->transform.position = pos;
+
+	Renderable* rend = m_renderScene->GetRenderable(m_ground->GetId());
+	Matrix4 rendModel = Matrix4::MakeModelMatrix(m_ground->transform.position, Vector3::ZERO, Vector3(100.f));
+
+	rend->SetRenderableMatrix(rendModel);
 }
 
 
