@@ -30,7 +30,6 @@ class PhysicsScene;
 class Player;
 class RenderScene;
 class RigidBody;
-class Skybox;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -71,11 +70,15 @@ private:
 	void PreUpdate(float deltaSeconds);
 	void PhysicsUpdate(float deltaSeconds);
 	void PostUpdate(float deltaSeconds);
+	void UpdateRenderables();
+
+	void RenderColliders() const;
 
 	// Physics helpers
 	void SpawnCapsule(float cylinderHeight, float radius, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
 	void SpawnBox(const Vector3& extents, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
 	void SpawnSphere(float radius, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
+	void SpawnGround();
 
 
 private:
@@ -86,7 +89,7 @@ private:
 	Camera*										m_uiCamera = nullptr;
 	ForwardRenderer*							m_renderer = nullptr;
 	RenderScene*								m_renderScene = nullptr;
-	Skybox*										m_skybox = nullptr;
+	bool										m_drawColliders = false;
 
 	// Framework
 	Clock*										m_gameClock = nullptr;

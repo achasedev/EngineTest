@@ -46,6 +46,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+Game* g_game = nullptr;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// C FUNCTIONS
@@ -96,29 +97,11 @@ Game::~Game()
 void Game::ProcessInput()
 {
 	m_player->ProcessInput(m_gameClock->GetDeltaSeconds());
-	//float mass = 1.f;
-	//float iMass = (1.f / mass);
 
-	//Vector3 spawnPosition = m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector() * 1.f;
-	//Vector3 spawnRotation = m_gameCamera->GetRotationAsEulerAnglesDegrees();
-	//Vector3 spawnVelocity = m_gameCamera->GetForwardVector() * 20.f;
-	////Vector3 spawnVelocity = Vector3::ZERO;
-	//Vector3 spawnAngularVelocityDegrees = Vector3::ZERO;
-
-	//if (mouse.WasButtonJustPressed(MOUSEBUTTON_LEFT))
-	//{
-	//	SpawnBox(Vector3(0.5f), iMass, spawnPosition, spawnRotation, spawnVelocity, spawnAngularVelocityDegrees, true);
-	//}
-
-	//if (mouse.WasButtonJustPressed(MOUSEBUTTON_RIGHT))
-	//{
-	//	SpawnSphere(0.5f, iMass, spawnPosition, spawnRotation, spawnVelocity, spawnAngularVelocityDegrees, true);
-	//}
-
-	//if (mouse.WasButtonJustPressed(MOUSEBUTTON_MIDDLE))
-	//{
-	//	SpawnCapsule(1.f, 0.5f, iMass, spawnPosition, spawnRotation, spawnVelocity, spawnAngularVelocityDegrees, true);
-	//}
+	if (g_inputSystem->WasKeyJustPressed('I'))
+	{
+		m_drawColliders = !m_drawColliders;
+	}
 }
 
 
@@ -136,29 +119,14 @@ void Game::Update()
 //-------------------------------------------------------------------------------------------------
 void Game::Render()
 {
-	//g_renderContext->BeginCamera(m_gameCamera);
-	//g_renderContext->ClearScreen(Rgba::BLACK);
-	//g_renderContext->ClearDepth();
-
-	//for (Entity* entity : m_entities)
-	//{
-	//	entity->Render();
-	//}
-	//
-	//// Draw the ground
-	//Vector3 pos = m_player->transform.position;
-	//pos.y = 0.f;
-	//Mesh* quad = g_resourceSystem->CreateOrGetMesh("horizontal_quad");
-	//Matrix4 model = Matrix4::MakeModelMatrix(pos, Vector3::ZERO, Vector3(100.f));
-	//Renderable rend;
-	//rend.SetRenderableMatrix(model);
-
-	//Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/ground.material");
-	//rend.AddDraw(quad, material);
-	//g_renderContext->DrawRenderable(rend);
-
-	//g_renderContext->EndCamera();
-	m_renderer->Render(m_renderScene);
+	if (m_drawColliders)
+	{
+		RenderColliders();
+	}
+	else
+	{
+		m_renderer->Render(m_renderScene);
+	}
 }
 
 
@@ -171,6 +139,9 @@ void Game::SetupFramework()
 	mouse.SetCursorMode(CURSORMODE_RELATIVE);
 
 	m_gameClock = new Clock(nullptr);
+
+	m_collisionScene = new CollisionScene<BoundingVolumeSphere>();
+	m_physicsScene = new PhysicsScene(m_collisionScene);
 }
 
 
@@ -187,12 +158,10 @@ void Game::SetupRendering()
 	m_uiCamera = new Camera();
 	m_uiCamera->SetProjectionOrthographic((float)g_window->GetClientPixelHeight(), g_window->GetClientAspect());
 
-
-	m_skybox = new Skybox(g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material"));
-
 	m_renderScene = new RenderScene("Game");
 	m_renderScene->AddCamera(m_gameCamera);
-	m_renderScene->SetSkybox(m_skybox);
+	Skybox* skybox = new Skybox(g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material"));
+	m_renderScene->SetSkybox(skybox);
 
 	m_renderer = new ForwardRenderer();
 }
@@ -201,62 +170,17 @@ void Game::SetupRendering()
 //-------------------------------------------------------------------------------------------------
 void Game::SpawnEntities()
 {
-	m_collisionScene = new CollisionScene<BoundingVolumeSphere>();
-	m_physicsScene = new PhysicsScene(m_collisionScene);
-
-	m_ground = new Entity();
-	m_ground->collider = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));;
-
-	m_collisionScene->AddEntity(m_ground);
-
-	SpawnBox(Vector3(1.f),	(1.f / 1.f),	Vector3(-10.f, 1.f, 5.f));
-	//SpawnBox(Vector3(2.f), (1.f / 8.f),		Vector3(0.f, 2.f, 0.f));
-	SpawnBox(Vector3(4.f), (1.f / 64.f),	Vector3(10.f, 4.f, 5.f));
-
+	// Create the player
 	m_player = new Player(m_gameCamera);
 	m_collisionScene->AddEntity(m_player);
 	m_physicsScene->AddRigidbody(m_player->rigidBody);
 	m_entities.push_back(m_player);
 
-	BlockObject* obj = new BlockObject();
-	obj->transform.position = Vector3(0.f, 1.5f, 5.f);
-	m_entities.push_back(obj);
+	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 5.f));
+	//SpawnBox(Vector3(4.f), (1.f / 64.f), Vector3(10.f, 4.f, 5.f));
 
-	// Set up renderables
-	for (int i = 0; i < (int)m_entities.size(); ++i)
-	{
-		Mesh* entityMesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
-		Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/entity.material");
-		Entity* entity = m_entities[i];
-
-		if (entity == m_player)
-		{
-			continue;
-		}
-
-		Renderable rend(entity->GetId());
-
-		rend.SetRenderableMatrix(entity->transform.GetModelMatrix());
-		rend.AddDraw(entityMesh, material);
-	
-		m_renderScene->AddRenderable(entity->GetId(), rend);
-	}
-
-	m_entities.push_back(m_ground);
-
-	Vector3 pos = m_player->transform.position;
-	pos.y = 0.f;
-	Mesh* quad = g_resourceSystem->CreateOrGetMesh("horizontal_quad");
-	m_ground->transform.position = pos;
-
-	Renderable rend(m_ground->GetId());
-	Matrix4 rendModel = Matrix4::MakeModelMatrix(m_ground->transform.position, Vector3::ZERO, Vector3(100.f));
-	rend.SetRenderableMatrix(rendModel);
-
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/ground.material");
-	rend.AddDraw(quad, material);
-
-	m_renderScene->AddRenderable(m_ground->GetId(), rend);
+	// Set up ground
+	SpawnGround();
 }
 
 
@@ -286,14 +210,48 @@ void Game::PostUpdate(float deltaSeconds)
 		entity->PostUpdate(deltaSeconds);
 	}
 
-	Vector3 pos = m_player->transform.position;
-	pos.y = 0.f;
-	m_ground->transform.position = pos;
+	// Ensure ground is below player
+	m_ground->transform.position = m_player->transform.position;;
+	m_ground->transform.position.y = 0.f;
 
-	Renderable* rend = m_renderScene->GetRenderable(m_ground->GetId());
-	Matrix4 rendModel = Matrix4::MakeModelMatrix(m_ground->transform.position, Vector3::ZERO, Vector3(100.f));
+	UpdateRenderables();
+}
 
-	rend->SetRenderableMatrix(rendModel);
+
+//-------------------------------------------------------------------------------------------------
+// Updates each entity's renderable to match the entity's updated transform
+void Game::UpdateRenderables()
+{
+	for (Entity* entity : m_entities)
+	{
+		if (entity == m_player)
+			continue;
+
+		Renderable* rend = m_renderScene->GetRenderable(entity->GetId());
+		Vector3 existngScale = Matrix4::ExtractScale(rend->GetModelMatrix());
+		Matrix4 newModelMatrix = Matrix4::MakeModelMatrix(entity->transform.position, entity->transform.rotation.GetAsEulerAnglesDegrees(), existngScale);
+		rend->SetModelMatrix(newModelMatrix);
+	}
+}
+
+
+//-------------------------------------------------------------------------------------------------
+// Renders the colliders for all non-ground/player entities
+void Game::RenderColliders() const
+{
+	g_renderContext->BeginCamera(m_gameCamera);
+	m_gameCamera->ClearColorTarget(Rgba::BLACK);
+	m_gameCamera->ClearDepthTarget();
+
+	for (Entity* entity : m_entities)
+	{
+		if (entity == m_ground || entity == m_player)
+			continue;
+
+		entity->collider->DebugRender(Rgba::ORANGE);
+	}
+
+	g_renderContext->EndCamera();
 }
 
 
@@ -340,6 +298,16 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
+
+	// Renderable
+	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/entity.material");
+	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, 2.f * extents);
+
+	Renderable rend;
+	rend.SetModelMatrix(model);
+	rend.AddDraw(mesh, material);
+	m_renderScene->AddRenderable(entity->GetId(), rend);
 }
 
 
@@ -363,4 +331,29 @@ void Game::SpawnSphere(float radius, float inverseMass, const Vector3& position,
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+// Spawns the entity used to represent the ground
+void Game::SpawnGround()
+{
+	m_ground = new Entity();
+	m_ground->collider = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));;
+	m_collisionScene->AddEntity(m_ground);
+	m_entities.push_back(m_ground);
+
+	// Place ground under the player
+	m_ground->transform.position = m_player->transform.position;
+	m_ground->transform.position.y = 0.f;
+
+	Renderable rend(m_ground->GetId());
+	Mesh* quad = g_resourceSystem->CreateOrGetMesh("horizontal_quad");
+	Matrix4 rendModel = Matrix4::MakeModelMatrix(m_ground->transform.position, Vector3::ZERO, Vector3(100.f));
+	rend.SetModelMatrix(rendModel);
+
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/ground.material");
+	rend.AddDraw(quad, material);
+
+	m_renderScene->AddRenderable(m_ground->GetId(), rend);
 }

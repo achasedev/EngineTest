@@ -124,7 +124,7 @@ void App::Initialize()
 	DevConsole::Initialize();
 	DebugRenderSystem::Initialize();
 
-	g_app->m_game = new Game();
+	g_game = new Game();
 	g_app->RegisterGameCommands();
 }
 
@@ -132,7 +132,7 @@ void App::Initialize()
 //-------------------------------------------------------------------------------------------------
 void App::Shutdown()
 {
-	SAFE_DELETE(g_app->m_game);
+	SAFE_DELETE(g_game);
 
 	DebugRenderSystem::Shutdown();
 	ResourceSystem::Shutdown();
@@ -189,7 +189,7 @@ void App::ProcessInput()
 	}
 	else
 	{
-		m_game->ProcessInput();
+		g_game->ProcessInput();
 	}
 }
 
@@ -197,7 +197,7 @@ void App::ProcessInput()
 //-------------------------------------------------------------------------------------------------
 void App::Update()
 {
-	m_game->Update();
+	g_game->Update();
 	g_devConsole->Update();
 }
 
@@ -205,7 +205,7 @@ void App::Update()
 //-------------------------------------------------------------------------------------------------
 void App::Render()
 {
-	m_game->Render();
+	g_game->Render();
 	g_debugRenderSystem->Render();
 	g_devConsole->Render();
 }

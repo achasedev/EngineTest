@@ -59,7 +59,6 @@ private:
 	//-----Private Data-----
 
 	bool m_isQuitting = false;
-	Game* m_game = nullptr;
 
 };
 

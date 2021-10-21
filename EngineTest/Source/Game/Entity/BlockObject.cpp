@@ -63,7 +63,7 @@ void BlockObject::Render() const
 {
 	Renderable rend;
 	rend.AddDraw(m_mesh, g_resourceSystem->CreateOrGetMaterial("Data/Material/debug.material"));
-	rend.SetRenderableMatrix(transform.GetModelMatrix());
+	rend.SetModelMatrix(transform.GetModelMatrix());
 	g_renderContext->DrawRenderable(rend);
 }
 
