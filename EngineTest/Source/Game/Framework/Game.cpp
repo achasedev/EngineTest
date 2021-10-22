@@ -309,7 +309,7 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 
 	// Renderable
 	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/normalmap_local.material");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
 	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, 2.f * extents);
 
 	Renderable rend;

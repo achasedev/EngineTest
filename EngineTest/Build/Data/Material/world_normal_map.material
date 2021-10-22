@@ -1,0 +1,6 @@
+<material>
+	<shader file="Data/Shader/world_normal_map.shader"/>
+	<texture>
+		<normal name="Data/Image/normal.png"/>
+	</texture>
+</material>

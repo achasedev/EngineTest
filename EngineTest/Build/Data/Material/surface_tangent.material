@@ -1,0 +1,5 @@
+<material>
+	<shader file="Data/Shader/surface_tangent.shader"/>
+	<texture>
+	</texture>
+</material>

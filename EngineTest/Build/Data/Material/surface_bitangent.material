@@ -1,0 +1,5 @@
+<material>
+	<shader file="Data/Shader/surface_bitangent.shader"/>
+	<texture>
+	</texture>
+</material>

@@ -1,6 +1,0 @@
-<material>
-	<shader file="Data/Shader/normal_world.shader"/>
-	<texture>
-		<albedo name="white"/>
-	</texture>
-</material>

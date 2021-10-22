@@ -1,0 +1,5 @@
+<material>
+	<shader file="Data/Shader/world_tangent.shader"/>
+	<texture>
+	</texture>
+</material>

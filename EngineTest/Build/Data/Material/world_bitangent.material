@@ -1,0 +1,5 @@
+<material>
+	<shader file="Data/Shader/world_bitangent.shader"/>
+	<texture>
+	</texture>
+</material>

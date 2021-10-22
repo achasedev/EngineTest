@@ -1,5 +1,5 @@
 <material>
-	<shader file="Data/Shader/normalmap_local.shader"/>
+	<shader file="Data/Shader/surface_normal_map.shader"/>
 	<texture>
 		<normal name="Data/Image/normal.png"/>
 	</texture>

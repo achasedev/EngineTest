@@ -36,7 +36,6 @@ cbuffer modelConstant : register(b3)
    float4x4 MODEL; 
 };
 
-
 VOut VertexFunction(VInput input)
 {
     float4 localPos = float4(input.position, 1.0f);
@@ -56,7 +55,8 @@ VOut VertexFunction(VInput input)
     float3 worldTangent = normalize(mul(MODEL , float4(input.tangent.xyz, 0.f)).xyz);
     float3 worldBitangent = cross(worldTangent, worldNormal) * input.tangent.w;
     output.TBNTransform = float4x4(float4(worldTangent, 0.f), float4(worldBitangent, 0.f), float4(worldNormal, 0.f), float4(worldPos.xyz, 1.0f));
-
+    output.TBNTransform = transpose(output.TBNTransform);
+    
     return output;
 }
 
@@ -85,8 +85,8 @@ cbuffer lightContant : register(b4)
 float3 CalculateWorldNormal(float4 color, float4x4 tbnTransform)
 {
   // Range map the values (Z should be between 0.5 and 1.0 always
-  float3 surfaceNormal = normalize(2.f * color.xyz - float3(1.f, 1.f, 1.f));
-  return mul(tbnTransform, float4(surfaceNormal, 0.f)).xyz;
+  float3 surfaceNormal = normalize((2.f * color.xyz) - float3(1.f, 1.f, 1.f));
+  return normalize(mul(tbnTransform, float4(surfaceNormal, 0.f)).xyz);
 }
 
 // Calculates the attenuation factor for the given light information
@@ -148,8 +148,10 @@ float4 FragmentFunction( VOut input ) : SV_Target0
   //   vec3 directionToEye = normalize(passEyePosition - passWorldPosition);
   
   //   // Get the normal from the normal map, and transform it into TBN space
-      float4 normalColor = tNormal.Sample(sNormal, input.uv); 
-      return normalColor;
+      float4 normalColor = tNormal.Sample(sNormal, input.uv);
+      float3 worldNormal = CalculateWorldNormal(normalColor, input.TBNTransform);
+
+      return float4(0.5f * (input.TBNTransform._m02_m12_m22 + float3(1.0f, 1.0f, 1.0f)), 1.0f); 
 
       //float3 worldNormal = CalculateWorldNormal(normalColor); 
   
