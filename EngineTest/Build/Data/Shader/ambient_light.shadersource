@@ -1,0 +1,77 @@
+
+struct VInput
+{
+	float3 position : POSITION;
+	float4 color : COLOR;
+	float2 uv : UV;
+};
+
+struct VOut
+{
+	float4 position : SV_POSITION;
+    float4 color : COLOR;
+    float2 uv : UV;
+};
+
+Texture2D<float4> tAlbedo : register(t0);
+SamplerState sAlbedo : register(s0);
+
+cbuffer cameraConstants : register(b2)
+{
+   float4x4 CAMERA;
+   float4x4 VIEW; 
+   float4x4 PROJECTION; 
+};
+
+cbuffer modelConstant : register(b3)
+{
+   float4x4 MODEL; 
+};
+
+VOut VertexFunction(VInput input)
+{
+    float4 localPos = float4(input.position, 1.0f);
+    float4 worldPos = mul(MODEL, localPos);
+    float4 viewPos = mul(VIEW, worldPos); 
+    float4 clipPos = mul(PROJECTION, viewPos); 
+
+    VOut output;
+    output.position = clipPos;
+    output.color = input.color;
+    output.uv = input.uv;
+    
+    return output;
+}
+
+struct Light
+{
+    float3    m_position;
+    float     m_dotOuterAngle;
+    float3    m_direction;
+    float     m_dotInnerAngle;
+    float3    m_attenuationFactors;
+    float     m_directionFactor;
+    float4    m_color;
+    float4x4  m_shadowVP;
+    float3    m_padding;
+    float     m_castsShadows;
+};
+
+#define MAX_LIGHTS 8
+cbuffer lightContant : register(b4)
+{
+    float4  AMBIENT; // xyz color, w intensity
+    Light   LIGHTS[MAX_LIGHTS];
+};
+
+float4 FragmentFunction( VOut input ) : SV_Target0
+{
+    float3 surfaceLight = AMBIENT.xyz * AMBIENT.w; 
+    surfaceLight = clamp(surfaceLight, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
+
+    float4 surfaceColor = tAlbedo.Sample(sAlbedo, input.uv);
+    float4 finalColor = float4(surfaceLight, 1.f) * surfaceColor * input.color;
+    finalColor = clamp(finalColor, float4(0.f, 0.f, 0.f, 0.f), float4(1.f, 1.f, 1.f, 1.f));
+    
+    return finalColor;
+}

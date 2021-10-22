@@ -15,7 +15,6 @@ struct VOut
     float2 uv : UV;
     float3 worldPosition : POSITIONT; // For determining light direction
     float4x4 TBNTransform : NORMAL;          
-    float3 eyePosition : POSITION;
 };
 
 Texture2D<float4> tAlbedo : register(t0);
@@ -49,7 +48,6 @@ VOut VertexFunction(VInput input)
     output.color = input.color;
     output.uv = input.uv;
     output.worldPosition = worldPos.xyz;
-    output.eyePosition = CAMERA._m03_m13_m23;
 
     float3 worldNormal = normalize(mul(MODEL, float4(input.normal, 0.f)).xyz);
     float3 worldTangent = normalize(mul(MODEL , float4(input.tangent.xyz, 0.f)).xyz);
@@ -96,7 +94,6 @@ float CalculateAttenuation(float3 lightPosition, float3 worldPosition, float3 at
     return (intensity / denominator);
 }   
 
-
 // Calculates the cone factor (= 1.f for directional and point lights, 0.f <= x <= 1.f for spot lights)
 float CalculateConeFactor(float3 lightPosition, float3 worldPosition, float3 lightDirection, float outerDotThreshold, float innerDotThreshold)
 {
@@ -106,87 +103,29 @@ float CalculateConeFactor(float3 lightPosition, float3 worldPosition, float3 lig
     return coneFactor;
 }     
 
-
-// Calculates the diffuse factor for the 
 float3 CalculateDot3(float3 directionToLight, float3 normal, float4 lightColor, float attenuation, float coneFactor)
 {
     return (max(0.f, dot(directionToLight, normal)) * lightColor.xyz * lightColor.w * attenuation * coneFactor);
 }
 
-// vec3 CalculateSpecular(vec3 directionToLight, vec3 normal, vec3 directionToEye, vec4 lightColor, float attenuation, float coneFactor)
-// {
-//   vec3 reflect = reflect(-directionToLight, normal);
-//   float factor = max(0, dot(directionToEye, reflect));
-//   vec3 specular = SPECULAR_AMOUNT * pow(factor, SPECULAR_POWER) * lightColor.xyz * lightColor.w * attenuation * coneFactor;
-  
-//   return specular;
-// }
-
-// float CalculateShadowFactor(vec3 fragPosition, vec3 normal, Light light)
-// {
-//   if (light.m_castsShadows == 0.f)
-//   {
-//     return 1.0f;
-//   }
-
-//   vec4 clipPos = light.m_shadowVP * vec4(fragPosition, 1.0f);
-//   vec3 ndcPos = clipPos.xyz / clipPos.w;
-
-//   ndcPos = (ndcPos + vec3(1)) * 0.5f;
-
-//   float shadowDepth = texture(gShadowDepth, ndcPos.xy).r;
-
-//   return ndcPos.z - 0.001 > shadowDepth ? 0.f : 1.f;
-// }
-
 float4 FragmentFunction( VOut input ) : SV_Target0
 {    
-    //----------------------------SET UP VALUES-------------------------------    
     float4 surfaceColor = tAlbedo.Sample(sAlbedo, input.uv);
-  //   vec3 directionToEye = normalize(passEyePosition - passWorldPosition);
-  
-    // Get the normal from the normal map, and transform it into TBN space
     float4 normalColor = tNormal.Sample(sNormal, input.uv);
     float3 worldNormal = CalculateWorldNormal(normalColor, input.TBNTransform);
-
-    // Calculate the direction TO light, attenuation, and cone factor for each light
-    // Set up accumulation variables
-    float3 surfaceLight = float3(0.f, 0.f, 0.f);  // How much light is hitting the surface
-    float3 reflectedLight = float3(0.f, 0.f, 0.f);  // How much light is being reflected back
-  
-    //----------STEP 1: Add in the ambient light to the surface light----------
-    surfaceLight = AMBIENT.xyz * AMBIENT.w;
+    float3 surfaceLight = float3(0.f, 0.f, 0.f); // No ambient
   
     for (int lightIndex = 0; lightIndex < MAX_LIGHTS; ++lightIndex)
     {
-        // Directions to the light
         float3 directionToLight = lerp(-LIGHTS[lightIndex].m_direction, normalize(LIGHTS[lightIndex].m_position - input.worldPosition), LIGHTS[lightIndex].m_directionFactor);
-
-        // Attenuation
         float attenuation = CalculateAttenuation(LIGHTS[lightIndex].m_position, input.worldPosition, LIGHTS[lightIndex].m_attenuationFactors, LIGHTS[lightIndex].m_color.w);
-
-        // Cone factor
         float coneFactor = CalculateConeFactor(LIGHTS[lightIndex].m_position, input.worldPosition, LIGHTS[lightIndex].m_direction, LIGHTS[lightIndex].m_dotOuterAngle, LIGHTS[lightIndex].m_dotInnerAngle);
-
-        //-------------STEP 2: Add in the diffuse light from all lights------------ 
-        //float shadowFactor = CalculateShadowFactor(passWorldPosition, worldNormal, LIGHTS[lightIndex]);
-        float shadowFactor = 1.0f;
-        surfaceLight += shadowFactor * CalculateDot3(directionToLight, worldNormal, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
-        
-        //-----STEP 3: Calculate and add in specular lighting from all lights----------
-        //reflectedLight += shadowFactor * CalculateSpecular(directionToLight, worldNormal, directionToEye, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
+        surfaceLight += CalculateDot3(directionToLight, worldNormal, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
     }
   
-  
-    // Clamp the surface light, since it alone shouldn't blow out the surface
     surfaceLight = clamp(surfaceLight, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
   
-  
-    //---------------------STEP 4: CALCULATE FINAL COLOR-----------------------
-    // Calculate the final color, surface gets w = 1 since it is multiplied in, reflected gets w = 0 since it is added in
-    float4 finalColor = float4(surfaceLight, 1.f) * surfaceColor * input.color + float4(reflectedLight, 0.f);
-  
-    // Clamp the color
+    float4 finalColor = float4(surfaceLight, 1.f) * surfaceColor * input.color;
     finalColor = clamp(finalColor, float4(0.f, 0.f, 0.f, 0.f), float4(1.f, 1.f, 1.f, 1.f));
     
     return finalColor;

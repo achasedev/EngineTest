@@ -1,6 +1,7 @@
 <material>
 	<shader file="Data/Shader/dot3.shader"/>
 	<texture>
-		<normal name="Flat"/>
+		<albedo name="Data/Image/debug.png"/>
+		<normal name="flat"/>
 	</texture>
 </material>
