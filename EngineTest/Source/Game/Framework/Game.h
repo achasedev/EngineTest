@@ -79,6 +79,7 @@ private:
 	void SpawnBox(const Vector3& extents, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
 	void SpawnSphere(float radius, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
 	void SpawnGround();
+	void SpawnLights();
 
 
 private:
@@ -102,6 +103,7 @@ private:
 	// Entities
 	Player*										m_player = nullptr;
 	Entity*										m_ground = nullptr;
+	Entity*										m_light = nullptr;
 	std::vector<Entity*>						m_entities;
 
 };

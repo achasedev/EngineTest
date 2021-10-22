@@ -1,0 +1,6 @@
+<material>
+	<shader file="Data/Shader/normalmap_local.shader"/>
+	<texture>
+		<normal name="Data/Image/normal.png"/>
+	</texture>
+</material>

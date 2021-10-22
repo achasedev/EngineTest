@@ -4,13 +4,14 @@ struct VInput
 	float3 position : POSITION;
 	float4 color : COLOR;
 	float2 uv : UV;
+  float3 normal : NORMAL;
+  float4 tangent : TANGENT;
 };
 
 struct VOut
 {
 	  float4 position : SV_POSITION;
-    float4 color : COLOR;
-    float2 uv : UV;
+    float3 worldNormal : NORMAL;
 };
 
 Texture2D<float4> tAlbedo : register(t0);
@@ -38,8 +39,7 @@ VOut VertexFunction(VInput input)
     VOut output;
 
     output.position = clipPos;
-    output.color = input.color;
-    output.uv = input.uv;
+    output.worldNormal = mul(MODEL, float4(input.normal, 0.f)).xyz;
 
     return output;
 }
@@ -47,6 +47,5 @@ VOut VertexFunction(VInput input)
 
 float4 FragmentFunction( VOut input ) : SV_Target0
 {
-   // Output solid magenta
-   return float4(1.0, 0.0, 1.0, 1.0);; 
+    return float4(0.5f * (input.worldNormal + float3(1.0f, 1.0f, 1.0f)), 1.0f); 
 }

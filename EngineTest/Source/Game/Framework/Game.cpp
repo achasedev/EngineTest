@@ -64,6 +64,11 @@ Game::Game()
 	SetupFramework();
 	SetupRendering();
 	SpawnEntities();
+
+	Vector3 angle = Vector3(-90.f, 80.0f, 60.0f);
+	Quaternion quat = Quaternion::CreateFromEulerAnglesDegrees(angle);
+	Matrix3 mat = Matrix3::MakeRotation(quat);
+	Vector3 result = quat.GetAsEulerAnglesDegrees();
 }
 
 
@@ -177,10 +182,13 @@ void Game::SpawnEntities()
 	m_entities.push_back(m_player);
 
 	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 5.f));
-	//SpawnBox(Vector3(4.f), (1.f / 64.f), Vector3(10.f, 4.f, 5.f));
+	SpawnBox(Vector3(4.f), (1.f / 64.f), Vector3(10.f, 4.f, 5.f), Vector3(90.f, 0.f, 0.f));
 
 	// Set up ground
 	SpawnGround();
+
+	// Add our lights
+	SpawnLights();
 }
 
 
@@ -229,7 +237,7 @@ void Game::UpdateRenderables()
 
 		Renderable* rend = m_renderScene->GetRenderable(entity->GetId());
 		Vector3 existngScale = Matrix4::ExtractScale(rend->GetModelMatrix());
-		Matrix4 newModelMatrix = Matrix4::MakeModelMatrix(entity->transform.position, entity->transform.rotation.GetAsEulerAnglesDegrees(), existngScale);
+		Matrix4 newModelMatrix = Matrix4::MakeModelMatrix(entity->transform.position, entity->transform.rotation, existngScale);
 		rend->SetModelMatrix(newModelMatrix);
 	}
 }
@@ -301,7 +309,7 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 
 	// Renderable
 	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/entity.material");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/normalmap_local.material");
 	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, 2.f * extents);
 
 	Renderable rend;
@@ -356,4 +364,26 @@ void Game::SpawnGround()
 	rend.AddDraw(quad, material);
 
 	m_renderScene->AddRenderable(m_ground->GetId(), rend);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+// Spawns a test light
+void Game::SpawnLights()
+{
+	Entity* entity = new Entity();
+	entity->transform.position = Vector3(0.f, 5.f, 0.f);
+	entity->transform.scale = Vector3(0.5f);
+
+	Renderable rend;
+	rend.SetModelMatrix(entity->transform.GetModelMatrix());
+
+	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material");
+	rend.AddDraw(mesh, material);
+
+	m_renderScene->AddRenderable(entity->GetId(), rend);
+
+	Light* light = Light::CreatePointLight(entity->transform.position);
+	m_renderScene->AddLight(light);
 }
