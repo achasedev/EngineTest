@@ -1,4 +1,3 @@
-
 struct VInput
 {
 	float3 position : POSITION;
@@ -24,16 +23,37 @@ SamplerState sAlbedo : register(s0);
 Texture2D<float4> tNormal : register(t1);
 SamplerState sNormal : register(s1);
 
-cbuffer cameraConstants : register(b2)
+cbuffer cbCamera : register(b2)
 {
    float4x4 CAMERA;
    float4x4 VIEW; 
    float4x4 PROJECTION; 
 };
 
-cbuffer modelConstant : register(b3)
+cbuffer cbModel : register(b3)
 {
    float4x4 MODEL; 
+};
+
+struct Light
+{
+  float3    m_position;
+  float     m_dotOuterAngle;
+  float3    m_direction;
+  float     m_dotInnerAngle;
+  float3    m_attenuationFactors;
+  float     m_directionFactor;
+  float4    m_color;
+  float4x4  m_shadowVP;
+  float3    m_padding;
+  float     m_castsShadows;
+};
+
+#define MAX_LIGHTS 8
+cbuffer cbLight : register(b4)
+{
+    float4  AMBIENT; // xyz color, w intensity
+    Light   LIGHTS[MAX_LIGHTS];
 };
 
 VOut VertexFunction(VInput input)
@@ -59,28 +79,6 @@ VOut VertexFunction(VInput input)
     
     return output;
 }
-
-struct Light
-{
-  float3    m_position;
-  float     m_dotOuterAngle;
-  float3    m_direction;
-  float     m_dotInnerAngle;
-  float3    m_attenuationFactors;
-  float     m_directionFactor;
-  float4    m_color;
-  float4x4  m_shadowVP;
-  float3    m_padding;
-  float     m_castsShadows;
-};
-
-#define MAX_LIGHTS 8
-cbuffer lightContant : register(b4)
-{
-    float4  AMBIENT; // xyz color, w intensity
-    Light   LIGHTS[MAX_LIGHTS];
-};
-
 
 float3 CalculateWorldNormal(float4 color, float4x4 tbnTransform)
 {
