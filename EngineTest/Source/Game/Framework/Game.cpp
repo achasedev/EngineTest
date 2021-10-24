@@ -167,7 +167,7 @@ void Game::SetupRendering()
 	m_renderScene->AddCamera(m_gameCamera);
 	Skybox* skybox = new Skybox(g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material"));
 	m_renderScene->SetSkybox(skybox);
-	m_renderScene->SetAmbience(Rgba(255, 255, 255, 100));
+	m_renderScene->SetAmbience(Rgba(255, 255, 255, 40));
 
 	m_renderer = new ForwardRenderer();
 }
