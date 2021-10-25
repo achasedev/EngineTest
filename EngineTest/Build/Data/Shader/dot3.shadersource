@@ -23,14 +23,14 @@ SamplerState sAlbedo : register(s0);
 Texture2D<float4> tNormal : register(t1);
 SamplerState sNormal : register(s1);
 
-cbuffer cbCamera : register(b2)
+cbuffer cbCamera : register(b1)
 {
    float4x4 CAMERA;
    float4x4 VIEW; 
    float4x4 PROJECTION; 
 };
 
-cbuffer cbModel : register(b3)
+cbuffer cbModel : register(b2)
 {
    float4x4 MODEL; 
 };
@@ -50,7 +50,7 @@ struct Light
 };
 
 #define MAX_LIGHTS 8
-cbuffer cbLight : register(b4)
+cbuffer cbLight : register(b3)
 {
     float4  AMBIENT; // xyz color, w intensity
     Light   LIGHTS[MAX_LIGHTS];

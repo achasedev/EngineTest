@@ -16,14 +16,14 @@ struct VOut
 Texture2D<float4> tNormal : register(t1);
 SamplerState sNormal : register(s1);
 
-cbuffer cameraConstants : register(b2)
+cbuffer cameraConstants : register(b1)
 {
    float4x4 CAMERA;
    float4x4 VIEW; 
    float4x4 PROJECTION; 
 };
 
-cbuffer modelConstant : register(b3)
+cbuffer modelConstant : register(b2)
 {
    float4x4 MODEL; 
 };

@@ -16,14 +16,14 @@ struct VOut
 Texture2D<float4> tAlbedo : register(t0);
 SamplerState sAlbedo : register(s0);
 
-cbuffer cbCamera : register(b2)
+cbuffer cbCamera : register(b1)
 {
     float4x4 CAMERA;
     float4x4 VIEW; 
     float4x4 PROJECTION; 
 };
 
-cbuffer cbModel : register(b3)
+cbuffer cbModel : register(b2)
 {
     float4x4 MODEL; 
 };
