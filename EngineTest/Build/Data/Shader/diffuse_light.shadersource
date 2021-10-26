@@ -1,24 +1,20 @@
-
 struct VInput
 {
 	float3 position : POSITION;
 	float4 color : COLOR;
 	float2 uv : UV;
-  float3 normal : NORMAL;
-  float4 tangent : TANGENT;
+    float3 normal : NORMAL;
+    float4 tangent : TANGENT;
 };
 
 struct VOut
 {
-	  float4 position : SV_POSITION;
-    float4 color : COLOR;
-    float2 uv : UV;
-    float3 worldPosition : POSITIONT; // For determining light direction
-    float4x4 TBNTransform : NORMAL;          
+	float4      position : SV_POSITION;
+    float4      color : COLOR;
+    float2      uv : UV;
+    float3      worldPosition : POSITIONT; // For determining light direction
+    float4x4    TBNTransform : NORMAL;          
 };
-
-Texture2D<float4> tAlbedo : register(t0);
-SamplerState sAlbedo : register(s0);
 
 Texture2D<float4> tNormal : register(t1);
 SamplerState sNormal : register(s1);
@@ -110,7 +106,6 @@ float3 CalculateDot3(float3 directionToLight, float3 normal, float4 lightColor, 
 
 float4 FragmentFunction( VOut input ) : SV_Target0
 {    
-    float4 surfaceColor = tAlbedo.Sample(sAlbedo, input.uv);
     float4 normalColor = tNormal.Sample(sNormal, input.uv);
     float3 worldNormal = CalculateWorldNormal(normalColor, input.TBNTransform);
     float3 surfaceLight = float3(0.f, 0.f, 0.f); // No ambient
@@ -125,7 +120,7 @@ float4 FragmentFunction( VOut input ) : SV_Target0
   
     surfaceLight = clamp(surfaceLight, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
   
-    float4 finalColor = float4(surfaceLight, 1.f) * surfaceColor * input.color;
+    float4 finalColor = float4(surfaceLight, 1.f) * input.color;
     finalColor = clamp(finalColor, float4(0.f, 0.f, 0.f, 0.f), float4(1.f, 1.f, 1.f, 1.f));
     
     return finalColor;

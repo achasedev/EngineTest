@@ -12,9 +12,6 @@ struct VOut
     float2 uv : UV;
 };
 
-Texture2D<float4> tAlbedo : register(t0);
-SamplerState sAlbedo : register(s0);
-
 cbuffer cbCamera : register(b1)
 {
    float4x4 CAMERA;
@@ -68,8 +65,7 @@ float4 FragmentFunction( VOut input ) : SV_Target0
     float3 surfaceLight = AMBIENT.xyz * AMBIENT.w; 
     surfaceLight = clamp(surfaceLight, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
 
-    float4 surfaceColor = tAlbedo.Sample(sAlbedo, input.uv);
-    float4 finalColor = float4(surfaceLight, 1.f) * surfaceColor * input.color;
+    float4 finalColor = float4(surfaceLight, 1.f) * input.color;
     finalColor = clamp(finalColor, float4(0.f, 0.f, 0.f, 0.f), float4(1.f, 1.f, 1.f, 1.f));
     
     return finalColor;
