@@ -1,0 +1,12 @@
+<material>
+	<shader file="Data/Shader/specular_light.shader"/>
+	<texture>
+		<normal name="flat"/>
+	</texture>
+	<property_blocks>
+		<property_block name="specular">
+			<property name="SPECULAR_POWER" value="1.0"/>
+			<property name="SPECULAR_AMOUNT" value="1.0"/>
+		</property_block>
+	</property_blocks>
+</material>
