@@ -28,6 +28,7 @@
 #include "Engine/Render/Camera.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
 #include "Engine/Render/ForwardRenderer.h"
+#include "Engine/Render/Material/Material.h"
 #include "Engine/Render/Renderable.h"
 #include "Engine/Render/RenderContext.h"
 #include "Engine/Render/RenderScene.h"
@@ -311,6 +312,9 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 	// Renderable
 	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	material->SetProperty(SID("SPECULAR_AMOUNT"), 0.5f);
+	material->SetProperty(SID("SPECULAR_POWER"), 4.0f);
+
 	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, 2.f * extents);
 
 	Renderable rend;
