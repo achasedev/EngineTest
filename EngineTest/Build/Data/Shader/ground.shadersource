@@ -3,47 +3,148 @@ struct VInput
 	float3 position : POSITION;
 	float4 color : COLOR;
 	float2 uv : UV;
+  float3 normal : NORMAL;
+  float4 tangent : TANGENT;
 };
 
 struct VOut
 {
-	  float4 worldPosition : POSITION;
-    float4 position : SV_POSITION;
+	  float4 position : SV_POSITION;
+    float4 color : COLOR;
+    float2 uv : UV;
+    float3 worldPosition : POSITIONT; // For determining light direction
+    float4x4 TBNTransform : NORMAL;          
+    float3 eyePosition : POSITION;
 };
 
-Texture2D<float4> tAlbedo : register(t0);
-SamplerState sAlbedo : register(s0);
+Texture2D<float4> tNormal : register(t1);
+SamplerState sNormal : register(s1);
 
-cbuffer cameraConstants : register(b1)
+cbuffer cbCamera : register(b1)
 {
    float4x4 CAMERA;
    float4x4 VIEW; 
    float4x4 PROJECTION; 
 };
 
-cbuffer modelConstant : register(b2)
+cbuffer cbModel : register(b2)
 {
    float4x4 MODEL; 
 };
 
+struct Light
+{
+  float3    m_position;
+  float     m_dotOuterAngle;
+  float3    m_direction;
+  float     m_dotInnerAngle;
+  float3    m_attenuationFactors;
+  float     m_directionFactor;
+  float4    m_color;
+  float4x4  m_shadowVP;
+  float3    m_padding;
+  float     m_castsShadows;
+};
+
+#define MAX_LIGHTS 8
+cbuffer cbLight : register(b3)
+{
+    float4  AMBIENT; // xyz color, w intensity
+    Light   LIGHTS[MAX_LIGHTS];
+};
+
+cbuffer cbSpecular : register(b8)
+{
+    float SPECULAR_AMOUNT;
+    float SPECULAR_POWER;
+    float2 PADDING0;
+}
+
 VOut VertexFunction(VInput input)
 {
     float4 localPos = float4(input.position, 1.0f);
-    float4 worldPos = mul( MODEL, localPos );
-    float4 viewPos = mul( VIEW, worldPos ); 
-    float4 clipPos = mul( PROJECTION, viewPos ); 
+    float4 worldPos = mul(MODEL, localPos);
+    float4 viewPos = mul(VIEW, worldPos); 
+    float4 clipPos = mul(PROJECTION, viewPos); 
 
     VOut output;
-    output.worldPosition = worldPos;
-    output.position = clipPos;
 
+    output.position = clipPos;
+    output.color = input.color;
+    output.uv = input.uv;
+    output.worldPosition = worldPos.xyz;
+    output.eyePosition = CAMERA._m03_m13_m23;
+
+    float3 worldNormal = normalize(mul(MODEL, float4(input.normal, 0.f)).xyz);
+    float3 worldTangent = normalize(mul(MODEL , float4(input.tangent.xyz, 0.f)).xyz);
+    float3 worldBitangent = cross(worldTangent, worldNormal) * input.tangent.w;
+    output.TBNTransform = float4x4(float4(worldTangent, 0.f), float4(worldBitangent, 0.f), float4(worldNormal, 0.f), float4(worldPos.xyz, 1.0f));
+    output.TBNTransform = transpose(output.TBNTransform);
+    
     return output;
 }
 
-float4 FragmentFunction( VOut input ) : SV_Target0
+float3 CalculateWorldNormal(float4 color, float4x4 tbnTransform)
+{
+  // Range map the values (Z should be between 0.5 and 1.0 always
+  float3 surfaceNormal = normalize((2.f * color.xyz) - float3(1.f, 1.f, 1.f));
+  return normalize(mul(tbnTransform, float4(surfaceNormal, 0.f)).xyz);
+}
+
+float CalculateAttenuation(float3 lightPosition, float3 worldPosition, float3 attenuationFactors, float intensity)
+{
+    float d = length(lightPosition - worldPosition);
+    float denominator = attenuationFactors.x + attenuationFactors.y * d + attenuationFactors.z * d * d;
+    return (intensity / denominator);
+}   
+
+
+// Calculates the cone factor (= 1.f for directional and point lights, 0.f <= x <= 1.f for spot lights)
+float CalculateConeFactor(float3 lightPosition, float3 worldPosition, float3 lightDirection, float outerDotThreshold, float innerDotThreshold)
+{
+    float dotFactor = dot(normalize(worldPosition - lightPosition), lightDirection);
+    float coneFactor = smoothstep(outerDotThreshold, innerDotThreshold, dotFactor);
+
+    return coneFactor;
+}     
+
+
+// Calculates the diffuse factor for the 
+float3 CalculateDot3(float3 directionToLight, float3 normal, float4 lightColor, float attenuation, float coneFactor)
+{
+    return (max(0.f, dot(directionToLight, normal)) * lightColor.xyz * lightColor.w * attenuation * coneFactor);
+}
+
+float3 CalculateSpecular(float3 directionToLight, float3 normal, float3 directionToEye, float4 lightColor, float attenuation, float coneFactor)
+{
+  float3 reflectDir = reflect(-directionToLight, normal);
+  float factor = max(0, dot(directionToEye, reflectDir));
+  float3 specular = SPECULAR_AMOUNT * pow(factor, SPECULAR_POWER) * lightColor.xyz * lightColor.w * attenuation * coneFactor;
+  
+  return specular;
+}
+
+// float CalculateShadowFactor(vec3 fragPosition, vec3 normal, Light light)
+// {
+//   if (light.m_castsShadows == 0.f)
+//   {
+//     return 1.0f;
+//   }
+
+//   vec4 clipPos = light.m_shadowVP * vec4(fragPosition, 1.0f);
+//   vec3 ndcPos = clipPos.xyz / clipPos.w;
+
+//   ndcPos = (ndcPos + vec3(1)) * 0.5f;
+
+//   float shadowDepth = texture(gShadowDepth, ndcPos.xy).r;
+
+//   return ndcPos.z - 0.001 > shadowDepth ? 0.f : 1.f;
+// }
+
+float4 ComputeGridColor(VOut input)
 {
     float4 backgroundColor = float4(0.095f, 0.130f, 0.350f, 1.000f);
-    float4 gridColor = float4(0.8f, 0.8f, 0.8f, 1.f);
+    float4 gridColor = float4(0.5f, 0.5f, 0.5f, 1.f);
 
       // Pick a coordinate to visualize in a grid
     float2 coord = input.worldPosition.xz;
@@ -54,4 +155,57 @@ float4 FragmentFunction( VOut input ) : SV_Target0
 
     float t = min(l, 1.0f);
     return lerp(gridColor, backgroundColor, t);
+}
+
+float4 FragmentFunction( VOut input ) : SV_Target0
+{    
+    //----------------------------SET UP VALUES-------------------------------    
+    float4 surfaceColor = ComputeGridColor(input);
+    float3 directionToEye = normalize(input.eyePosition - input.worldPosition);
+  
+    // Get the normal from the normal map, and transform it into TBN space
+    float4 normalColor = tNormal.Sample(sNormal, input.uv);
+    float3 worldNormal = CalculateWorldNormal(normalColor, input.TBNTransform);
+
+    // Calculate the direction TO light, attenuation, and cone factor for each light
+    // Set up accumulation variables
+    float3 surfaceLight = float3(0.f, 0.f, 0.f);  // How much light is hitting the surface
+    float3 reflectedLight = float3(0.f, 0.f, 0.f);  // How much light is being reflected back
+  
+    //----------STEP 1: Add in the ambient light to the surface light----------
+    surfaceLight = AMBIENT.xyz * AMBIENT.w;
+  
+    for (int lightIndex = 0; lightIndex < MAX_LIGHTS; ++lightIndex)
+    {
+        // Directions to the light
+        float3 directionToLight = lerp(-LIGHTS[lightIndex].m_direction, normalize(LIGHTS[lightIndex].m_position - input.worldPosition), LIGHTS[lightIndex].m_directionFactor);
+
+        // Attenuation
+        float attenuation = CalculateAttenuation(LIGHTS[lightIndex].m_position, input.worldPosition, LIGHTS[lightIndex].m_attenuationFactors, LIGHTS[lightIndex].m_color.w);
+
+        // Cone factor
+        float coneFactor = CalculateConeFactor(LIGHTS[lightIndex].m_position, input.worldPosition, LIGHTS[lightIndex].m_direction, LIGHTS[lightIndex].m_dotOuterAngle, LIGHTS[lightIndex].m_dotInnerAngle);
+
+        //-------------STEP 2: Add in the diffuse light from all lights------------ 
+        //float shadowFactor = CalculateShadowFactor(passWorldPosition, worldNormal, LIGHTS[lightIndex]);
+        float shadowFactor = 1.0f;
+        surfaceLight += shadowFactor * CalculateDot3(directionToLight, worldNormal, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
+        
+        //-----STEP 3: Calculate and add in specular lighting from all lights----------
+        reflectedLight += shadowFactor * CalculateSpecular(directionToLight, worldNormal, directionToEye, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
+    }
+  
+  
+    // Clamp the surface light, since it alone shouldn't blow out the surface
+    surfaceLight = clamp(surfaceLight, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));
+  
+  
+    //---------------------STEP 4: CALCULATE FINAL COLOR-----------------------
+    // Calculate the final color, surface gets w = 1 since it is multiplied in, reflected gets w = 0 since it is added in
+    float4 finalColor = float4(surfaceLight, 1.f) * surfaceColor * input.color + float4(reflectedLight, 0.f);
+  
+    // Clamp the color
+    finalColor = clamp(finalColor, float4(0.f, 0.f, 0.f, 0.f), float4(1.f, 1.f, 1.f, 1.f));
+    
+    return finalColor;
 }

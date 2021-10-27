@@ -2,5 +2,12 @@
 	<shader file="Data/Shader/ground.shader"/>
 	<texture>
 		<albedo name="white"/>
+		<normal name="flat"/>
 	</texture>
+	<property_blocks>
+		<property_block name="specular">
+			<property name="SPECULAR_POWER" value="0.5"/>
+			<property name="SPECULAR_AMOUNT" value="0.1"/>
+		</property_block>
+	</property_blocks>
 </material>

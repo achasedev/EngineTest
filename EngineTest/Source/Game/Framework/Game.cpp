@@ -183,7 +183,7 @@ void Game::SetupRendering()
 	m_renderScene->AddCamera(m_gameCamera);
 	Skybox* skybox = new Skybox(g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material"));
 	m_renderScene->SetSkybox(skybox);
-	m_renderScene->SetAmbience(Rgba(255, 255, 255, 40));
+	m_renderScene->SetAmbience(Rgba(255, 255, 255, 100));
 
 	m_renderer = new ForwardRenderer();
 }
@@ -404,6 +404,9 @@ void Game::SpawnLights()
 
 	m_renderScene->AddRenderable(entity->GetId(), rend);
 
-	Light* light = Light::CreatePointLight(entity->transform.position, Rgba::YELLOW);
+	Light* light = Light::CreatePointLight(entity->transform.position, Rgba::WHITE, Vector3(1.f, 0.8f, 0.f));
 	m_renderScene->AddLight(light);
+
+	Light* dirLight = Light::CreateDirectionalLight(entity->transform.position, Vector3(0.f, -1.f, 1.f), Rgba(255, 255, 255, 200));
+	m_renderScene->AddLight(dirLight);
 }
