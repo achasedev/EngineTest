@@ -70,6 +70,21 @@ Game::Game()
 	Quaternion quat = Quaternion::CreateFromEulerAnglesDegrees(angle);
 	Matrix3 mat = Matrix3::MakeRotation(quat);
 	Vector3 result = quat.GetAsEulerAnglesDegrees();
+
+	Maybe<Rgba> test = TryParseAsRgba("1.f 2.f");
+	test = TryParseAsRgba("1.f -2.f 3.f 4.f");
+	test = TryParseAsRgba("100 255 255 255");
+	test = TryParseAsRgba("100, 255, 255, 255");
+	test = TryParseAsRgba("100, 255, 255,, 255");
+	test = TryParseAsRgba("100, 255, 255");
+	test = TryParseAsRgba("100, 255, -255, 255");
+	test = TryParseAsRgba("100.f, 255, 255, 0");
+	test = TryParseAsRgba("0.5f, 0.5f, -0.5f, 0.5f");
+	test = TryParseAsRgba("0.5f, 1, 0.5f, 0.5f");
+	test = TryParseAsRgba("white");
+	test = TryParseAsRgba("GrAY");
+	test = TryParseAsRgba("blUE");
+	test = TryParseAsRgba("MAGENTA");
 }
 
 
@@ -311,9 +326,9 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 
 	// Renderable
 	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/ambient_light.material");
-	material->SetProperty(SID("SPECULAR_AMOUNT"), 1.0f);
-	material->SetProperty(SID("SPECULAR_POWER"), 20.0f);
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	//material->SetProperty(SID("SPECULAR_AMOUNT"), 1.0f);
+	//material->SetProperty(SID("SPECULAR_POWER"), 20.0f);
 
 	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, 2.f * extents);
 
