@@ -171,7 +171,7 @@ void Game::SetupRendering()
 {
 	// Cameras
 	m_gameCamera = new Camera();
-	m_gameCamera->SetProjectionPerspective(90.f, 0.1f, 100.f);
+	m_gameCamera->SetProjectionPerspective(90.f, g_window->GetClientAspect(), 0.1f, 100.f);
 	m_gameCamera->LookAt(Vector3(0.f, 0.f, -10.f), Vector3(0.f, 0.f, 0.f));
 	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
 	g_debugRenderSystem->SetCamera(m_gameCamera);
@@ -240,6 +240,23 @@ void Game::PostUpdate(float deltaSeconds)
 	m_ground->transform.position.y = 0.f;
 
 	UpdateRenderables();
+
+	static bool updateLight = true;
+	if (g_inputSystem->WasKeyJustPressed('E'))
+	{
+		updateLight = !updateLight;
+	}
+
+	if (updateLight)
+	{
+		if (m_coneLight != nullptr)
+		{
+			LightData data = m_coneLight->GetLightData();
+			data.m_position = m_gameCamera->GetPosition();
+			data.m_lightDirection = m_gameCamera->GetForwardVector();
+			m_coneLight->SetLightData(data);
+		}
+	}
 }
 
 
@@ -404,9 +421,13 @@ void Game::SpawnLights()
 
 	//m_renderScene->AddRenderable(entity->GetId(), rend);
 
-	Light* light = Light::CreatePointLight(entity->transform.position, Rgba::WHITE);
-	light->SetIsShadowCasting(true);
-	m_renderScene->AddLight(light);
+	m_coneLight = Light::CreateConeLight(m_gameCamera->GetPosition(), m_gameCamera->GetForwardVector(), 90.f, 70.f);
+	m_coneLight->SetIsShadowCasting(true);
+	m_renderScene->AddLight(m_coneLight);
+
+	//Light* light = Light::CreatePointLight(entity->transform.position, Rgba::WHITE);
+	//light->SetIsShadowCasting(true);
+	//m_renderScene->AddLight(light);
 
 	//Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 20.f, 0.f), Vector3(0.f, -1.f, 0.f), Rgba(255, 255, 255, 200));
 	//dirLight->SetIsShadowCasting(true);

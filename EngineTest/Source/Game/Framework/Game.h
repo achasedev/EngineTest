@@ -24,6 +24,7 @@ class Camera;
 class Clock;
 class Entity;
 class ForwardRenderer;
+class Light;
 class Particle;
 class ParticleWorld;
 class PhysicsScene;
@@ -91,6 +92,7 @@ private:
 	ForwardRenderer*							m_renderer = nullptr;
 	RenderScene*								m_renderScene = nullptr;
 	bool										m_drawColliders = false;
+	Light*										m_coneLight = nullptr;
 
 	// Framework
 	Clock*										m_gameClock = nullptr;

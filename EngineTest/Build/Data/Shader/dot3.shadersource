@@ -139,15 +139,30 @@ float CalculateShadowFactor(float3 fragPosition, float3 normal, Light light, int
 
   float4 clipPos = mul(light.m_shadowVP, float4(fragPosition, 1.0f));
   float3 ndcPos = clipPos.xyz / clipPos.w;
+  
+  float2 uvs = (ndcPos.xy + float2(1.f, 1.f)) * 0.5f;
+  uvs.y = 1.0f - uvs.y;
 
-  ndcPos = (ndcPos + float3(1.f, 1.f, 1.f)) * 0.5f;
-
-  float shadowDepth = tDepth.Sample(sDepth, ndcPos.xy).r;
-  return ndcPos.z > shadowDepth ? 0.f : 1.f;
+  float shadowDepth = tDepth.Sample(sDepth, uvs).r;
+  return ndcPos.z - 0.001f > shadowDepth ? 0.f : 1.f;
 }
 
 float4 FragmentFunction( VOut input ) : SV_Target0
 {    
+    // float4 clipPos = mul(LIGHTS[0].m_shadowVP, float4(input.worldPosition, 1.0f));
+    // float3 ndcPos = clipPos.xyz / clipPos.w;
+    // float depth = ndcPos.z;
+
+    // ndcPos = (ndcPos + float3(1.f, 1.f, 1.f)) * 0.5f;
+    // ndcPos.y = 1.0f - ndcPos.y;
+
+    // float shadowDepth = tDepth.Sample(sDepth, ndcPos.xy).r;
+    // if (depth - 0.001f > shadowDepth ? 0.f : 1.f)
+    // {
+       
+    // }
+    // return float4(input.position.z, depth, shadowDepth, 1.0f);
+
     //----------------------------SET UP VALUES-------------------------------    
     float4 surfaceColor = tAlbedo.Sample(sAlbedo, input.uv);
     float3 directionToEye = normalize(input.eyePosition - input.worldPosition);
