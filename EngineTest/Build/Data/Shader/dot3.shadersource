@@ -17,24 +17,6 @@ struct VOut
     float3 eyePosition : POSITION;
 };
 
-Texture2D<float4> tAlbedo : register(t0);
-SamplerState sAlbedo : register(s0);
-
-Texture2D<float4> tNormal : register(t1);
-SamplerState sNormal : register(s1);
-
-cbuffer cbCamera : register(b1)
-{
-   float4x4 CAMERA;
-   float4x4 VIEW; 
-   float4x4 PROJECTION; 
-};
-
-cbuffer cbModel : register(b2)
-{
-   float4x4 MODEL; 
-};
-
 struct Light
 {
   float3    m_position;
@@ -54,6 +36,27 @@ cbuffer cbLight : register(b3)
 {
     float4  AMBIENT; // xyz color, w intensity
     Light   LIGHTS[MAX_LIGHTS];
+};
+
+Texture2D<float4> tAlbedo : register(t0);
+SamplerState sAlbedo : register(s0);
+
+Texture2D<float4> tNormal : register(t1);
+SamplerState sNormal : register(s1);
+
+Texture2D<float4> tDepth : register(t4);
+SamplerState sDepth : register(s4);
+
+cbuffer cbCamera : register(b1)
+{
+   float4x4 CAMERA;
+   float4x4 VIEW; 
+   float4x4 PROJECTION; 
+};
+
+cbuffer cbModel : register(b2)
+{
+   float4x4 MODEL; 
 };
 
 cbuffer cbSpecular : register(b8)
@@ -127,22 +130,21 @@ float3 CalculateSpecular(float3 directionToLight, float3 normal, float3 directio
   return specular;
 }
 
-// float CalculateShadowFactor(vec3 fragPosition, vec3 normal, Light light)
-// {
-//   if (light.m_castsShadows == 0.f)
-//   {
-//     return 1.0f;
-//   }
+float CalculateShadowFactor(float3 fragPosition, float3 normal, Light light, int lightIndex)
+{
+  if (light.m_castsShadows == 0.f)
+  {
+    return 1.0f;
+  }
 
-//   vec4 clipPos = light.m_shadowVP * vec4(fragPosition, 1.0f);
-//   vec3 ndcPos = clipPos.xyz / clipPos.w;
+  float4 clipPos = mul(light.m_shadowVP, float4(fragPosition, 1.0f));
+  float3 ndcPos = clipPos.xyz / clipPos.w;
 
-//   ndcPos = (ndcPos + vec3(1)) * 0.5f;
+  ndcPos = (ndcPos + float3(1.f, 1.f, 1.f)) * 0.5f;
 
-//   float shadowDepth = texture(gShadowDepth, ndcPos.xy).r;
-
-//   return ndcPos.z - 0.001 > shadowDepth ? 0.f : 1.f;
-// }
+  float shadowDepth = tDepth.Sample(sDepth, ndcPos.xy).r;
+  return ndcPos.z > shadowDepth ? 0.f : 1.f;
+}
 
 float4 FragmentFunction( VOut input ) : SV_Target0
 {    
@@ -174,8 +176,7 @@ float4 FragmentFunction( VOut input ) : SV_Target0
         float coneFactor = CalculateConeFactor(LIGHTS[lightIndex].m_position, input.worldPosition, LIGHTS[lightIndex].m_direction, LIGHTS[lightIndex].m_dotOuterAngle, LIGHTS[lightIndex].m_dotInnerAngle);
 
         //-------------STEP 2: Add in the diffuse light from all lights------------ 
-        //float shadowFactor = CalculateShadowFactor(passWorldPosition, worldNormal, LIGHTS[lightIndex]);
-        float shadowFactor = 1.0f;
+        float shadowFactor = CalculateShadowFactor(input.worldPosition, worldNormal, LIGHTS[lightIndex], lightIndex);
         surfaceLight += shadowFactor * CalculateDot3(directionToLight, worldNormal, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
         
         //-----STEP 3: Calculate and add in specular lighting from all lights----------

@@ -380,7 +380,7 @@ void Game::SpawnGround()
 	Matrix4 rendModel = Matrix4::MakeModelMatrix(m_ground->transform.position, Vector3::ZERO, Vector3(100.f));
 	rend.SetModelMatrix(rendModel);
 
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/ground.material");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
 	rend.AddDraw(quad, material);
 
 	m_renderScene->AddRenderable(m_ground->GetId(), rend);
@@ -392,7 +392,7 @@ void Game::SpawnGround()
 void Game::SpawnLights()
 {
 	Entity* entity = new Entity();
-	entity->transform.position = Vector3(0.f, 5.f, 0.f);
+	entity->transform.position = Vector3(0.f, 5.f, 2.f);
 	entity->transform.scale = Vector3(0.5f);
 
 	Renderable rend;
@@ -402,11 +402,13 @@ void Game::SpawnLights()
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material");
 	rend.AddDraw(mesh, material);
 
-	m_renderScene->AddRenderable(entity->GetId(), rend);
+	//m_renderScene->AddRenderable(entity->GetId(), rend);
 
-	Light* light = Light::CreatePointLight(entity->transform.position, Rgba::WHITE, Vector3(1.f, 0.8f, 0.f));
+	Light* light = Light::CreatePointLight(entity->transform.position, Rgba::WHITE);
+	light->SetIsShadowCasting(true);
 	m_renderScene->AddLight(light);
 
-	Light* dirLight = Light::CreateDirectionalLight(entity->transform.position, Vector3(0.f, -1.f, 1.f), Rgba(255, 255, 255, 200));
-	m_renderScene->AddLight(dirLight);
+	//Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 20.f, 0.f), Vector3(0.f, -1.f, 0.f), Rgba(255, 255, 255, 200));
+	//dirLight->SetIsShadowCasting(true);
+	//m_renderScene->AddLight(dirLight);
 }
