@@ -123,6 +123,17 @@ void Game::ProcessInput()
 	{
 		m_drawColliders = !m_drawColliders;
 	}
+
+	if (g_inputSystem->WasKeyJustPressed('E'))
+	{
+		SpawnLight();
+	}
+
+	if (g_inputSystem->WasKeyJustPressed('Q'))
+	{
+		m_renderScene->RemoveLight(m_coneLight);
+		SAFE_DELETE(m_coneLight);
+	}
 }
 
 
@@ -203,9 +214,6 @@ void Game::SpawnEntities()
 
 	// Set up ground
 	SpawnGround();
-
-	// Add our lights
-	SpawnLights();
 }
 
 
@@ -240,23 +248,6 @@ void Game::PostUpdate(float deltaSeconds)
 	m_ground->transform.position.y = 0.f;
 
 	UpdateRenderables();
-
-	static bool updateLight = true;
-	if (g_inputSystem->WasKeyJustPressed('E'))
-	{
-		updateLight = !updateLight;
-	}
-
-	if (updateLight)
-	{
-		if (m_coneLight != nullptr)
-		{
-			LightData data = m_coneLight->GetLightData();
-			data.m_position = m_gameCamera->GetPosition();
-			data.m_lightDirection = m_gameCamera->GetForwardVector();
-			m_coneLight->SetLightData(data);
-		}
-	}
 }
 
 
@@ -406,24 +397,16 @@ void Game::SpawnGround()
 
 //-------------------------------------------------------------------------------------------------
 // Spawns a test light
-void Game::SpawnLights()
+void Game::SpawnLight()
 {
-	Entity* entity = new Entity();
-	entity->transform.position = Vector3(0.f, 5.f, 2.f);
-	entity->transform.scale = Vector3(0.5f);
+	Light* light = Light::CreateConeLight(m_gameCamera->GetPosition(), m_gameCamera->GetForwardVector(), 90.f, 70.f);
+	light->SetIsShadowCasting(true);
+	m_renderScene->AddLight(light);
 
-	Renderable rend;
-	rend.SetModelMatrix(entity->transform.GetModelMatrix());
-
-	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material");
-	rend.AddDraw(mesh, material);
-
-	//m_renderScene->AddRenderable(entity->GetId(), rend);
-
-	m_coneLight = Light::CreateConeLight(m_gameCamera->GetPosition(), m_gameCamera->GetForwardVector(), 90.f, 70.f);
-	m_coneLight->SetIsShadowCasting(true);
-	m_renderScene->AddLight(m_coneLight);
+	if (m_coneLight == nullptr)
+	{
+		m_coneLight = light;
+	}
 
 	//Light* light = Light::CreatePointLight(entity->transform.position, Rgba::WHITE);
 	//light->SetIsShadowCasting(true);
