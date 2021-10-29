@@ -70,21 +70,6 @@ Game::Game()
 	Quaternion quat = Quaternion::CreateFromEulerAnglesDegrees(angle);
 	Matrix3 mat = Matrix3::MakeRotation(quat);
 	Vector3 result = quat.GetAsEulerAnglesDegrees();
-
-	Maybe<Rgba> test = TryParseAsRgba("1.f 2.f");
-	test = TryParseAsRgba("1.f -2.f 3.f 4.f");
-	test = TryParseAsRgba("100 255 255 255");
-	test = TryParseAsRgba("100, 255, 255, 255");
-	test = TryParseAsRgba("100, 255, 255,, 255");
-	test = TryParseAsRgba("100, 255, 255");
-	test = TryParseAsRgba("100, 255, -255, 255");
-	test = TryParseAsRgba("100.f, 255, 255, 0");
-	test = TryParseAsRgba("0.5f, 0.5f, -0.5f, 0.5f");
-	test = TryParseAsRgba("0.5f, 1, 0.5f, 0.5f");
-	test = TryParseAsRgba("white");
-	test = TryParseAsRgba("GrAY");
-	test = TryParseAsRgba("blUE");
-	test = TryParseAsRgba("MAGENTA");
 }
 
 
@@ -194,7 +179,7 @@ void Game::SetupRendering()
 	m_renderScene->AddCamera(m_gameCamera);
 	Skybox* skybox = new Skybox(g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material"));
 	m_renderScene->SetSkybox(skybox);
-	m_renderScene->SetAmbience(Rgba(255, 255, 255, 100));
+	m_renderScene->SetAmbience(Rgba(255, 255, 255, 20));
 
 	m_renderer = new ForwardRenderer();
 }
@@ -399,20 +384,20 @@ void Game::SpawnGround()
 // Spawns a test light
 void Game::SpawnLight()
 {
-	Light* light = Light::CreateConeLight(m_gameCamera->GetPosition(), m_gameCamera->GetForwardVector(), 90.f, 70.f);
-	light->SetIsShadowCasting(true);
-	m_renderScene->AddLight(light);
+	//Light* light = Light::CreateConeLight(m_gameCamera->GetPosition(), m_gameCamera->GetForwardVector(), 90.f, 70.f);
+	//light->SetIsShadowCasting(true);
+	//m_renderScene->AddLight(light);
 
-	if (m_coneLight == nullptr)
-	{
-		m_coneLight = light;
-	}
+	//if (m_coneLight == nullptr)
+	//{
+	//	m_coneLight = light;
+	//}
 
 	//Light* light = Light::CreatePointLight(entity->transform.position, Rgba::WHITE);
 	//light->SetIsShadowCasting(true);
 	//m_renderScene->AddLight(light);
 
-	//Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 20.f, 0.f), Vector3(0.f, -1.f, 0.f), Rgba(255, 255, 255, 200));
-	//dirLight->SetIsShadowCasting(true);
-	//m_renderScene->AddLight(dirLight);
+	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, 0.f, 1.f), Rgba(255, 255, 255, 255));
+	dirLight->SetIsShadowCasting(true);
+	m_renderScene->AddLight(dirLight);
 }
