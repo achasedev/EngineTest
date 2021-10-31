@@ -104,15 +104,30 @@ void Game::ProcessInput()
 		m_drawColliders = !m_drawColliders;
 	}
 
+	static bool test = false;
+
+	if (test)
+	{
+		m_gameCamera->SetProjectionPerspective(90.f, g_window->GetClientAspect(), 0.1f, 10.f);
+		test = false;
+	}
+
 	if (g_inputSystem->WasKeyJustPressed('E'))
 	{
 		SpawnLight();
-	}
+		test = true;
+		//static bool test = true;
+		//if (test)
+		//{
+		//	Frustrum frustrum = m_gameCamera->GetFrustrum();
+		//	DebugRenderOptions options;
+		//	options.m_startColor = Rgba::MAGENTA;
+		//	options.m_debugRenderMode = DEBUG_RENDER_MODE_XRAY;
 
-	if (g_inputSystem->WasKeyJustPressed('Q'))
-	{
-		m_renderScene->RemoveLight(m_coneLight);
-		SAFE_DELETE(m_coneLight);
+		//	DebugDrawFrustrum(frustrum, options);
+
+		//	test = false;
+		//}
 	}
 }
 
@@ -162,7 +177,7 @@ void Game::SetupRendering()
 {
 	// Cameras
 	m_gameCamera = new Camera();
-	m_gameCamera->SetProjectionPerspective(90.f, g_window->GetClientAspect(), 0.1f, 100.f);
+	m_gameCamera->SetProjectionPerspective(90.f, g_window->GetClientAspect(), 0.1f, 20.f);
 	m_gameCamera->LookAt(Vector3(0.f, 0.f, -10.f), Vector3(0.f, 0.f, 0.f));
 	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
 	g_debugRenderSystem->SetCamera(m_gameCamera);
@@ -383,16 +398,12 @@ void Game::SpawnLight()
 	//light->SetIsShadowCasting(true);
 	//m_renderScene->AddLight(light);
 
-	//if (m_coneLight == nullptr)
-	//{
-	//	m_coneLight = light;
-	//}
-
 	//Light* light = Light::CreatePointLight(entity->transform.position, Rgba::WHITE);
 	//light->SetIsShadowCasting(true);
 	//m_renderScene->AddLight(light);
 
-	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, 0.f, 1.f), Rgba(255, 255, 255, 255));
+	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 140, 0, 150));
+
 	dirLight->SetIsShadowCasting(true);
 	m_renderScene->AddLight(dirLight);
 }

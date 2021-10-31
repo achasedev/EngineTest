@@ -122,12 +122,7 @@ void Player::PostUpdate(float deltaSeconds)
 	Entity::PostUpdate(deltaSeconds);
 
 	m_camera->SetPosition(transform.position + s_cameraOffset);
-}
 
-
-//-------------------------------------------------------------------------------------------------
-void Player::Render() const
-{
 	Vector3 lateralVelocity = rigidBody->GetVelocityWs();
 	lateralVelocity.y = 0.f;
 
@@ -137,9 +132,15 @@ void Player::Render() const
 	if (AreMostlyEqual(pos.z, 0.f)) { pos.z = 0.f; }
 
 	ConsolePrintf("Position: (%.1f, %.1f, %.1f)", pos.x, pos.y, pos.z);
-	
+
 	float speed = lateralVelocity.GetLength();
 	if (AreMostlyEqual(speed, 0.f)) { speed = 0.f; }
-	
+
 	ConsolePrintf("Lateral Speed: %.2f m/s", speed);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void Player::Render() const
+{
 }
