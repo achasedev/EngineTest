@@ -408,7 +408,7 @@ void Game::SpawnLight()
 	//light->SetIsShadowCasting(true);
 	//m_renderScene->AddLight(light);
 
-	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 255, 255, 255));
+	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, 0.f, 1.f), Rgba(255, 255, 255, 255));
 	dirLight->SetIsShadowCasting(true);
 	m_renderScene->AddLight(dirLight);
 }
