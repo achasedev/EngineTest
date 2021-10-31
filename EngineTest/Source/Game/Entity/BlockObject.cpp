@@ -72,7 +72,7 @@ void BlockObject::Render() const
 void BlockObject::UpdateMesh()
 {
 	MeshBuilder mb;
-	mb.BeginBuilding(true);
+	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
 
 	BlockIter itr = m_blocks.begin();
 	for (itr; itr != m_blocks.end(); itr++)

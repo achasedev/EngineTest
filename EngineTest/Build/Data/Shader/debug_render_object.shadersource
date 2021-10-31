@@ -54,7 +54,7 @@ float4 FragmentFunction( VOut input ) : SV_Target0
    float4 texColor = tAlbedo.Sample( sAlbedo, input.uv ); 
 
    // Component wise multiply to "tint" the output
-   float4 finalColor = texColor * TINT;
+   float4 finalColor = texColor * TINT * input.color;
 
    // output it; 
    return finalColor; 

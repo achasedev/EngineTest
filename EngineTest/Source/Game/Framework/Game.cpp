@@ -65,11 +65,6 @@ Game::Game()
 	SetupFramework();
 	SetupRendering();
 	SpawnEntities();
-
-	Vector3 angle = Vector3(-90.f, 80.0f, 60.0f);
-	Quaternion quat = Quaternion::CreateFromEulerAnglesDegrees(angle);
-	Matrix3 mat = Matrix3::MakeRotation(quat);
-	Vector3 result = quat.GetAsEulerAnglesDegrees();
 }
 
 
@@ -143,17 +138,6 @@ void Game::Render()
 	else
 	{
 		m_renderer->Render(m_renderScene);
-	}
-
-	static bool test = false;
-	if (!test)
-	{
-		DebugRenderOptions options;
-		options.m_debugRenderMode = DEBUG_RENDER_MODE_XRAY;
-
-		DebugDrawBox(Vector3(0.f, 1.0f, 0.f), Vector3::ONES, Quaternion::IDENTITY, options);
-
-		test = true;
 	}
 }
 
