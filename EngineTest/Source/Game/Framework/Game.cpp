@@ -144,6 +144,17 @@ void Game::Render()
 	{
 		m_renderer->Render(m_renderScene);
 	}
+
+	static bool test = false;
+	if (!test)
+	{
+		DebugRenderOptions options;
+		options.m_debugRenderMode = DEBUG_RENDER_MODE_XRAY;
+
+		DebugDrawBox(Vector3(0.f, 1.0f, 0.f), Vector3::ONES, Quaternion::IDENTITY, options);
+
+		test = true;
+	}
 }
 
 
@@ -397,7 +408,7 @@ void Game::SpawnLight()
 	//light->SetIsShadowCasting(true);
 	//m_renderScene->AddLight(light);
 
-	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, 0.f, 1.f), Rgba(255, 255, 255, 255));
+	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 255, 255, 255));
 	dirLight->SetIsShadowCasting(true);
 	m_renderScene->AddLight(dirLight);
 }
