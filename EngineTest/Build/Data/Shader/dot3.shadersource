@@ -26,7 +26,9 @@ struct Light
   float3    m_attenuationFactors;
   float     m_directionFactor;
   float4    m_color;
-  float4x4  m_shadowVP;
+  float4x4  m_shadowModel;
+  float4x4  m_shadowView;
+  float4x4  m_shadowProjection;
   float3    m_padding;
   float     m_castsShadows;
 };
@@ -46,6 +48,10 @@ SamplerState sNormal : register(s1);
 
 Texture2DArray<float4> tDepth : register(t4);
 SamplerState sDepth : register(s4);
+
+TextureCube<float4> tPointDepth : register(t5);
+SamplerState sPointDepth : register(s5);
+
 
 cbuffer cbCamera : register(b1)
 {
@@ -130,6 +136,21 @@ float3 CalculateSpecular(float3 directionToLight, float3 normal, float3 directio
   return specular;
 }
 
+static float3x3 lightToFaceMatrices[6] = 
+{
+    float3x3(float3(0.f, 0.f, -1.f), float3(0.f, -1.f, 0.f), float3(1.f, 0.f, 0.f)),
+    float3x3(float3(0.f, 0.f, 1.f), float3(0.f, -1.f, 0.f), float3(-1.f, 0.f, 0.f)),
+    float3x3(float3(1.f, 0.f, 0.f), float3(0.f, 0.f, 1.f), float3(0.f, 1.f, 0.f)),
+    float3x3(float3(1.f, 0.f, 0.f), float3(0.f, 0.f, -1.f), float3(0.f, -1.f, 0.f)),
+    float3x3(float3(1.f, 0.f, 0.f), float3(0.f, -1.f, 0.f), float3(0.f, 0.f, 1.f)),
+    float3x3(float3(-1.f, 0.f, 0.f), float3(0.f, -1.f, 0.f), float3(0.f, 0.f, -1.f)),
+};
+
+float3x3 GetLightToFaceMatrix(int faceIndex)
+{
+    return lightToFaceMatrices[faceIndex];
+}
+
 float CalculateShadowFactor(float3 fragPosition, float3 normal, Light light, int lightIndex)
 {
   if (light.m_castsShadows == 0.f)
@@ -137,21 +158,106 @@ float CalculateShadowFactor(float3 fragPosition, float3 normal, Light light, int
     return 1.0f;
   }
 
-  float4 clipPos = mul(light.m_shadowVP, float4(fragPosition, 1.0f));
-  float3 ndcPos = clipPos.xyz / clipPos.w;
-  
-  float3 uvIndex;
-  uvIndex.xy = (ndcPos.xy + float2(1.f, 1.f)) * 0.5f;
-  uvIndex.y = 1.0f - uvIndex.y;
-  uvIndex.z = (float)lightIndex;
+  float shadowDepth = 1.f;
+  float3 ndcPos;
 
-  float shadowDepth = tDepth.Sample(sDepth, uvIndex).r;
+  if (light.m_dotOuterAngle == -1.0f && light.m_directionFactor > 0.f)
+  {
+        float3 toFrag = (fragPosition - light.m_position);
+        // Determine face
+        int faceIndex = 0;
+        float maxValue = max(abs(toFrag.x), max(abs(toFrag.y), abs(toFrag.z)));
+        if (maxValue == abs(toFrag.z))
+        {
+            faceIndex = 4;
+            if (toFrag.z < 0.f)
+            {
+                faceIndex++;
+            }
+        }
+        else if (maxValue == abs(toFrag.y))
+        {
+            faceIndex = 2;
+            if (toFrag.y < 0.f)
+            {
+                faceIndex++;
+            }
+        }
+        else
+        {
+            faceIndex = 0;
+            if (toFrag.x < 0.f)
+            {
+                faceIndex++;
+            }
+        }
+
+        // Make conversion matrix
+        float3x3 lightToFace = GetLightToFaceMatrix(faceIndex);
+        float3 posLs = mul(light.m_shadowView, float4(fragPosition, 1.0f)).xyz;
+        float3 posFs = mul(lightToFace, posLs);
+
+        float4 clipPos = mul(light.m_shadowProjection, float4(posFs, 1.0f));
+        ndcPos = clipPos.xyz / clipPos.w;
+
+        shadowDepth = tPointDepth.Sample(sPointDepth, toFrag).r;
+  }
+  else
+  {
+      float4 clipPos = mul(light.m_shadowProjection, mul(light.m_shadowView, float4(fragPosition, 1.0f)));
+      ndcPos = clipPos.xyz / clipPos.w;
+      float3 uvIndex;
+      uvIndex.xy = (ndcPos.xy + float2(1.f, 1.f)) * 0.5f;
+      uvIndex.y = 1.0f - uvIndex.y;
+      uvIndex.z = (float)lightIndex;
+      shadowDepth = tDepth.Sample(sDepth, uvIndex).r;
+  }
 
   return ndcPos.z - 0.001f > shadowDepth ? 0.f : 1.f;
 }
 
 float4 FragmentFunction( VOut input ) : SV_Target0
 {    
+    //     float3 toFrag = (input.worldPosition - LIGHTS[0].m_position);
+    //     // Determine face
+    //     int faceIndex = 0;
+    //     float maxValue = max(abs(toFrag.x), max(abs(toFrag.y), abs(toFrag.z)));
+    //     if (maxValue == abs(toFrag.z))
+    //     {
+    //         faceIndex = 4;
+    //         if (toFrag.z < 0.f)
+    //         {
+    //             faceIndex++;
+    //         }
+    //     }
+    //     else if (maxValue == abs(toFrag.y))
+    //     {
+    //         faceIndex = 2;
+    //         if (toFrag.y < 0.f)
+    //         {
+    //             faceIndex++;
+    //         }
+    //     }
+    //     else
+    //     {
+    //         faceIndex = 0;
+    //         if (toFrag.x < 0.f)
+    //         {
+    //             faceIndex++;
+    //         }
+    //     }
+
+    //     // Make conversion matrix
+    //     float3x3 lightToFace = GetLightToFaceMatrix(faceIndex);
+    //     float3 posLs = mul(LIGHTS[0].m_shadowView, float4(input.worldPosition, 1.0f)).xyz;
+    //     float3 posFs = mul(lightToFace, posLs);
+
+    //     float4 clipPos = mul(LIGHTS[0].m_shadowProjection, float4(posFs, 1.0f));
+    //     float3 ndcPos = clipPos.xyz / clipPos.w;
+  
+    // return float4(ndcPos.x, ndcPos.y, ndcPos.z, 1.0f);
+
+
     //----------------------------SET UP VALUES-------------------------------    
     float4 surfaceColor = tAlbedo.Sample(sAlbedo, input.uv);
     float3 directionToEye = normalize(input.eyePosition - input.worldPosition);

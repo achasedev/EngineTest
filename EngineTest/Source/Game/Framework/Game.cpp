@@ -104,18 +104,9 @@ void Game::ProcessInput()
 		m_drawColliders = !m_drawColliders;
 	}
 
-	static bool test = false;
-
-	if (test)
-	{
-		m_gameCamera->SetProjectionPerspective(90.f, g_window->GetClientAspect(), 0.1f, 10.f);
-		test = false;
-	}
-
 	if (g_inputSystem->WasKeyJustPressed('E'))
 	{
 		SpawnLight();
-		test = true;
 		//static bool test = true;
 		//if (test)
 		//{
@@ -179,7 +170,8 @@ void Game::SetupRendering()
 	m_gameCamera = new Camera();
 	m_gameCamera->SetProjectionPerspective(90.f, g_window->GetClientAspect(), 0.1f, 20.f);
 	m_gameCamera->LookAt(Vector3(0.f, 0.f, -10.f), Vector3(0.f, 0.f, 0.f));
-	m_gameCamera->SetDepthTarget(g_renderContext->GetDefaultDepthStencilTarget(), false);
+	m_gameCamera->SetColorTargetView(g_renderContext->GetDefaultColorTargetView());
+	m_gameCamera->SetDepthStencilView(g_renderContext->GetDefaultDepthStencilView());
 	g_debugRenderSystem->SetCamera(m_gameCamera);
 
 	m_uiCamera = new Camera();
@@ -205,6 +197,8 @@ void Game::SpawnEntities()
 	m_entities.push_back(m_player);
 
 	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 5.f));
+	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 3.f));
+	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 7.f));
 	SpawnBox(Vector3(4.f), (1.f / 64.f), Vector3(10.f, 4.f, 5.f), Vector3(90.f, 0.f, 0.f));
 
 	// Set up ground
@@ -398,12 +392,11 @@ void Game::SpawnLight()
 	//light->SetIsShadowCasting(true);
 	//m_renderScene->AddLight(light);
 
-	//Light* light = Light::CreatePointLight(entity->transform.position, Rgba::WHITE);
-	//light->SetIsShadowCasting(true);
-	//m_renderScene->AddLight(light);
+	Light* light = Light::CreatePointLight(Vector3(-12.f, 1.f, 5.f), Rgba::WHITE);
+	light->SetIsShadowCasting(true);
+	m_renderScene->AddLight(light);
 
-	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 140, 0, 150));
-
-	dirLight->SetIsShadowCasting(true);
-	m_renderScene->AddLight(dirLight);
+	//Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 140, 0, 150));
+	//dirLight->SetIsShadowCasting(true);
+	//m_renderScene->AddLight(dirLight);
 }
