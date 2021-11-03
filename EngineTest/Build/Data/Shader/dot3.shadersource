@@ -26,11 +26,11 @@ struct Light
   float3    m_attenuationFactors;
   float     m_directionFactor;
   float4    m_color;
-  float4x4  m_shadowModel;
   float4x4  m_shadowView;
   float4x4  m_shadowProjection;
-  float3    m_padding;
+  float2    m_shadowMapDimensions;
   float     m_castsShadows;
+  float     m_padding0;
 };
 
 #define MAX_LIGHTS 8
@@ -158,7 +158,7 @@ float CalculateShadowFactor(float3 fragPosition, float3 normal, Light light, int
     return 1.0f;
   }
 
-  float shadowDepth = 1.f;
+  float shadowDepth = 0.f;
   float3 ndcPos;
 
   if (light.m_dotOuterAngle == -1.0f && light.m_directionFactor > 0.f)
@@ -210,7 +210,16 @@ float CalculateShadowFactor(float3 fragPosition, float3 normal, Light light, int
       uvIndex.xy = (ndcPos.xy + float2(1.f, 1.f)) * 0.5f;
       uvIndex.y = 1.0f - uvIndex.y;
       uvIndex.z = (float)lightIndex;
+
+      float2 offset = float2(1.f / light.m_shadowMapDimensions.x, 1.f / light.m_shadowMapDimensions.y);
+
       shadowDepth = tDepth.Sample(sDepth, uvIndex).r;
+      shadowDepth += tDepth.Sample(sDepth, uvIndex + float3(offset.x, 0.f, 0.f)).r;
+      shadowDepth += tDepth.Sample(sDepth, uvIndex + float3(-offset.x, 0.f, 0.f)).r;
+      shadowDepth += tDepth.Sample(sDepth, uvIndex + float3(0.f, offset.y, 0.f)).r;
+      shadowDepth += tDepth.Sample(sDepth, uvIndex + float3(0.f, -offset.y, 0.f)).r;
+      
+      shadowDepth *= 0.2f;
   }
 
   return ndcPos.z - 0.001f > shadowDepth ? 0.f : 1.f;

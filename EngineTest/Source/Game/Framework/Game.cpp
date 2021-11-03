@@ -168,7 +168,7 @@ void Game::SetupRendering()
 {
 	// Cameras
 	m_gameCamera = new Camera();
-	m_gameCamera->SetProjectionPerspective(90.f, g_window->GetClientAspect(), 0.1f, 20.f);
+	m_gameCamera->SetProjectionPerspective(90.f, g_window->GetClientAspect(), 0.1f, 100.f);
 	m_gameCamera->LookAt(Vector3(0.f, 0.f, -10.f), Vector3(0.f, 0.f, 0.f));
 	m_gameCamera->SetColorTargetView(g_renderContext->GetDefaultColorTargetView());
 	m_gameCamera->SetDepthStencilView(g_renderContext->GetDefaultDepthStencilView());
@@ -329,6 +329,8 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 
 	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, 2.f * extents);
 
+	static bool test = false;
+
 	Renderable rend;
 	rend.SetModelMatrix(model);
 	rend.AddDraw(mesh, material);
@@ -388,13 +390,13 @@ void Game::SpawnGround()
 // Spawns a test light
 void Game::SpawnLight()
 {
-	Light* light = Light::CreateConeLight(m_gameCamera->GetPosition(), m_gameCamera->GetForwardVector(), 90.f, 70.f);
-	light->SetIsShadowCasting(true);
-	m_renderScene->AddLight(light);
+	//Light* light = Light::CreateConeLight(m_gameCamera->GetPosition(), m_gameCamera->GetForwardVector(), 90.f, 70.f);
+	//light->SetIsShadowCasting(true);
+	//m_renderScene->AddLight(light);
 
-	Light* pointLight = Light::CreatePointLight(Vector3(0.f, 2.f, 5.f), Rgba::YELLOW);
-	pointLight->SetIsShadowCasting(true);
-	m_renderScene->AddLight(pointLight);
+	//Light* pointLight = Light::CreatePointLight(Vector3(0.f, 2.f, 5.f), Rgba::YELLOW);
+	//pointLight->SetIsShadowCasting(true);
+	//m_renderScene->AddLight(pointLight);
 
 	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 140, 0, 150));
 	dirLight->SetIsShadowCasting(true);
