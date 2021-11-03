@@ -49,7 +49,7 @@ SamplerState sNormal : register(s1);
 Texture2DArray<float4> tDepth : register(t4);
 SamplerState sDepth : register(s4);
 
-TextureCube<float4> tPointDepth : register(t5);
+TextureCubeArray<float4> tPointDepth : register(t5);
 SamplerState sPointDepth : register(s5);
 
 
@@ -200,7 +200,7 @@ float CalculateShadowFactor(float3 fragPosition, float3 normal, Light light, int
         float4 clipPos = mul(light.m_shadowProjection, float4(posFs, 1.0f));
         ndcPos = clipPos.xyz / clipPos.w;
 
-        shadowDepth = tPointDepth.Sample(sPointDepth, toFrag).r;
+        shadowDepth = tPointDepth.Sample(sPointDepth, float4(toFrag, (float)lightIndex)).r;
   }
   else
   {

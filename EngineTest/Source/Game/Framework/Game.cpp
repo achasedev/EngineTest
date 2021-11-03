@@ -388,15 +388,15 @@ void Game::SpawnGround()
 // Spawns a test light
 void Game::SpawnLight()
 {
-	//Light* light = Light::CreateConeLight(m_gameCamera->GetPosition(), m_gameCamera->GetForwardVector(), 90.f, 70.f);
-	//light->SetIsShadowCasting(true);
-	//m_renderScene->AddLight(light);
-
-	Light* light = Light::CreatePointLight(Vector3(-12.f, 1.f, 5.f), Rgba::WHITE);
+	Light* light = Light::CreateConeLight(m_gameCamera->GetPosition(), m_gameCamera->GetForwardVector(), 90.f, 70.f);
 	light->SetIsShadowCasting(true);
 	m_renderScene->AddLight(light);
 
-	//Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 140, 0, 150));
-	//dirLight->SetIsShadowCasting(true);
-	//m_renderScene->AddLight(dirLight);
+	Light* pointLight = Light::CreatePointLight(Vector3(0.f, 2.f, 5.f), Rgba::YELLOW);
+	pointLight->SetIsShadowCasting(true);
+	m_renderScene->AddLight(pointLight);
+
+	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 140, 0, 150));
+	dirLight->SetIsShadowCasting(true);
+	m_renderScene->AddLight(dirLight);
 }
