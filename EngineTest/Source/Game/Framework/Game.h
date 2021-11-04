@@ -71,9 +71,6 @@ private:
 	void PreUpdate(float deltaSeconds);
 	void PhysicsUpdate(float deltaSeconds);
 	void PostUpdate(float deltaSeconds);
-	void UpdateRenderables();
-
-	void RenderColliders() const;
 
 	// Physics helpers
 	void SpawnCapsule(float cylinderHeight, float radius, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);
@@ -101,6 +98,7 @@ private:
 	bool										m_pausePhysics = true;
 	PhysicsScene*								m_physicsScene = nullptr;
 	CollisionScene<BoundingVolumeSphere>*		m_collisionScene = nullptr;
+	int											m_spawnType = 0;
 
 	// Entities
 	Player*										m_player = nullptr;

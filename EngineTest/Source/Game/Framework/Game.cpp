@@ -104,21 +104,47 @@ void Game::ProcessInput()
 		m_drawColliders = !m_drawColliders;
 	}
 
-	if (g_inputSystem->WasKeyJustPressed('E'))
+	Mouse& mouse = g_inputSystem->GetMouse();
+	if (mouse.GetMouseWheelDelta() != 0.f)
 	{
-		SpawnLight();
-		//static bool test = true;
-		//if (test)
-		//{
-		//	Frustrum frustrum = m_gameCamera->GetFrustrum();
-		//	DebugRenderOptions options;
-		//	options.m_startColor = Rgba::MAGENTA;
-		//	options.m_debugRenderMode = DEBUG_RENDER_MODE_XRAY;
+		const int numTypes = 3;
+		if (mouse.GetMouseWheelDelta() > 0.f)
+		{
+			m_spawnType--;
+			if (m_spawnType < 0)
+			{
+				m_spawnType = numTypes - 1;
+			}
+		}
+		else
+		{
+			m_spawnType++;
+			if (m_spawnType >= numTypes)
+			{
+				m_spawnType = 0;
+			}
+		}
+	}
 
-		//	DebugDrawFrustrum(frustrum, options);
+	if (mouse.WasButtonJustPressed(MOUSEBUTTON_LEFT))
+	{
+		Vector3 spawnPosition = m_gameCamera->GetPosition() + 2.f * m_gameCamera->GetForwardVector();
+		Vector3 velocity = 10.f * m_gameCamera->GetForwardVector();
+		float mass = 1.f;
 
-		//	test = false;
-		//}
+		switch (m_spawnType)
+		{
+		case 0:
+			SpawnBox(Vector3(0.5f), 1.0f / mass, spawnPosition, Vector3::ZERO, velocity);
+			break;
+		case 1:
+			SpawnSphere(0.5f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
+			break;
+		case 2:
+			SpawnCapsule(0.5f, 0.25f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
+		default:
+			break;
+		}
 	}
 }
 
@@ -128,6 +154,21 @@ void Game::Update()
 {	
 	const float deltaSeconds = m_gameClock->GetDeltaSeconds();
 	
+	switch (m_spawnType)
+	{
+	case 0:
+		ConsolePrintf(Rgba::CYAN, 0.f, "Spawn Type: Box");
+		break;
+	case 1:
+		ConsolePrintf(Rgba::CYAN, 0.f, "Spawn Type: Sphere");
+		break;
+	case 2: 
+		ConsolePrintf(Rgba::CYAN, 0.f, "Spawn Type: Capsule");
+		break;
+	default:
+		break;
+	}
+
 	PreUpdate(deltaSeconds);
 	PhysicsUpdate(deltaSeconds);
 	PostUpdate(deltaSeconds);
@@ -137,14 +178,7 @@ void Game::Update()
 //-------------------------------------------------------------------------------------------------
 void Game::Render()
 {
-	if (m_drawColliders)
-	{
-		RenderColliders();
-	}
-	else
-	{
-		m_renderer->Render(m_renderScene);
-	}
+	m_renderer->Render(m_renderScene);
 }
 
 
@@ -235,45 +269,6 @@ void Game::PostUpdate(float deltaSeconds)
 	// Ensure ground is below player
 	m_ground->transform.position = m_player->transform.position;;
 	m_ground->transform.position.y = 0.f;
-
-	UpdateRenderables();
-}
-
-
-//-------------------------------------------------------------------------------------------------
-// Updates each entity's renderable to match the entity's updated transform
-void Game::UpdateRenderables()
-{
-	for (Entity* entity : m_entities)
-	{
-		if (entity == m_player)
-			continue;
-
-		Renderable* rend = m_renderScene->GetRenderable(entity->GetId());
-		Vector3 existngScale = Matrix4::ExtractScale(rend->GetModelMatrix());
-		Matrix4 newModelMatrix = Matrix4::MakeModelMatrix(entity->transform.position, entity->transform.rotation, existngScale);
-		rend->SetModelMatrix(newModelMatrix);
-	}
-}
-
-
-//-------------------------------------------------------------------------------------------------
-// Renders the colliders for all non-ground/player entities
-void Game::RenderColliders() const
-{
-	g_renderContext->BeginCamera(m_gameCamera);
-	m_gameCamera->ClearColorTarget(Rgba::BLACK);
-	m_gameCamera->ClearDepthTarget();
-
-	for (Entity* entity : m_entities)
-	{
-		if (entity == m_ground || entity == m_player)
-			continue;
-
-		entity->collider->DebugRender(Rgba::ORANGE);
-	}
-
-	g_renderContext->EndCamera();
 }
 
 
@@ -292,11 +287,15 @@ void Game::SpawnCapsule(float cylinderHeight, float radius, float inverseMass, c
 	body->SetAffectedByGravity(hasGravity);
 
 	entity->rigidBody = body;
-	entity->collider = new CapsuleCollider(entity, Capsule3D(Vector3(0.f, -cylinderHeight, 0.f), Vector3(0.f, cylinderHeight, 0.f), radius));
+	entity->collider = new CapsuleCollider(entity, Capsule3D(Vector3(0.f, -0.5f * cylinderHeight, 0.f), Vector3(0.f, 0.5f * cylinderHeight, 0.f), radius));
 
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
+
+	DebugRenderOptions options;
+	options.m_parentTransform = &entity->transform;
+	DebugDrawCapsule(Capsule3D(Vector3(0.f, -0.5f * cylinderHeight, 0.f), Vector3(0.f, 0.5f * cylinderHeight, 0.f), radius), options);
 }
 
 
@@ -321,20 +320,9 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
 
-	// Renderable
-	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
-	//material->SetProperty(SID("SPECULAR_AMOUNT"), 1.0f);
-	//material->SetProperty(SID("SPECULAR_POWER"), 20.0f);
-
-	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, 2.f * extents);
-
-	static bool test = false;
-
-	Renderable rend;
-	rend.SetModelMatrix(model);
-	rend.AddDraw(mesh, material);
-	m_renderScene->AddRenderable(entity->GetId(), rend);
+	DebugRenderOptions options;
+	options.m_parentTransform = &entity->transform;
+	DebugDrawBox(Vector3::ZERO, extents, Quaternion::IDENTITY, options);
 }
 
 
@@ -358,6 +346,10 @@ void Game::SpawnSphere(float radius, float inverseMass, const Vector3& position,
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
+
+	DebugRenderOptions options;
+	options.m_parentTransform = &entity->transform;
+	DebugDrawSphere(Vector3::ZERO, radius, options);
 }
 
 
@@ -379,7 +371,7 @@ void Game::SpawnGround()
 	Matrix4 rendModel = Matrix4::MakeModelMatrix(m_ground->transform.position, Vector3::ZERO, Vector3(100.f));
 	rend.SetModelMatrix(rendModel);
 
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/ground.material");
 	rend.AddDraw(quad, material);
 
 	m_renderScene->AddRenderable(m_ground->GetId(), rend);
@@ -398,7 +390,7 @@ void Game::SpawnLight()
 	//pointLight->SetIsShadowCasting(true);
 	//m_renderScene->AddLight(pointLight);
 
-	Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 140, 0, 150));
-	dirLight->SetIsShadowCasting(true);
-	m_renderScene->AddLight(dirLight);
+	//Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 140, 0, 150));
+	//dirLight->SetIsShadowCasting(true);
+	//m_renderScene->AddLight(dirLight);
 }
