@@ -179,6 +179,18 @@ void Game::Update()
 void Game::Render()
 {
 	m_renderer->Render(m_renderScene);
+
+	
+	g_renderContext->BeginCamera(m_gameCamera);
+
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/entity.material");
+	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("cylinder");
+	Renderable rend;
+	rend.AddDraw(mesh, material);
+	rend.SetModelMatrix(Matrix4::MakeModelMatrix(Vector3(0.f, 3.f, 0.f), Quaternion::IDENTITY, Vector3::ONES));
+	g_renderContext->DrawRenderable(rend);
+
+	g_renderContext->EndCamera();
 }
 
 
