@@ -215,4 +215,5 @@ void App::Render()
 void App::RegisterGameCommands()
 {
 	ConsoleCommand::Register(SID("exit"), "Shuts down the program", "exit (NO_PARAMS)", Command_Exit, false);
+	ConsoleCommand::Register(SID("collision_debug"), "Sets the collision debug draw flags", "collision_debug <collider - contact - bounds - leaf_bounds>", Command_SetCollisionDebugFlags, false);
 }

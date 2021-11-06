@@ -46,6 +46,8 @@ class Game
 public:
 	//-----Public Methods-----
 
+	CollisionScene<BoundingVolumeSphere>* GetCollisionScene() const { return m_collisionScene; }
+
 
 private:
 	//-----Private Methods-----
@@ -71,6 +73,7 @@ private:
 	void PreUpdate(float deltaSeconds);
 	void PhysicsUpdate(float deltaSeconds);
 	void PostUpdate(float deltaSeconds);
+	void UpdateRenderables();
 
 	// Physics helpers
 	void SpawnCapsule(float cylinderHeight, float radius, float inverseMass, const Vector3& position, const Vector3& rotationDegrees = Vector3::ZERO, const Vector3& velocity = Vector3::ZERO, const Vector3& angularVelocityDegrees = Vector3::ZERO, bool hasGravity = true);

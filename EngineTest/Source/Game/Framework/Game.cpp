@@ -227,7 +227,11 @@ void Game::SetupRendering()
 	m_renderScene->AddCamera(m_gameCamera);
 	Skybox* skybox = new Skybox(g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material"));
 	m_renderScene->SetSkybox(skybox);
-	m_renderScene->SetAmbience(Rgba(255, 255, 255, 20));
+	m_renderScene->SetAmbience(Rgba(255, 255, 255, 200));
+	
+	Light* dirLight = Light::CreateDirectionalLight(Vector3::ZERO, Vector3(0.f, -1.f, 1.f).GetNormalized(), Rgba(255, 255, 220, 255));
+	dirLight->SetIsShadowCasting(true);
+	m_renderScene->AddLight(dirLight);
 
 	m_renderer = new ForwardRenderer();
 }
@@ -281,6 +285,8 @@ void Game::PostUpdate(float deltaSeconds)
 	// Ensure ground is below player
 	m_ground->transform.position = m_player->transform.position;;
 	m_ground->transform.position.y = 0.f;
+
+	UpdateRenderables();
 }
 
 
@@ -305,9 +311,22 @@ void Game::SpawnCapsule(float cylinderHeight, float radius, float inverseMass, c
 	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
 
-	DebugRenderOptions options;
-	options.m_parentTransform = &entity->transform;
-	DebugDrawCapsule(Capsule3D(Vector3(0.f, -0.5f * cylinderHeight, 0.f), Vector3(0.f, 0.5f * cylinderHeight, 0.f), radius), options);
+	Mesh* bottom = g_resourceSystem->CreateOrGetMesh("capsule_bottom");
+	Mesh* middle = g_resourceSystem->CreateOrGetMesh("capsule_middle");
+	Mesh* top = g_resourceSystem->CreateOrGetMesh("capsule_top");
+
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+
+	Matrix4 bottomMat = Matrix4::MakeModelMatrix(Vector3(0.f, -0.5f * cylinderHeight, 0.f), Quaternion::IDENTITY, Vector3(radius));
+	Matrix4 middleMat = Matrix4::MakeModelMatrix(Vector3::ZERO, Quaternion::IDENTITY, Vector3(radius, cylinderHeight, radius));
+	Matrix4 topMat = Matrix4::MakeModelMatrix(Vector3(0.f, 0.5f * cylinderHeight, 0.f), Quaternion::IDENTITY, Vector3(radius));
+
+	Renderable rend;
+	rend.SetModelMatrix(entity->transform.GetModelMatrix());
+	rend.AddDraw(bottom, material, bottomMat);
+	rend.AddDraw(middle, material, middleMat);
+	rend.AddDraw(top, material, topMat);
+	m_renderScene->AddRenderable(entity->GetId(), rend);
 }
 
 
@@ -332,9 +351,31 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
 
-	DebugRenderOptions options;
-	options.m_parentTransform = &entity->transform;
-	DebugDrawBox(Vector3::ZERO, extents, Quaternion::IDENTITY, options);
+	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, 2.f * extents);
+
+	Renderable rend;
+	rend.SetModelMatrix(model);
+	rend.AddDraw(mesh, material);
+	m_renderScene->AddRenderable(entity->GetId(), rend);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+// Updates each entity's renderable to match the entity's updated transform
+void Game::UpdateRenderables()
+{
+	for (Entity* entity : m_entities)
+	{
+		if (entity == m_player)
+			continue;
+
+		Renderable* rend = m_renderScene->GetRenderable(entity->GetId());
+		Vector3 existngScale = Matrix4::ExtractScale(rend->GetModelMatrix());
+		Matrix4 newModelMatrix = Matrix4::MakeModelMatrix(entity->transform.position, entity->transform.rotation, existngScale);
+		rend->SetModelMatrix(newModelMatrix);
+	}
 }
 
 
@@ -359,9 +400,14 @@ void Game::SpawnSphere(float radius, float inverseMass, const Vector3& position,
 	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
 
-	DebugRenderOptions options;
-	options.m_parentTransform = &entity->transform;
-	DebugDrawSphere(Vector3::ZERO, radius, options);
+	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_sphere");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, Vector3(radius));
+
+	Renderable rend;
+	rend.SetModelMatrix(model);
+	rend.AddDraw(mesh, material);
+	m_renderScene->AddRenderable(entity->GetId(), rend);
 }
 
 
@@ -387,22 +433,4 @@ void Game::SpawnGround()
 	rend.AddDraw(quad, material);
 
 	m_renderScene->AddRenderable(m_ground->GetId(), rend);
-}
-
-
-//-------------------------------------------------------------------------------------------------
-// Spawns a test light
-void Game::SpawnLight()
-{
-	//Light* light = Light::CreateConeLight(m_gameCamera->GetPosition(), m_gameCamera->GetForwardVector(), 90.f, 70.f);
-	//light->SetIsShadowCasting(true);
-	//m_renderScene->AddLight(light);
-
-	//Light* pointLight = Light::CreatePointLight(Vector3(0.f, 2.f, 5.f), Rgba::YELLOW);
-	//pointLight->SetIsShadowCasting(true);
-	//m_renderScene->AddLight(pointLight);
-
-	//Light* dirLight = Light::CreateDirectionalLight(Vector3(0.f, 0.f, 0.f), Vector3(0.f, -1.f, 1.f), Rgba(255, 140, 0, 150));
-	//dirLight->SetIsShadowCasting(true);
-	//m_renderScene->AddLight(dirLight);
 }
