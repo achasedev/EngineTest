@@ -46,6 +46,7 @@ private:
 	//-----Private Data-----
 
 	Camera* m_camera = nullptr;
+	bool m_cameraEjected = false;
 
 	static Vector3 s_cameraOffset;
 	static float	s_maxMoveSpeed;

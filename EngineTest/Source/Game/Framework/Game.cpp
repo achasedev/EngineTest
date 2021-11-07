@@ -99,15 +99,10 @@ void Game::ProcessInput()
 {
 	m_player->ProcessInput(m_gameClock->GetDeltaSeconds());
 
-	if (g_inputSystem->WasKeyJustPressed('I'))
-	{
-		m_drawColliders = !m_drawColliders;
-	}
-
 	Mouse& mouse = g_inputSystem->GetMouse();
 	if (mouse.GetMouseWheelDelta() != 0.f)
 	{
-		const int numTypes = 3;
+		const int numTypes = 4;
 		if (mouse.GetMouseWheelDelta() > 0.f)
 		{
 			m_spawnType--;
@@ -142,6 +137,10 @@ void Game::ProcessInput()
 			break;
 		case 2:
 			SpawnCapsule(0.5f, 0.25f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
+			break;
+		case 3:
+			SpawnCylinder(1.f, 0.25f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
+			break;
 		default:
 			break;
 		}
@@ -165,6 +164,9 @@ void Game::Update()
 	case 2: 
 		ConsolePrintf(Rgba::CYAN, 0.f, "Spawn Type: Capsule");
 		break;
+	case 3:
+		ConsolePrintf(Rgba::CYAN, 0.f, "Spawn Type: Cylinder");
+		break;
 	default:
 		break;
 	}
@@ -179,18 +181,6 @@ void Game::Update()
 void Game::Render()
 {
 	m_renderer->Render(m_renderScene);
-
-	
-	g_renderContext->BeginCamera(m_gameCamera);
-
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/entity.material");
-	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("cylinder");
-	Renderable rend;
-	rend.AddDraw(mesh, material);
-	rend.SetModelMatrix(Matrix4::MakeModelMatrix(Vector3(0.f, 3.f, 0.f), Quaternion::IDENTITY, Vector3::ONES));
-	g_renderContext->DrawRenderable(rend);
-
-	g_renderContext->EndCamera();
 }
 
 
@@ -249,7 +239,7 @@ void Game::SpawnEntities()
 	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 5.f));
 	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 3.f));
 	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 7.f));
-	SpawnBox(Vector3(4.f), (1.f / 64.f), Vector3(10.f, 4.f, 5.f), Vector3(90.f, 0.f, 0.f));
+	SpawnBox(Vector3(4.f), (1.f / 64.f), Vector3(10.f, 4.f, 5.f), Vector3(180.f, 0.f, 0.f));
 
 	// Set up ground
 	SpawnGround();
@@ -412,11 +402,45 @@ void Game::SpawnSphere(float radius, float inverseMass, const Vector3& position,
 
 
 //-------------------------------------------------------------------------------------------------
+// Spawns a duck.....no a cylinder actually
+void Game::SpawnCylinder(float height, float radius, float inverseMass, const Vector3& position, const Vector3& rotationDegrees /*= Vector3::ZERO*/, const Vector3& velocity /*= Vector3::ZERO*/, const Vector3& angularVelocityDegrees /*= Vector3::ZERO*/, bool hasGravity /*= true*/)
+{
+	Entity* entity = new Entity();
+	entity->transform.position = position;
+	entity->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(rotationDegrees);
+
+	RigidBody* body = new RigidBody(&entity->transform);
+	body->SetInverseMass(inverseMass);
+	body->SetInertiaTensor_Cylinder(height, radius);
+	body->SetVelocityWs(velocity);
+	body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
+	body->SetAffectedByGravity(hasGravity);
+
+	entity->rigidBody = body;
+	entity->collider = new CylinderCollider(entity, Cylinder3D(Vector3(0.f, -0.5f * height, 0.f), Vector3(0.f, 0.5f * height, 0.f), radius));
+
+	m_collisionScene->AddEntity(entity);
+	m_physicsScene->AddRigidbody(body);
+	m_entities.push_back(entity);
+
+	Mesh* cylMesh = g_resourceSystem->CreateOrGetMesh("cylinder");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, Vector3(radius, height, radius));
+
+	Renderable rend;
+	rend.SetModelMatrix(model);
+	rend.AddDraw(cylMesh, material, Matrix4::IDENTITY);
+	m_renderScene->AddRenderable(entity->GetId(), rend);
+}
+
+
+//-------------------------------------------------------------------------------------------------
 // Spawns the entity used to represent the ground
 void Game::SpawnGround()
 {
 	m_ground = new Entity();
-	m_ground->collider = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));;
+	//m_ground->collider = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
+	m_ground->collider = new PlaneCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
 	m_collisionScene->AddEntity(m_ground);
 	m_entities.push_back(m_ground);
 
