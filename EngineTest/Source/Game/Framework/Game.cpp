@@ -139,7 +139,7 @@ void Game::ProcessInput()
 			SpawnCapsule(0.5f, 0.25f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
 			break;
 		case 3:
-			SpawnCylinder(1.f, 0.25f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
+			SpawnCylinder(1.5f, 0.5f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 0.f), velocity);
 			break;
 		default:
 			break;
@@ -240,6 +240,7 @@ void Game::SpawnEntities()
 	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 3.f));
 	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 7.f));
 	SpawnBox(Vector3(4.f), (1.f / 64.f), Vector3(10.f, 4.f, 5.f), Vector3(180.f, 0.f, 0.f));
+	SpawnCylinder(5.f, 5.f, (1.f / 128.f), Vector3(0.f, 10.f, 20.f));
 
 	// Set up ground
 	SpawnGround();
