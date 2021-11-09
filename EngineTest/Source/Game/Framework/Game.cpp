@@ -136,7 +136,7 @@ void Game::ProcessInput()
 			SpawnSphere(0.5f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
 			break;
 		case 2:
-			SpawnCapsule(0.5f, 0.25f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
+			SpawnCapsule(0.5f, 0.25f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 90.f), velocity);
 			break;
 		case 3:
 			SpawnCylinder(1.5f, 0.5f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 0.f), velocity);
