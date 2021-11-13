@@ -130,16 +130,16 @@ void Game::ProcessInput()
 		switch (m_spawnType)
 		{
 		case 0:
-			SpawnBox(Vector3(0.5f), 1.0f / mass, spawnPosition, Vector3::ZERO, velocity);
+			SpawnBox(Vector3(0.25f, 0.1f, 0.05f), 1.0f / mass, spawnPosition, Vector3::ZERO, velocity);
 			break;
 		case 1:
 			SpawnSphere(0.5f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
 			break;
 		case 2:
-			SpawnCapsule(0.5f, 0.25f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 90.f), velocity);
+			SpawnCapsule(2.f, 1.5f, 1.f / mass, spawnPosition, Vector3(45.f, 0.f, 0.f), velocity);
 			break;
 		case 3:
-			SpawnCylinder(1.5f, 0.5f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 0.f), velocity);
+			SpawnCylinder(1.5f, 2.f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 0.f), velocity);
 			break;
 		default:
 			break;
@@ -236,14 +236,16 @@ void Game::SpawnEntities()
 	m_physicsScene->AddRigidbody(m_player->rigidBody);
 	m_entities.push_back(m_player);
 
-	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 5.f));
-	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 3.f));
-	SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 7.f));
+	//SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 5.f));
+	//SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 3.f));
+	//SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 7.f));
 	SpawnBox(Vector3(4.f), (1.f / 64.f), Vector3(10.f, 4.f, 5.f), Vector3(180.f, 0.f, 0.f));
-	SpawnCylinder(5.f, 5.f, (1.f / 128.f), Vector3(0.f, 10.f, 20.f));
+	SpawnCylinder(5.f, 5.f, 0.f, Vector3(0.f, 2.5f, 20.f), Vector3::ZERO, Vector3::ZERO, Vector3::ZERO, false);
 
 	// Set up ground
 	SpawnGround();
+
+	SpawnRigidbodyTest();
 }
 
 
@@ -287,16 +289,18 @@ void Game::SpawnCapsule(float cylinderHeight, float radius, float inverseMass, c
 	Entity* entity = new Entity();
 	entity->transform.position = position;
 	entity->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(rotationDegrees);
+	entity->transform.scale = Vector3(radius, cylinderHeight, radius);
 
 	RigidBody* body = new RigidBody(&entity->transform);
 	body->SetInverseMass(inverseMass);
 	body->SetInertiaTensor_Capsule(cylinderHeight, radius);
+
 	body->SetVelocityWs(velocity);
 	body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
 	body->SetAffectedByGravity(hasGravity);
 
 	entity->rigidBody = body;
-	entity->collider = new CapsuleCollider(entity, Capsule3D(Vector3(0.f, -0.5f * cylinderHeight, 0.f), Vector3(0.f, 0.5f * cylinderHeight, 0.f), radius));
+	entity->collider = new CapsuleCollider(entity, Capsule3D(Vector3(0.f, -0.5f, 0.f), Vector3(0.f, 0.5f, 0.f), 1.0f));
 
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
@@ -327,6 +331,7 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 	Entity* entity = new Entity();
 	entity->transform.position = position;
 	entity->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(rotationDegrees);
+	entity->transform.scale = 2.f * extents;
 
 	RigidBody* body = new RigidBody(&entity->transform);
 	body->SetInverseMass(inverseMass);
@@ -336,7 +341,7 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 	body->SetAffectedByGravity(hasGravity);
 
 	entity->rigidBody = body;
-	entity->collider = new BoxCollider(entity, OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
+	entity->collider = new BoxCollider(entity, OBB3(Vector3::ZERO, Vector3(0.5f), Quaternion::IDENTITY));
 
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
@@ -344,10 +349,9 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 
 	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
-	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, 2.f * extents);
 
 	Renderable rend;
-	rend.SetModelMatrix(model);
+	rend.SetModelMatrix(entity->transform.GetModelMatrix());
 	rend.AddDraw(mesh, material);
 	m_renderScene->AddRenderable(entity->GetId(), rend);
 }
@@ -362,10 +366,23 @@ void Game::UpdateRenderables()
 		if (entity == m_player)
 			continue;
 
-		Renderable* rend = m_renderScene->GetRenderable(entity->GetId());
-		Vector3 existngScale = Matrix4::ExtractScale(rend->GetModelMatrix());
-		Matrix4 newModelMatrix = Matrix4::MakeModelMatrix(entity->transform.position, entity->transform.rotation, existngScale);
-		rend->SetModelMatrix(newModelMatrix);
+		if (entity->collider->IsOfType<CapsuleCollider>())
+		{
+			Renderable* rend = m_renderScene->GetRenderable(entity->GetId());
+			rend->SetModelMatrix(Matrix4::MakeModelMatrix(entity->transform.position, entity->transform.rotation, Vector3::ONES));
+		}
+		else if (entity->collider->IsOfType<HalfSpaceCollider>() || entity->collider->IsOfType<PlaneCollider>())
+		{
+			Renderable* rend = m_renderScene->GetRenderable(entity->GetId());
+			Vector3 existngScale = Matrix4::ExtractScale(rend->GetModelMatrix());
+			Matrix4 newModelMatrix = Matrix4::MakeModelMatrix(entity->transform.position, entity->transform.rotation, existngScale);
+			rend->SetModelMatrix(newModelMatrix);
+		}
+		else
+		{
+			Renderable* rend = m_renderScene->GetRenderable(entity->GetId());
+			rend->SetModelMatrix(entity->transform.GetLocalToWorldMatrix());
+		}
 	}
 }
 
@@ -376,6 +393,7 @@ void Game::SpawnSphere(float radius, float inverseMass, const Vector3& position,
 	Entity* entity = new Entity();
 	entity->transform.position = position;
 	entity->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(rotationDegrees);
+	entity->transform.scale = Vector3(radius);
 
 	RigidBody* body = new RigidBody(&entity->transform);
 	body->SetInverseMass(inverseMass);
@@ -385,7 +403,7 @@ void Game::SpawnSphere(float radius, float inverseMass, const Vector3& position,
 	body->SetAffectedByGravity(hasGravity);
 
 	entity->rigidBody = body;
-	entity->collider = new SphereCollider(entity, Sphere3D(Vector3::ZERO, radius));
+	entity->collider = new SphereCollider(entity, Sphere3D(Vector3::ZERO, 1.0f));
 
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
@@ -393,10 +411,9 @@ void Game::SpawnSphere(float radius, float inverseMass, const Vector3& position,
 
 	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_sphere");
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
-	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, Vector3(radius));
 
 	Renderable rend;
-	rend.SetModelMatrix(model);
+	rend.SetModelMatrix(entity->transform.GetModelMatrix());
 	rend.AddDraw(mesh, material);
 	m_renderScene->AddRenderable(entity->GetId(), rend);
 }
@@ -409,27 +426,31 @@ void Game::SpawnCylinder(float height, float radius, float inverseMass, const Ve
 	Entity* entity = new Entity();
 	entity->transform.position = position;
 	entity->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(rotationDegrees);
+	entity->transform.scale = Vector3(radius, height, radius);
 
-	RigidBody* body = new RigidBody(&entity->transform);
-	body->SetInverseMass(inverseMass);
-	body->SetInertiaTensor_Cylinder(height, radius);
-	body->SetVelocityWs(velocity);
-	body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
-	body->SetAffectedByGravity(hasGravity);
+	//if (inverseMass > 0.f)
+	//{
+		RigidBody* body = new RigidBody(&entity->transform);
+		body->SetInverseMass(inverseMass);
+		body->SetInertiaTensor_Cylinder(height, radius);
+		body->SetVelocityWs(velocity);
+		body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
+		body->SetAffectedByGravity(hasGravity);
 
-	entity->rigidBody = body;
-	entity->collider = new CylinderCollider(entity, Cylinder3D(Vector3(0.f, -0.5f * height, 0.f), Vector3(0.f, 0.5f * height, 0.f), radius));
+		entity->rigidBody = body;
+		m_physicsScene->AddRigidbody(body);
+	//}
+
+	entity->collider = new CylinderCollider(entity, Cylinder3D(Vector3(0.f, -0.5f, 0.f), Vector3(0.f, 0.5f, 0.f), 1.0f));
 
 	m_collisionScene->AddEntity(entity);
-	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
 
 	Mesh* cylMesh = g_resourceSystem->CreateOrGetMesh("cylinder");
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
-	Matrix4 model = Matrix4::MakeModelMatrix(position, rotationDegrees, Vector3(radius, height, radius));
 
 	Renderable rend;
-	rend.SetModelMatrix(model);
+	rend.SetModelMatrix(entity->transform.GetModelMatrix());
 	rend.AddDraw(cylMesh, material, Matrix4::IDENTITY);
 	m_renderScene->AddRenderable(entity->GetId(), rend);
 }
@@ -458,4 +479,48 @@ void Game::SpawnGround()
 	rend.AddDraw(quad, material);
 
 	m_renderScene->AddRenderable(m_ground->GetId(), rend);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void Game::SpawnRigidbodyTest()
+{
+	Vector3 position = Vector3(0.f, 3.f, 0.f);
+	Entity* entity = new Entity();
+	entity->transform.position = position;
+
+	RigidBody* body = new RigidBody(&entity->transform);
+
+	float mass = 1.f;
+	Vector3 extents = Vector3(0.5f);
+	body->SetInverseMass(1.f / mass);
+
+	float w = 2.f * extents.x;
+	float h = 2.f * extents.y;
+	float l = 2.f * extents.z;
+
+	Matrix3 inertiaTensor = Matrix3::IDENTITY;
+	inertiaTensor.Ix = (1.f / 12.f) * mass * (h * h + l * l);
+	inertiaTensor.Jy = (1.f / 12.f) * mass * (w * w + l * l);
+	inertiaTensor.Kz = (1.f / 12.f) * mass * (w * w + h * h);
+
+	body->SetInverseInertiaTensor(inertiaTensor.GetInverse(), Vector3(0.f, 0.25f, 0.f));
+	body->SetAngularVelocityDegreesWs(Vector3(120.f, 0.f, 0.f));
+	body->SetAffectedByGravity(false);
+
+	entity->rigidBody = body;
+	entity->collider = new BoxCollider(entity, OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
+
+	m_collisionScene->AddEntity(entity);
+	m_physicsScene->AddRigidbody(body);
+	m_entities.push_back(entity);
+
+	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	Matrix4 model = Matrix4::MakeModelMatrix(position, Quaternion::IDENTITY, 2.f * extents);
+
+	Renderable rend;
+	rend.SetModelMatrix(model);
+	rend.AddDraw(mesh, material);
+	m_renderScene->AddRenderable(entity->GetId(), rend);
 }
