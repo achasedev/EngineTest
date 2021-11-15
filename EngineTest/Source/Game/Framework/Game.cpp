@@ -131,7 +131,7 @@ void Game::ProcessInput()
 		switch (m_spawnType)
 		{
 		case 0:
-			SpawnBox(Vector3(1.f, 1.f, 1.5f), 1.0f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO, false);
+			SpawnBox(Vector3(1.f, 1.f, 1.5f), 1.0f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO);
 			break;
 		case 1:
 			SpawnSphere(0.5f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
@@ -143,7 +143,7 @@ void Game::ProcessInput()
 			SpawnCylinder(1.5f, 2.f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 0.f), velocity);
 			break;
 		case 4:
-			SpawnPolygon(1.f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3(-122.f, 72.f, 90.f), false);
+			SpawnPolygon(1.f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3(-122.f, 72.f, 90.f));
 			break;
 		default:
 			break;
@@ -257,7 +257,7 @@ void Game::SpawnEntities()
 	m_poly.AddVertex(Vector3(1.f, -1.f, -1.f));
 	m_poly.AddVertex(Vector3(1.f, -1.f, 1.f));
 	m_poly.AddVertex(Vector3(-1.f, 0.f, +1.f));
-	m_poly.AddVertex(Vector3(-1.f, -1.f, +1.f));
+	m_poly.AddVertex(Vector3(-1.f, -1.f, +2.f));
 
 	std::vector<int> face0{ 0, 1, 2 };
 	std::vector<int> face1{ 3, 4, 5 };
@@ -274,6 +274,7 @@ void Game::SpawnEntities()
 	MeshBuilder mb;
 	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
 	mb.PushPolygon(m_poly);
+	mb.GenerateFlatNormals();
 	mb.FinishBuilding();
 
 	m_polyMesh = mb.CreateMesh<VertexLit>();
@@ -538,7 +539,7 @@ void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector
 	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
 
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/surface_normal.material");
 
 	Renderable rend;
 	rend.SetModelMatrix(entity->transform.GetModelMatrix());
