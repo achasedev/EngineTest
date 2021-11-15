@@ -29,6 +29,7 @@
 #include "Engine/Render/Debug/DebugRenderSystem.h"
 #include "Engine/Render/ForwardRenderer.h"
 #include "Engine/Render/Material/Material.h"
+#include "Engine/Render/Mesh/MeshBuilder.h"
 #include "Engine/Render/Renderable.h"
 #include "Engine/Render/RenderContext.h"
 #include "Engine/Render/RenderScene.h"
@@ -102,7 +103,7 @@ void Game::ProcessInput()
 	Mouse& mouse = g_inputSystem->GetMouse();
 	if (mouse.GetMouseWheelDelta() != 0.f)
 	{
-		const int numTypes = 4;
+		const int numTypes = 5;
 		if (mouse.GetMouseWheelDelta() > 0.f)
 		{
 			m_spawnType--;
@@ -130,7 +131,7 @@ void Game::ProcessInput()
 		switch (m_spawnType)
 		{
 		case 0:
-			SpawnBox(Vector3(0.25f, 0.1f, 0.05f), 1.0f / mass, spawnPosition, Vector3::ZERO, velocity);
+			SpawnBox(Vector3(1.f, 1.f, 1.5f), 1.0f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO, false);
 			break;
 		case 1:
 			SpawnSphere(0.5f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
@@ -140,6 +141,9 @@ void Game::ProcessInput()
 			break;
 		case 3:
 			SpawnCylinder(1.5f, 2.f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 0.f), velocity);
+			break;
+		case 4:
+			SpawnPolygon(1.f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3(-122.f, 72.f, 90.f), false);
 			break;
 		default:
 			break;
@@ -166,6 +170,9 @@ void Game::Update()
 		break;
 	case 3:
 		ConsolePrintf(Rgba::CYAN, 0.f, "Spawn Type: Cylinder");
+		break;
+	case 4:
+		ConsolePrintf(Rgba::CYAN, 0.f, "Spawn Type: Polygon");
 		break;
 	default:
 		break;
@@ -239,13 +246,37 @@ void Game::SpawnEntities()
 	//SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 5.f));
 	//SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 3.f));
 	//SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 7.f));
-	SpawnBox(Vector3(4.f), (1.f / 64.f), Vector3(10.f, 4.f, 5.f), Vector3(180.f, 0.f, 0.f));
+	SpawnBox(Vector3(10.f), (1.f / 2.f), Vector3(10.f, 4.f, 5.f), Vector3(180.f, 0.f, 0.f));
 	SpawnCylinder(5.f, 5.f, 0.f, Vector3(0.f, 2.5f, 20.f), Vector3::ZERO, Vector3::ZERO, Vector3::ZERO, false);
 
 	// Set up ground
 	SpawnGround();
+	
+	m_poly.AddVertex(Vector3(-1.f, -1.f, -1.f));
+	m_poly.AddVertex(Vector3(-1.f, 0.f, -1.f));
+	m_poly.AddVertex(Vector3(1.f, -1.f, -1.f));
+	m_poly.AddVertex(Vector3(1.f, -1.f, 1.f));
+	m_poly.AddVertex(Vector3(-1.f, 0.f, +1.f));
+	m_poly.AddVertex(Vector3(-1.f, -1.f, +1.f));
 
-	SpawnRigidbodyTest();
+	std::vector<int> face0{ 0, 1, 2 };
+	std::vector<int> face1{ 3, 4, 5 };
+	std::vector<int> face2{ 5, 4, 1, 0 };
+	std::vector<int> face3{ 5, 0, 2, 3 };
+	std::vector<int> face4{ 2, 1, 4, 3 };
+
+	m_poly.AddFace(face0);
+	m_poly.AddFace(face1);
+	m_poly.AddFace(face2);
+	m_poly.AddFace(face3);
+	m_poly.AddFace(face4);
+
+	MeshBuilder mb;
+	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
+	mb.PushPolygon(m_poly);
+	mb.FinishBuilding();
+
+	m_polyMesh = mb.CreateMesh<VertexLit>();
 }
 
 
@@ -335,7 +366,9 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 
 	RigidBody* body = new RigidBody(&entity->transform);
 	body->SetInverseMass(inverseMass);
+
 	body->SetInertiaTensor_Box(extents);
+
 	body->SetVelocityWs(velocity);
 	body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
 	body->SetAffectedByGravity(hasGravity);
@@ -461,8 +494,8 @@ void Game::SpawnCylinder(float height, float radius, float inverseMass, const Ve
 void Game::SpawnGround()
 {
 	m_ground = new Entity();
-	//m_ground->collider = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
-	m_ground->collider = new PlaneCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
+	m_ground->collider = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
+	//m_ground->collider = new PlaneCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
 	m_collisionScene->AddEntity(m_ground);
 	m_entities.push_back(m_ground);
 
@@ -483,44 +516,32 @@ void Game::SpawnGround()
 
 
 //-------------------------------------------------------------------------------------------------
-void Game::SpawnRigidbodyTest()
+void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector3& rotationDegrees /*= Vector3::ZERO*/, const Vector3& velocity /*= Vector3::ZERO*/, const Vector3& angularVelocityDegrees /*= Vector3::ZERO*/, bool hasGravity /*= true*/)
 {
-	Vector3 position = Vector3(0.f, 3.f, 0.f);
 	Entity* entity = new Entity();
 	entity->transform.position = position;
+	entity->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(rotationDegrees);
 
 	RigidBody* body = new RigidBody(&entity->transform);
+	body->SetInverseMass(inverseMass);
 
-	float mass = 1.f;
-	Vector3 extents = Vector3(0.5f);
-	body->SetInverseMass(1.f / mass);
+	body->SetInertiaTensor_Polygon(m_poly);
 
-	float w = 2.f * extents.x;
-	float h = 2.f * extents.y;
-	float l = 2.f * extents.z;
-
-	Matrix3 inertiaTensor = Matrix3::IDENTITY;
-	inertiaTensor.Ix = (1.f / 12.f) * mass * (h * h + l * l);
-	inertiaTensor.Jy = (1.f / 12.f) * mass * (w * w + l * l);
-	inertiaTensor.Kz = (1.f / 12.f) * mass * (w * w + h * h);
-
-	body->SetInverseInertiaTensor(inertiaTensor.GetInverse(), Vector3(0.f, 0.25f, 0.f));
-	body->SetAngularVelocityDegreesWs(Vector3(120.f, 0.f, 0.f));
-	body->SetAffectedByGravity(false);
+	body->SetVelocityWs(velocity);
+	body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
+	body->SetAffectedByGravity(hasGravity);
 
 	entity->rigidBody = body;
-	entity->collider = new BoxCollider(entity, OBB3(Vector3::ZERO, extents, Quaternion::IDENTITY));
+	entity->collider = new PolygonCollider(entity, m_poly);
 
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
 	m_entities.push_back(entity);
 
-	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
-	Matrix4 model = Matrix4::MakeModelMatrix(position, Quaternion::IDENTITY, 2.f * extents);
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/default.material");
 
 	Renderable rend;
-	rend.SetModelMatrix(model);
-	rend.AddDraw(mesh, material);
+	rend.SetModelMatrix(entity->transform.GetModelMatrix());
+	rend.AddDraw(m_polyMesh, material);
 	m_renderScene->AddRenderable(entity->GetId(), rend);
 }

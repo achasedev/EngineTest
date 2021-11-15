@@ -27,9 +27,10 @@ cbuffer modelConstant : register(b2)
    float4x4 MODEL; 
 };
 
-cbuffer cbTint : register(b8)
+cbuffer cbDebug : register(b8)
 {
-   float4 TINT; 
+   float4 TINT;
+   float WIREFRAME_BLEND; 
 };
 
 VOut VertexFunction(VInput input)
@@ -54,7 +55,7 @@ float4 FragmentFunction( VOut input ) : SV_Target0
    float4 texColor = tAlbedo.Sample( sAlbedo, input.uv ); 
 
    // Component wise multiply to "tint" the output
-   float4 finalColor = texColor * TINT * input.color;
+   float4 finalColor = lerp(texColor * TINT, TINT, WIREFRAME_BLEND) * input.color;
 
    // output it; 
    return finalColor; 
