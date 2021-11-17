@@ -104,7 +104,7 @@ private:
 	PhysicsScene*								m_physicsScene = nullptr;
 	CollisionScene<BoundingVolumeSphere>*		m_collisionScene = nullptr;
 	int											m_spawnType = 0;
-	Polygon3d									m_poly;
+	Polyhedron									m_poly;
 	Mesh*										m_polyMesh = nullptr;
 
 	// Entities

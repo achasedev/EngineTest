@@ -45,7 +45,7 @@ Player::Player(Camera* camera)
 	m_camera->SetPosition(transform.position + s_cameraOffset);
 	m_camera->SetRotationEulerAnglesDegrees(Vector3::ZERO);
 
-	collider = new CapsuleCollider(this, Capsule3D(Vector3(0.f, 0.5f, 0.f), Vector3(0.f, 1.5f, 0.f), 0.5f));
+	collider = new CapsuleCollider(this, Capsule3(Vector3(0.f, 0.5f, 0.f), Vector3(0.f, 1.5f, 0.f), 0.5f));
 
 	rigidBody = new RigidBody(&transform);
 	rigidBody->SetInverseMass(1.f);

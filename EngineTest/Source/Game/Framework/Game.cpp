@@ -59,6 +59,9 @@ Game* g_game = nullptr;
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Engine/Math/Matrix3.h"
 #include "Engine/Math/OBB3.h"
+#include "Engine/Math/Triangle2.h"
+#include "Engine/Math/GJK.h"
+#include "Engine/Math/LineSegment2.h"
 
 //-------------------------------------------------------------------------------------------------
 Game::Game()
@@ -332,7 +335,7 @@ void Game::SpawnCapsule(float cylinderHeight, float radius, float inverseMass, c
 	body->SetAffectedByGravity(hasGravity);
 
 	entity->rigidBody = body;
-	entity->collider = new CapsuleCollider(entity, Capsule3D(Vector3(0.f, -0.5f, 0.f), Vector3(0.f, 0.5f, 0.f), 1.0f));
+	entity->collider = new CapsuleCollider(entity, Capsule3(Vector3(0.f, -0.5f, 0.f), Vector3(0.f, 0.5f, 0.f), 1.0f));
 
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
@@ -437,7 +440,7 @@ void Game::SpawnSphere(float radius, float inverseMass, const Vector3& position,
 	body->SetAffectedByGravity(hasGravity);
 
 	entity->rigidBody = body;
-	entity->collider = new SphereCollider(entity, Sphere3D(Vector3::ZERO, 1.0f));
+	entity->collider = new SphereCollider(entity, Sphere(Vector3::ZERO, 1.0f));
 
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
@@ -475,7 +478,7 @@ void Game::SpawnCylinder(float height, float radius, float inverseMass, const Ve
 		m_physicsScene->AddRigidbody(body);
 	//}
 
-	entity->collider = new CylinderCollider(entity, Cylinder3D(Vector3(0.f, -0.5f, 0.f), Vector3(0.f, 0.5f, 0.f), 1.0f));
+	entity->collider = new CylinderCollider(entity, Cylinder(Vector3(0.f, -0.5f, 0.f), Vector3(0.f, 0.5f, 0.f), 1.0f));
 
 	m_collisionScene->AddEntity(entity);
 	m_entities.push_back(entity);
@@ -533,7 +536,7 @@ void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector
 	body->SetAffectedByGravity(hasGravity);
 
 	entity->rigidBody = body;
-	entity->collider = new PolygonCollider(entity, m_poly);
+	entity->collider = new ConvexHullCollider(entity, m_poly);
 
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
