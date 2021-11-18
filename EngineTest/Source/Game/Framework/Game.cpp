@@ -276,11 +276,16 @@ void Game::SpawnEntities()
 
 	MeshBuilder mb;
 	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
-	mb.PushPolygon(m_poly);
+	mb.PushPolyhedron(m_poly);
 	mb.GenerateFlatNormals();
 	mb.FinishBuilding();
 
 	m_polyMesh = mb.CreateMesh<VertexLit>();
+
+	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 2.f, 1.f), Vector3(2.f, 0.5f, -1.f));
+	DebugRenderOptions options;
+	options.m_startColor = Rgba::BLUE;
+	DebugDrawTriangle3(tri, options);
 }
 
 
@@ -315,6 +320,19 @@ void Game::PostUpdate(float deltaSeconds)
 	m_ground->transform.position.y = 0.f;
 
 	UpdateRenderables();
+
+	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 2.f, 1.f), Vector3(2.f, 0.5f, -1.f));
+
+	Vector3 closestPt;
+	float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), tri, closestPt);
+
+	DebugRenderOptions options;
+	options.m_startColor = Rgba::RED;
+	options.m_lifetime = 0.f;
+
+	DebugDrawSphere(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), 0.1f, options);
+	DebugDrawSphere(closestPt, 0.1f, options);
+	DebugDrawLine(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), closestPt, options);
 }
 
 
