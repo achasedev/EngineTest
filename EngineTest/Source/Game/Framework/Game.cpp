@@ -282,10 +282,29 @@ void Game::SpawnEntities()
 
 	m_polyMesh = mb.CreateMesh<VertexLit>();
 
-	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 2.f, 1.f), Vector3(2.f, 0.5f, -1.f));
+	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 1.f, 1.f), Vector3(1.f, 1.f, 0.f));
 	DebugRenderOptions options;
 	options.m_startColor = Rgba::BLUE;
-	DebugDrawTriangle3(tri, options);
+
+	//DebugDrawTriangle3(tri, options);
+
+	Polygon3 poly;
+	poly.AddVertex(Vector3(-4.f, 1.f, -1.f));
+	poly.AddVertex(Vector3(-5.f, 2.f, 0.f));
+	poly.AddVertex(Vector3(0.f, 3.f, 1.f));
+	poly.AddVertex(Vector3(2.f, 2.f, 0.f));
+	poly.AddVertex(Vector3(2.f, 1.f, -1.f));
+
+
+	for (int i = 0; i < poly.GetNumVertices(); ++i)
+	{
+		DebugRenderOptions options2;
+		options2.m_startColor = Rgba::RED;
+
+		//DebugDrawSphere(poly.GetVertex(i), 0.1f, options2);
+	}
+
+	DebugDrawPolygon(poly, options);
 }
 
 
@@ -321,10 +340,19 @@ void Game::PostUpdate(float deltaSeconds)
 
 	UpdateRenderables();
 
-	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 2.f, 1.f), Vector3(2.f, 0.5f, -1.f));
+	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 1.f, 1.f), Vector3(1.f, 1.f, 0.f));
+
+	Polygon3 poly;
+	poly.AddVertex(Vector3(-4.f, 1.f, -1.f));
+	poly.AddVertex(Vector3(-5.f, 2.f, 0.f));
+	poly.AddVertex(Vector3(0.f, 3.f, 1.f));
+	poly.AddVertex(Vector3(2.f, 2.f, 0.f));
+	poly.AddVertex(Vector3(2.f, 1.f, -1.f));
 
 	Vector3 closestPt;
-	float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), tri, closestPt);
+	//float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), tri, closestPt);
+	float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), poly, closestPt);
+	ConsolePrintf("Dist: %.2f", dist);
 
 	DebugRenderOptions options;
 	options.m_startColor = Rgba::RED;
