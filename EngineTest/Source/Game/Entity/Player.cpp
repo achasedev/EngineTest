@@ -42,6 +42,7 @@ float Player::s_maxMoveSpeed = 5.0f;
 Player::Player(Camera* camera)
 	: m_camera(camera)
 {
+	transform.position = Vector3(0.f, 0.f, -2.f);
 	m_camera->SetPosition(transform.position + s_cameraOffset);
 	m_camera->SetRotationEulerAnglesDegrees(Vector3::ZERO);
 

@@ -69,6 +69,12 @@ Game::Game()
 	SetupFramework();
 	SetupRendering();
 	SpawnEntities();
+
+	LineSegment2 a(Vector2(1.f, 1.f), Vector2(2.f, 2.f));
+	LineSegment2 b(Vector2(2.f, 3.f), Vector2(4.f, 1.f));
+
+	bool intersect = DoLineSegmentsIntersect(a, b);
+
 }
 
 
@@ -255,12 +261,12 @@ void Game::SpawnEntities()
 	// Set up ground
 	SpawnGround();
 	
-	m_poly.AddVertex(Vector3(-1.f, -1.f, -1.f));
-	m_poly.AddVertex(Vector3(-1.f, 0.f, -1.f));
-	m_poly.AddVertex(Vector3(1.f, -1.f, -1.f));
-	m_poly.AddVertex(Vector3(1.f, -1.f, 1.f));
-	m_poly.AddVertex(Vector3(-1.f, 0.f, +1.f));
-	m_poly.AddVertex(Vector3(-1.f, -1.f, +2.f));
+	m_poly[0].AddVertex(Vector3(-1.f, 1.f, -1.f));
+	m_poly[0].AddVertex(Vector3(-1.f, 2.f, -1.f));
+	m_poly[0].AddVertex(Vector3(1.f, 1.f, -1.f));
+	m_poly[0].AddVertex(Vector3(1.f, 1.f, 1.f));
+	m_poly[0].AddVertex(Vector3(-1.f, 2.f, +1.f));
+	m_poly[0].AddVertex(Vector3(-1.f, 1.f, +2.f));
 
 	std::vector<int> face0{ 0, 1, 2 };
 	std::vector<int> face1{ 3, 4, 5 };
@@ -268,19 +274,119 @@ void Game::SpawnEntities()
 	std::vector<int> face3{ 5, 0, 2, 3 };
 	std::vector<int> face4{ 2, 1, 4, 3 };
 
-	m_poly.AddFace(face0);
-	m_poly.AddFace(face1);
-	m_poly.AddFace(face2);
-	m_poly.AddFace(face3);
-	m_poly.AddFace(face4);
+	m_poly[0].AddFace(face0);
+	m_poly[0].AddFace(face1);
+	m_poly[0].AddFace(face2);
+	m_poly[0].AddFace(face3);
+	m_poly[0].AddFace(face4);
 
 	MeshBuilder mb;
 	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
-	mb.PushPolyhedron(m_poly);
+	mb.PushPolyhedron(m_poly[0]);
 	mb.GenerateFlatNormals();
 	mb.FinishBuilding();
 
-	m_polyMesh = mb.CreateMesh<VertexLit>();
+	m_polyMesh[0] = mb.CreateMesh<VertexLit>();
+
+	m_poly[1].AddVertex(Vector3(0.f, 3.f, 0.f));
+	int numSegments = 20;
+	float anglePerSegment = (360.f / (float)numSegments);
+	float radius = 1.f;
+	std::vector<int> bottomFaceIndices;
+
+	for (int i = 0; i < numSegments; ++i)
+	{
+		float angle = anglePerSegment * (float)i;
+		Vector3 pos = Vector3(radius * CosDegrees(angle), 1.f, radius * SinDegrees(angle));
+
+		m_poly[1].AddVertex(pos);
+		bottomFaceIndices.push_back(i + 1);
+	}
+
+	m_poly[1].AddFace(bottomFaceIndices);
+	for (int i = 1; i <= numSegments; ++i)
+	{
+		int next = (i == numSegments ? 1 : i + 1);
+		std::vector<int> indices = { next, i, 0 };
+		m_poly[1].AddFace(indices);
+	}
+
+	mb.Clear();
+	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
+	mb.PushPolyhedron(m_poly[1]);
+	mb.GenerateFlatNormals();
+	mb.FinishBuilding();
+	m_polyMesh[1] = mb.CreateMesh<VertexLit>();
+
+	OBB3 box = OBB3(Vector3(0.f, 1.f, 0.f), Vector3::ONES, Quaternion::IDENTITY);
+	m_poly[2] = Polyhedron(box);
+	mb.Clear();
+	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
+	mb.PushPolyhedron(m_poly[2]);
+	mb.GenerateFlatNormals();
+	mb.FinishBuilding();
+	m_polyMesh[2] = mb.CreateMesh<VertexLit>();
+
+	m_poly[3].AddVertex(Vector3(+0.00000000, +0.00000000 + 1.f, +1.00000000));
+	m_poly[3].AddVertex(Vector3(+0.00000000, +0.00000000 + 1.f, -1.00000000));
+	m_poly[3].AddVertex(Vector3(+0.89442719, +0.00000000 + 1.f, +0.44721360));
+	m_poly[3].AddVertex(Vector3(+0.27639320, +0.85065081 + 1.f, +0.44721360));
+	m_poly[3].AddVertex(Vector3(-0.72360680, +0.52573111 + 1.f, +0.44721360));
+	m_poly[3].AddVertex(Vector3(-0.72360680, -0.52573111 + 1.f, +0.44721360));
+	m_poly[3].AddVertex(Vector3(+0.27639320, -0.85065081 + 1.f, +0.44721360));
+	m_poly[3].AddVertex(Vector3(+0.72360680, +0.52573111 + 1.f, -0.44721360));
+	m_poly[3].AddVertex(Vector3(-0.27639320, +0.85065081 + 1.f, -0.44721360));
+	m_poly[3].AddVertex(Vector3(-0.89442719, +0.00000000 + 1.f, -0.44721360));
+	m_poly[3].AddVertex(Vector3(-0.27639320, -0.85065081 + 1.f, -0.44721360));
+	m_poly[3].AddVertex(Vector3(+0.72360680, -0.52573111 + 1.f, -0.44721360));
+
+	std::vector<int> icosaVerts0 = { 6 ,     11,     2 };
+	std::vector<int> icosaVerts1 = { 3 ,     2 ,     7 };
+	std::vector<int> icosaVerts2 = { 7 ,     2 ,     11};
+	std::vector<int> icosaVerts3 = { 0 ,     2 ,     3 };
+	std::vector<int> icosaVerts4 = { 0 ,     6 ,     2 };
+	std::vector<int> icosaVerts5 = { 10,     1 ,     11};
+	std::vector<int> icosaVerts6 = { 1 ,     7 ,     11};
+	std::vector<int> icosaVerts7 = { 10,     11,     6 };
+	std::vector<int> icosaVerts8 = { 8 ,     7 ,     1 };
+	std::vector<int> icosaVerts9 = { 8 ,     3 ,     7 };
+	std::vector<int> icosaVerts10 = { 5 ,     10,     6 };
+	std::vector<int> icosaVerts11 = { 5 ,     6 ,     0 };
+	std::vector<int> icosaVerts12 = { 4 ,     3 ,     8 };
+	std::vector<int> icosaVerts13 = { 4 ,     0 ,     3 };
+	std::vector<int> icosaVerts14 = { 9 ,     8 ,     1 };
+	std::vector<int> icosaVerts15 = { 9 ,     1 ,     10};
+	std::vector<int> icosaVerts16 = { 4 ,     5 ,     0 };
+	std::vector<int> icosaVerts17 = { 9 ,     10,     5 };
+	std::vector<int> icosaVerts18 = { 9 ,     5 ,     4 };
+	std::vector<int> icosaVerts19 = { 9 ,     4 ,     8 };
+
+	m_poly[3].AddFace(icosaVerts0);
+	m_poly[3].AddFace(icosaVerts1);
+	m_poly[3].AddFace(icosaVerts2);
+	m_poly[3].AddFace(icosaVerts3);
+	m_poly[3].AddFace(icosaVerts4);
+	m_poly[3].AddFace(icosaVerts5);
+	m_poly[3].AddFace(icosaVerts6);
+	m_poly[3].AddFace(icosaVerts7);
+	m_poly[3].AddFace(icosaVerts8);
+	m_poly[3].AddFace(icosaVerts9);
+	m_poly[3].AddFace(icosaVerts10);
+	m_poly[3].AddFace(icosaVerts11);
+	m_poly[3].AddFace(icosaVerts12);
+	m_poly[3].AddFace(icosaVerts13);
+	m_poly[3].AddFace(icosaVerts14);
+	m_poly[3].AddFace(icosaVerts15);
+	m_poly[3].AddFace(icosaVerts16);
+	m_poly[3].AddFace(icosaVerts17);
+	m_poly[3].AddFace(icosaVerts18);
+	m_poly[3].AddFace(icosaVerts19);
+	mb.Clear();
+	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
+	mb.PushPolyhedron(m_poly[3]);
+	mb.GenerateFlatNormals();
+	mb.FinishBuilding();
+	m_polyMesh[3] = mb.CreateMesh<VertexLit>();
 
 	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 1.f, 1.f), Vector3(1.f, 1.f, 0.f));
 	DebugRenderOptions options;
@@ -295,7 +401,6 @@ void Game::SpawnEntities()
 	poly.AddVertex(Vector3(2.f, 2.f, 0.f));
 	poly.AddVertex(Vector3(2.f, 1.f, -1.f));
 
-
 	for (int i = 0; i < poly.GetNumVertices(); ++i)
 	{
 		DebugRenderOptions options2;
@@ -304,7 +409,22 @@ void Game::SpawnEntities()
 		//DebugDrawSphere(poly.GetVertex(i), 0.1f, options2);
 	}
 
-	DebugDrawPolygon(poly, options);
+	//DebugDrawPolygon(poly, options);
+
+	//Tetrahedron tetra(Vector3(-4.f, 2.f, 0.f), Vector3(1.f, 2.f, -2.f), Vector3(0.f, 2.f, 1.f), Vector3(0.f, 5.f, 0.f));
+
+	//mb.Clear();
+	//mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
+	//mb.PushTetrahedron(tetra);
+	//mb.FinishBuilding();
+
+	//Mesh* mesh = mb.CreateMesh<VertexLit>();
+
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/surface_normal.material");
+	Renderable rend;
+	rend.AddDraw(m_polyMesh[3], material);
+
+	m_renderScene->AddRenderable(400, rend);
 }
 
 
@@ -349,18 +469,36 @@ void Game::PostUpdate(float deltaSeconds)
 	poly.AddVertex(Vector3(2.f, 2.f, 0.f));
 	poly.AddVertex(Vector3(2.f, 1.f, -1.f));
 
-	Vector3 closestPt;
+	//Vector3 closestPt;
 	//float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), tri, closestPt);
-	float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), poly, closestPt);
-	ConsolePrintf("Dist: %.2f", dist);
+	////float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), poly, closestPt);
+	//ConsolePrintf("Dist: %.2f", dist);
+
+	//DebugRenderOptions options;
+	//options.m_startColor = Rgba::RED;
+	//options.m_lifetime = 0.f;
+
+	//DebugDrawSphere(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), 0.1f, options);
+	//DebugDrawSphere(closestPt, 0.1f, options);
+	//DebugDrawLine(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), closestPt, options);
+
+	Tetrahedron tetra(Vector3(-4.f, 2.f, 0.f), Vector3(1.f, 2.f, -2.f), Vector3(0.f, 2.f, 1.f), Vector3(0.f, 5.f, 0.f));
+
+	Vector3 closestPt;
+	//float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), tetra, closestPt);
+	float angle = (360.f / 20.f) * 0.5f;
+	//Vector3 input = Vector3(0.3f * CosDegrees(angle), 2.5f, 0.3f * SinDegrees(angle));
+	Vector3 input = m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector();
+	float dist = FindNearestPoint(input, m_poly[3], closestPt);
 
 	DebugRenderOptions options;
 	options.m_startColor = Rgba::RED;
 	options.m_lifetime = 0.f;
 
-	DebugDrawSphere(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), 0.1f, options);
+	DebugDrawSphere(input, 0.1f, options);
 	DebugDrawSphere(closestPt, 0.1f, options);
-	DebugDrawLine(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), closestPt, options);
+	DebugDrawLine(input, closestPt, options);
+
 }
 
 
@@ -575,14 +713,16 @@ void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector
 	RigidBody* body = new RigidBody(&entity->transform);
 	body->SetInverseMass(inverseMass);
 
-	body->SetInertiaTensor_Polygon(m_poly);
+	//int iPoly = GetRandomIntInRange(0, 3);
+	int iPoly = 3;
+	body->SetInertiaTensor_Polygon(m_poly[iPoly]);
 
 	body->SetVelocityWs(velocity);
 	body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
 	body->SetAffectedByGravity(hasGravity);
 
 	entity->rigidBody = body;
-	entity->collider = new ConvexHullCollider(entity, m_poly);
+	entity->collider = new ConvexHullCollider(entity, m_poly[iPoly]);
 
 	m_collisionScene->AddEntity(entity);
 	m_physicsScene->AddRigidbody(body);
@@ -592,6 +732,6 @@ void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector
 
 	Renderable rend;
 	rend.SetModelMatrix(entity->transform.GetModelMatrix());
-	rend.AddDraw(m_polyMesh, material);
+	rend.AddDraw(m_polyMesh[iPoly], material);
 	m_renderScene->AddRenderable(entity->GetId(), rend);
 }
