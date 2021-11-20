@@ -288,8 +288,8 @@ void Game::SpawnEntities()
 
 	m_polyMesh[0] = mb.CreateMesh<VertexLit>();
 
-	m_poly[1].AddVertex(Vector3(0.f, 3.f, 0.f));
-	int numSegments = 20;
+	m_poly[1].AddVertex(Vector3(0.f, 5.f, 0.f));
+	int numSegments = 10;
 	float anglePerSegment = (360.f / (float)numSegments);
 	float radius = 1.f;
 	std::vector<int> bottomFaceIndices;
@@ -308,6 +308,7 @@ void Game::SpawnEntities()
 	{
 		int next = (i == numSegments ? 1 : i + 1);
 		std::vector<int> indices = { next, i, 0 };
+
 		m_poly[1].AddFace(indices);
 	}
 
@@ -422,7 +423,7 @@ void Game::SpawnEntities()
 
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/surface_normal.material");
 	Renderable rend;
-	rend.AddDraw(m_polyMesh[3], material);
+	rend.AddDraw(m_polyMesh[1], material);
 
 	m_renderScene->AddRenderable(400, rend);
 }
@@ -486,10 +487,10 @@ void Game::PostUpdate(float deltaSeconds)
 
 	Vector3 closestPt;
 	//float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), tetra, closestPt);
-	float angle = (360.f / 20.f) * 0.5f;
+	float angle = (360.f / 10.f) * 0.5f;
 	//Vector3 input = Vector3(0.3f * CosDegrees(angle), 2.5f, 0.3f * SinDegrees(angle));
 	Vector3 input = m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector();
-	float dist = FindNearestPoint(input, m_poly[3], closestPt);
+	float dist = FindNearestPoint(input, m_poly[1], closestPt);
 
 	DebugRenderOptions options;
 	options.m_startColor = Rgba::RED;
@@ -714,7 +715,7 @@ void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector
 	body->SetInverseMass(inverseMass);
 
 	//int iPoly = GetRandomIntInRange(0, 3);
-	int iPoly = 3;
+	int iPoly = 1;
 	body->SetInertiaTensor_Polygon(m_poly[iPoly]);
 
 	body->SetVelocityWs(velocity);
@@ -734,4 +735,11 @@ void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector
 	rend.SetModelMatrix(entity->transform.GetModelMatrix());
 	rend.AddDraw(m_polyMesh[iPoly], material);
 	m_renderScene->AddRenderable(entity->GetId(), rend);
+
+	DebugRenderOptions options;
+	options.m_debugRenderMode = DEBUG_RENDER_MODE_IGNORE_DEPTH;
+	options.m_startColor = Rgba::BLUE;
+	options.m_parentTransform = &entity->transform;
+	
+	DebugDrawSphere(entity->rigidBody->GetCenterOfMassLs(), 0.1f, options);
 }
