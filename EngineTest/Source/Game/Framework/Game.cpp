@@ -131,28 +131,47 @@ void Game::ProcessInput()
 		}
 	}
 
+	if (m_spawnType == 2)
+	{
+		Transform test;
+		test.position = m_gameCamera->GetPosition() + 2.f * m_gameCamera->GetForwardVector();
+		test.scale = Vector3(0.25f, 0.5f, 0.25f);
+
+		Vector3 start = test.TransformPosition(Vector3(0.f, -0.5f, 0.f));
+		Vector3 end = test.TransformPosition(Vector3(0.f, 0.5f, 0.f));
+		Capsule3 cap = Capsule3(start, end, 0.25f);
+		
+		DebugRenderOptions options;
+		options.m_startColor = Rgba::RED;
+		options.m_debugRenderMode = DEBUG_RENDER_MODE_XRAY;
+		options.m_fillMode = FILL_MODE_WIREFRAME;
+		options.m_lifetime = 0.f;
+		
+		DebugDrawCapsule(cap, options);
+	}
+
 	if (mouse.WasButtonJustPressed(MOUSEBUTTON_LEFT))
 	{
 		Vector3 spawnPosition = m_gameCamera->GetPosition() + 2.f * m_gameCamera->GetForwardVector();
 		Vector3 velocity = 10.f * m_gameCamera->GetForwardVector();
-		float mass = 1.f;
+		float mass = 5.f;
 
 		switch (m_spawnType)
 		{
 		case 0:
-			SpawnBox(Vector3(1.f, 1.f, 1.5f), 1.0f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO);
+			SpawnBox(Vector3(1.f, 1.f, 1.5f), 1.0f / (100.f * mass), spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO);
 			break;
 		case 1:
 			SpawnSphere(0.5f, 1.f / mass, spawnPosition, Vector3::ZERO, velocity);
 			break;
 		case 2:
-			SpawnCapsule(2.f, 1.5f, 1.f / mass, spawnPosition, Vector3(45.f, 0.f, 0.f), velocity);
+			SpawnCapsule(0.5f, 0.25f, 1.f / mass, spawnPosition, Vector3::ZERO, Vector3::ZERO);
 			break;
 		case 3:
 			SpawnCylinder(1.5f, 2.f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 0.f), velocity);
 			break;
 		case 4:
-			SpawnPolygon(1.f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3(-122.f, 72.f, 90.f));
+			SpawnPolygon(1.f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO);
 			break;
 		default:
 			break;
@@ -288,7 +307,7 @@ void Game::SpawnEntities()
 
 	m_polyMesh[0] = mb.CreateMesh<VertexLit>();
 
-	m_poly[1].AddVertex(Vector3(0.f, 5.f, 0.f));
+	m_poly[1].AddVertex(Vector3(0.f, 2.f, 0.f));
 	int numSegments = 10;
 	float anglePerSegment = (360.f / (float)numSegments);
 	float radius = 1.f;
@@ -297,7 +316,7 @@ void Game::SpawnEntities()
 	for (int i = 0; i < numSegments; ++i)
 	{
 		float angle = anglePerSegment * (float)i;
-		Vector3 pos = Vector3(radius * CosDegrees(angle), 1.f, radius * SinDegrees(angle));
+		Vector3 pos = Vector3(radius * CosDegrees(angle), 0.f, radius * SinDegrees(angle));
 
 		m_poly[1].AddVertex(pos);
 		bottomFaceIndices.push_back(i + 1);
@@ -389,6 +408,14 @@ void Game::SpawnEntities()
 	mb.FinishBuilding();
 	m_polyMesh[3] = mb.CreateMesh<VertexLit>();
 
+	for (int i = 0; i < 4; ++i)
+	{
+		if (i == 2)
+			continue;
+
+		m_poly[i].GenerateHalfEdgeStructure();
+	}
+
 	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 1.f, 1.f), Vector3(1.f, 1.f, 0.f));
 	DebugRenderOptions options;
 	options.m_startColor = Rgba::BLUE;
@@ -423,7 +450,7 @@ void Game::SpawnEntities()
 
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/surface_normal.material");
 	Renderable rend;
-	rend.AddDraw(m_polyMesh[1], material);
+	rend.AddDraw(m_polyMesh[3], material);
 
 	m_renderScene->AddRenderable(400, rend);
 }
@@ -484,21 +511,34 @@ void Game::PostUpdate(float deltaSeconds)
 	//DebugDrawLine(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), closestPt, options);
 
 	Tetrahedron tetra(Vector3(-4.f, 2.f, 0.f), Vector3(1.f, 2.f, -2.f), Vector3(0.f, 2.f, 1.f), Vector3(0.f, 5.f, 0.f));
-
 	Vector3 closestPt;
 	//float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), tetra, closestPt);
 	float angle = (360.f / 10.f) * 0.5f;
 	//Vector3 input = Vector3(0.3f * CosDegrees(angle), 2.5f, 0.3f * SinDegrees(angle));
 	Vector3 input = m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector();
-	float dist = FindNearestPoint(input, m_poly[1], closestPt);
+	LineSegment3 seg(input - Vector3(0.f, 0.5f, 0.f), input + Vector3(0.f, 0.5f, 0.5f));
+
+	Vector3 closestOnLine, closestOnPoly;
+	float dist = FindNearestPoints(seg, m_poly[3], closestOnLine, closestOnPoly);
+	//float dist = FindNearestPoint(input, m_poly[0], closestPt);
 
 	DebugRenderOptions options;
 	options.m_startColor = Rgba::RED;
 	options.m_lifetime = 0.f;
 
-	DebugDrawSphere(input, 0.1f, options);
-	DebugDrawSphere(closestPt, 0.1f, options);
-	DebugDrawLine(input, closestPt, options);
+	//DebugDrawSphere(closestPt, 0.1f, options);
+	//DebugDrawSphere(input, 0.1f, options);
+	//DebugDrawLine(input, closestPt, options);
+
+	DebugDrawSphere(closestOnLine, 0.1f, options);
+	DebugDrawSphere(closestOnPoly, 0.1f, options);
+	DebugDrawLine(closestOnLine, closestOnPoly, options);
+
+	options.m_startColor = Rgba::YELLOW;
+
+	DebugDrawSphere(seg.m_a, 0.1f, options);
+	DebugDrawSphere(seg.m_b, 0.1f, options);
+	DebugDrawLine(seg.m_a, seg.m_b, options);
 
 }
 
@@ -715,7 +755,7 @@ void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector
 	body->SetInverseMass(inverseMass);
 
 	//int iPoly = GetRandomIntInRange(0, 3);
-	int iPoly = 1;
+	int iPoly = 3;
 	body->SetInertiaTensor_Polygon(m_poly[iPoly]);
 
 	body->SetVelocityWs(velocity);
@@ -735,11 +775,4 @@ void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector
 	rend.SetModelMatrix(entity->transform.GetModelMatrix());
 	rend.AddDraw(m_polyMesh[iPoly], material);
 	m_renderScene->AddRenderable(entity->GetId(), rend);
-
-	DebugRenderOptions options;
-	options.m_debugRenderMode = DEBUG_RENDER_MODE_IGNORE_DEPTH;
-	options.m_startColor = Rgba::BLUE;
-	options.m_parentTransform = &entity->transform;
-	
-	DebugDrawSphere(entity->rigidBody->GetCenterOfMassLs(), 0.1f, options);
 }
