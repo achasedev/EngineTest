@@ -112,7 +112,7 @@ void Game::ProcessInput()
 	Mouse& mouse = g_inputSystem->GetMouse();
 	if (mouse.GetMouseWheelDelta() != 0.f)
 	{
-		const int numTypes = 5;
+		const int numTypes = 6;
 		if (mouse.GetMouseWheelDelta() > 0.f)
 		{
 			m_spawnType--;
@@ -168,10 +168,13 @@ void Game::ProcessInput()
 			SpawnCapsule(0.5f, 0.25f, 1.f / mass, spawnPosition, Vector3::ZERO, Vector3::ZERO);
 			break;
 		case 3:
-			SpawnCylinder(1.5f, 2.f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 0.f), velocity);
+			SpawnCylinder(0.5f, 1.25f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 0.f), velocity);
 			break;
 		case 4:
-			SpawnPolygon(1.f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO);
+			SpawnPolygon(0.f, spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO);
+			break;
+		case 5:
+			SpawnPolygon2(1.f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO);
 			break;
 		default:
 			break;
@@ -201,6 +204,9 @@ void Game::Update()
 		break;
 	case 4:
 		ConsolePrintf(Rgba::CYAN, 0.f, "Spawn Type: Polygon");
+		break;
+	case 5:
+		ConsolePrintf(Rgba::CYAN, 0.f, "Spawn Type: Polygon 2");
 		break;
 	default:
 		break;
@@ -423,11 +429,11 @@ void Game::SpawnEntities()
 	//DebugDrawTriangle3(tri, options);
 
 	Polygon3 poly;
-	poly.AddVertex(Vector3(-4.f, 1.f, -1.f));
-	poly.AddVertex(Vector3(-5.f, 2.f, 0.f));
-	poly.AddVertex(Vector3(0.f, 3.f, 1.f));
-	poly.AddVertex(Vector3(2.f, 2.f, 0.f));
-	poly.AddVertex(Vector3(2.f, 1.f, -1.f));
+	poly.m_vertices.push_back(Vector3(-4.f, 1.f, -1.f));
+	poly.m_vertices.push_back(Vector3(-5.f, 2.f, 0.f));
+	poly.m_vertices.push_back(Vector3(0.f, 3.f, 1.f));
+	poly.m_vertices.push_back(Vector3(2.f, 2.f, 0.f));
+	poly.m_vertices.push_back(Vector3(2.f, 1.f, -1.f));
 
 	for (int i = 0; i < poly.GetNumVertices(); ++i)
 	{
@@ -491,11 +497,11 @@ void Game::PostUpdate(float deltaSeconds)
 	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 1.f, 1.f), Vector3(1.f, 1.f, 0.f));
 
 	Polygon3 poly;
-	poly.AddVertex(Vector3(-4.f, 1.f, -1.f));
-	poly.AddVertex(Vector3(-5.f, 2.f, 0.f));
-	poly.AddVertex(Vector3(0.f, 3.f, 1.f));
-	poly.AddVertex(Vector3(2.f, 2.f, 0.f));
-	poly.AddVertex(Vector3(2.f, 1.f, -1.f));
+	poly.m_vertices.push_back(Vector3(-4.f, 1.f, -1.f));
+	poly.m_vertices.push_back(Vector3(-5.f, 2.f, 0.f));
+	poly.m_vertices.push_back(Vector3(0.f, 3.f, 1.f));
+	poly.m_vertices.push_back(Vector3(2.f, 2.f, 0.f));
+	poly.m_vertices.push_back(Vector3(2.f, 1.f, -1.f));
 
 	//Vector3 closestPt;
 	//float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), tri, closestPt);
@@ -751,22 +757,62 @@ void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector
 	entity->transform.position = position;
 	entity->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(rotationDegrees);
 
-	RigidBody* body = new RigidBody(&entity->transform);
-	body->SetInverseMass(inverseMass);
+	int iPoly = 2;
+	if (inverseMass > 0.f)
+	{
+		RigidBody* body = new RigidBody(&entity->transform);
+		body->SetInverseMass(inverseMass);
 
-	//int iPoly = GetRandomIntInRange(0, 3);
-	int iPoly = 3;
-	body->SetInertiaTensor_Polygon(m_poly[iPoly]);
+		//int iPoly = GetRandomIntInRange(0, 3);
+		body->SetInertiaTensor_Polygon(m_poly[iPoly]);
 
-	body->SetVelocityWs(velocity);
-	body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
-	body->SetAffectedByGravity(hasGravity);
+		body->SetVelocityWs(velocity);
+		body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
+		body->SetAffectedByGravity(hasGravity);
+		entity->rigidBody = body;
+		m_physicsScene->AddRigidbody(body);
+	}
 
-	entity->rigidBody = body;
 	entity->collider = new ConvexHullCollider(entity, m_poly[iPoly]);
 
 	m_collisionScene->AddEntity(entity);
-	m_physicsScene->AddRigidbody(body);
+	m_entities.push_back(entity);
+
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/surface_normal.material");
+
+	Renderable rend;
+	rend.SetModelMatrix(entity->transform.GetModelMatrix());
+	rend.AddDraw(m_polyMesh[iPoly], material);
+	m_renderScene->AddRenderable(entity->GetId(), rend);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void Game::SpawnPolygon2(float inverseMass, const Vector3& position, const Vector3& rotationDegrees /*= Vector3::ZERO*/, const Vector3& velocity /*= Vector3::ZERO*/, const Vector3& angularVelocityDegrees /*= Vector3::ZERO*/, bool hasGravity /*= true*/)
+{
+	Entity* entity = new Entity();
+	entity->transform.position = position;
+	entity->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(rotationDegrees);
+
+	int iPoly = 1;
+	if (inverseMass > 0.f)
+	{
+		RigidBody* body = new RigidBody(&entity->transform);
+		body->SetInverseMass(inverseMass);
+
+		//int iPoly = GetRandomIntInRange(0, 3);
+		body->SetInertiaTensor_Polygon(m_poly[iPoly]);
+
+		body->SetVelocityWs(velocity);
+		body->SetAngularVelocityDegreesWs(angularVelocityDegrees);
+		body->SetAffectedByGravity(hasGravity);
+		entity->rigidBody = body;
+		m_physicsScene->AddRigidbody(body);
+	}
+
+	entity->collider = new ConvexHullCollider(entity, m_poly[iPoly]);
+
+	m_collisionScene->AddEntity(entity);
 	m_entities.push_back(entity);
 
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/surface_normal.material");
