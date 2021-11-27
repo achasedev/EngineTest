@@ -171,7 +171,7 @@ void Game::ProcessInput()
 			SpawnCylinder(0.5f, 1.25f, 1.f / mass, spawnPosition, Vector3(0.f, 0.f, 0.f), velocity);
 			break;
 		case 4:
-			SpawnPolygon(0.f, spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO);
+			SpawnPolygon(0.f, spawnPosition, Vector3(0.f, 45.f, 0.f), velocity, Vector3::ZERO);
 			break;
 		case 5:
 			SpawnPolygon2(1.f / mass, spawnPosition, Vector3::ZERO, velocity, Vector3::ZERO);
@@ -729,8 +729,8 @@ void Game::SpawnCylinder(float height, float radius, float inverseMass, const Ve
 void Game::SpawnGround()
 {
 	m_ground = new Entity();
-	m_ground->collider = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
-	//m_ground->collider = new PlaneCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
+	//m_ground->collider = new HalfSpaceCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
+	m_ground->collider = new PlaneCollider(m_ground, Plane3(Vector3::Y_AXIS, Vector3::ZERO));
 	m_collisionScene->AddEntity(m_ground);
 	m_entities.push_back(m_ground);
 
@@ -757,7 +757,7 @@ void Game::SpawnPolygon(float inverseMass, const Vector3& position, const Vector
 	entity->transform.position = position;
 	entity->transform.rotation = Quaternion::CreateFromEulerAnglesDegrees(rotationDegrees);
 
-	int iPoly = 2;
+	int iPoly = 1;
 	if (inverseMass > 0.f)
 	{
 		RigidBody* body = new RigidBody(&entity->transform);
