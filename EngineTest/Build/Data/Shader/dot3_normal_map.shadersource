@@ -3,16 +3,17 @@ struct VInput
 	float3 position : POSITION;
 	float4 color : COLOR;
 	float2 uv : UV;
-    float3 normal : NORMAL;
+  float3 normal : NORMAL;
+  float4 tangent : TANGENT;
 };
 
 struct VOut
 {
-	float4 position : SV_POSITION;
+	  float4 position : SV_POSITION;
     float4 color : COLOR;
     float2 uv : UV;
     float3 worldPosition : POSITIONT; // For determining light direction
-    float3 worldNormal : NORMAL;
+    float4x4 TBNTransform : NORMAL;          
     float3 eyePosition : POSITION;
 };
 
@@ -42,11 +43,15 @@ cbuffer cbLight : register(b3)
 Texture2D<float4> tAlbedo : register(t0);
 SamplerState sAlbedo : register(s0);
 
+Texture2D<float4> tNormal : register(t1);
+SamplerState sNormal : register(s1);
+
 Texture2DArray<float4> tDepth : register(t4);
 SamplerState sDepth : register(s4);
 
 TextureCubeArray<float4> tPointDepth : register(t5);
 SamplerState sPointDepth : register(s5);
+
 
 cbuffer cbCamera : register(b1)
 {
@@ -81,9 +86,21 @@ VOut VertexFunction(VInput input)
     output.uv = input.uv;
     output.worldPosition = worldPos.xyz;
     output.eyePosition = CAMERA._m03_m13_m23;
-    output.worldNormal = mul(MODEL, float4(input.normal, 0.f)).xyz;
 
+    float3 worldNormal = normalize(mul(MODEL, float4(input.normal, 0.f)).xyz);
+    float3 worldTangent = normalize(mul(MODEL , float4(input.tangent.xyz, 0.f)).xyz);
+    float3 worldBitangent = cross(worldTangent, worldNormal) * input.tangent.w;
+    output.TBNTransform = float4x4(float4(worldTangent, 0.f), float4(worldBitangent, 0.f), float4(worldNormal, 0.f), float4(worldPos.xyz, 1.0f));
+    output.TBNTransform = transpose(output.TBNTransform);
+    
     return output;
+}
+
+float3 CalculateWorldNormal(float4 color, float4x4 tbnTransform)
+{
+  // Range map the values (Z should be between 0.5 and 1.0 always
+  float3 surfaceNormal = normalize((2.f * color.xyz) - float3(1.f, 1.f, 1.f));
+  return normalize(mul(tbnTransform, float4(surfaceNormal, 0.f)).xyz);
 }
 
 float CalculateAttenuation(float3 lightPosition, float3 worldPosition, float3 attenuationFactors, float intensity)
@@ -210,10 +227,54 @@ float CalculateShadowFactor(float3 fragPosition, float3 normal, Light light, int
 
 float4 FragmentFunction( VOut input ) : SV_Target0
 {    
+    //     float3 toFrag = (input.worldPosition - LIGHTS[0].m_position);
+    //     // Determine face
+    //     int faceIndex = 0;
+    //     float maxValue = max(abs(toFrag.x), max(abs(toFrag.y), abs(toFrag.z)));
+    //     if (maxValue == abs(toFrag.z))
+    //     {
+    //         faceIndex = 4;
+    //         if (toFrag.z < 0.f)
+    //         {
+    //             faceIndex++;
+    //         }
+    //     }
+    //     else if (maxValue == abs(toFrag.y))
+    //     {
+    //         faceIndex = 2;
+    //         if (toFrag.y < 0.f)
+    //         {
+    //             faceIndex++;
+    //         }
+    //     }
+    //     else
+    //     {
+    //         faceIndex = 0;
+    //         if (toFrag.x < 0.f)
+    //         {
+    //             faceIndex++;
+    //         }
+    //     }
+
+    //     // Make conversion matrix
+    //     float3x3 lightToFace = GetLightToFaceMatrix(faceIndex);
+    //     float3 posLs = mul(LIGHTS[0].m_shadowView, float4(input.worldPosition, 1.0f)).xyz;
+    //     float3 posFs = mul(lightToFace, posLs);
+
+    //     float4 clipPos = mul(LIGHTS[0].m_shadowProjection, float4(posFs, 1.0f));
+    //     float3 ndcPos = clipPos.xyz / clipPos.w;
+  
+    // return float4(ndcPos.x, ndcPos.y, ndcPos.z, 1.0f);
+
+
     //----------------------------SET UP VALUES-------------------------------    
     float4 surfaceColor = tAlbedo.Sample(sAlbedo, input.uv);
     float3 directionToEye = normalize(input.eyePosition - input.worldPosition);
   
+    // Get the normal from the normal map, and transform it into TBN space
+    float4 normalColor = tNormal.Sample(sNormal, input.uv);
+    float3 worldNormal = CalculateWorldNormal(normalColor, input.TBNTransform);
+
     // Calculate the direction TO light, attenuation, and cone factor for each light
     // Set up accumulation variables
     float3 surfaceLight = float3(0.f, 0.f, 0.f);  // How much light is hitting the surface
@@ -234,11 +295,11 @@ float4 FragmentFunction( VOut input ) : SV_Target0
         float coneFactor = CalculateConeFactor(LIGHTS[lightIndex].m_position, input.worldPosition, LIGHTS[lightIndex].m_direction, LIGHTS[lightIndex].m_dotOuterAngle, LIGHTS[lightIndex].m_dotInnerAngle);
 
         //-------------STEP 2: Add in the diffuse light from all lights------------ 
-        float shadowFactor = CalculateShadowFactor(input.worldPosition, input.worldNormal, LIGHTS[lightIndex], lightIndex);
-        surfaceLight += shadowFactor * CalculateDot3(directionToLight, input.worldNormal, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
+        float shadowFactor = CalculateShadowFactor(input.worldPosition, worldNormal, LIGHTS[lightIndex], lightIndex);
+        surfaceLight += shadowFactor * CalculateDot3(directionToLight, worldNormal, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
         
         //-----STEP 3: Calculate and add in specular lighting from all lights----------
-        reflectedLight += shadowFactor * CalculateSpecular(directionToLight, input.worldNormal, directionToEye, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
+        reflectedLight += shadowFactor * CalculateSpecular(directionToLight, worldNormal, directionToEye, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
     }
   
   

@@ -14,6 +14,7 @@
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Core/Window.h"
 #include "Engine/IO/InputSystem.h"
+#include "Engine/Math/ScalarField3.h"
 #include "Engine/Physics/Particle/Particle.h"
 #include "Engine/Physics/Particle/ParticleAnchoredBungee.h"
 #include "Engine/Physics/Particle/ParticleAnchoredSpring.h"
@@ -36,6 +37,7 @@
 #include "Engine/Resource/ResourceSystem.h"
 #include "Engine/Time/Clock.h"
 #include "Engine/Render/Skybox.h"
+#include "Engine/Render/Mesh/MarchingCubes.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -68,13 +70,142 @@ Game::Game()
 {
 	SetupFramework();
 	SetupRendering();
+
+	//unsigned int table[256][16];
+	//for (unsigned int i = 0; i < 256; ++i)
+	//{
+	//	for (unsigned int j = 0; j < 15; j+=3)
+	//	{
+	//		table[i][j] = MarchingCubes::TRI_TABLE[i][j];
+	//		table[i][j + 1] = MarchingCubes::TRI_TABLE[i][j + 2];
+	//		table[i][j + 2] = MarchingCubes::TRI_TABLE[i][j + 1];
+	//	}
+
+	//	table[i][15] = -1;
+	//}
+
+	//std::string line;
+	//for (int i = 0; i < 256; ++i)
+	//{
+	//	std::string line = "{ ";
+
+	//	for (int j = 0; j < 16; ++j)
+	//	{
+
+	//		line += Stringf("%i", table[i][j]);
+
+	//		if (j != 15)
+	//		{
+	//			line += ", ";
+	//		}
+	//	}
+
+	//	line += " },\n";
+
+	//	DebuggerPrintf(line.c_str());
+	//}
+
+	//int debugpoint = 0;
 	SpawnEntities();
 
-	LineSegment2 a(Vector2(1.f, 1.f), Vector2(2.f, 2.f));
-	LineSegment2 b(Vector2(2.f, 3.f), Vector2(4.f, 1.f));
+	//unsigned int table[256];
+	//for (unsigned int i = 0; i < 256; ++i)
+	//{
+	//	table[i] = 0xF000;
+	//}
 
-	bool intersect = DoLineSegmentsIntersect(a, b);
+	//for (unsigned int i = 0; i < 256; ++i)
+	//{
+	//	unsigned int newIndex = 0;
 
+	//	for (unsigned int iOldVertex = 0; iOldVertex < 16; ++iOldVertex)
+	//	{
+	//		if (IsBitSet(i, iOldVertex))
+	//		{
+	//			int iNewVertex = ConvertToMyVertexIndex(iOldVertex);
+	//			SetBit(newIndex, iNewVertex);
+	//		}
+	//	}
+
+	//	ASSERT_OR_DIE(newIndex < 256, "oops");
+	//	ASSERT_OR_DIE(table[newIndex] == 0xF000, "oops again");
+	//	table[newIndex] = MarchingCubes::EDGE_TABLE[i];
+	//}
+
+	//for (unsigned int i = 0; i < 256; ++i)
+	//{
+	//	ASSERT_OR_DIE(table[i] < 0xF000, "ah");
+	//}
+
+	//std::string line;
+	//for (unsigned int i = 0; i < 256; ++i)
+	//{
+	//	line += Stringf("0x%x", table[i]);
+	//	if (i % 8 == 7)
+	//	{
+	//		line += ",\n";
+	//	}
+	//	else
+	//	{
+	//		line += ", ";
+	//	}
+	//}
+
+	//DebuggerPrintf(line.c_str());
+
+	//LineSegment2 a(Vector2(1.f, 1.f), Vector2(2.f, 2.f));
+	//LineSegment2 b(Vector2(2.f, 3.f), Vector2(4.f, 1.f));
+
+	//bool intersect = DoLineSegmentsIntersect(a, b);
+	//std::string line;
+
+	//for (int i = 0; i < 256; ++i)
+	//{
+	//	unsigned int val = MarchingCubes::EDGE_TABLE[i];
+	//	unsigned int newVal = 0;
+
+	//	for (int j = 0; j < 16; ++j)
+	//	{
+	//		if (IsBitSet(val, j))
+	//		{
+	//			int newIndex = ConvertToMyEdgeIndex(j);
+	//			SetBit(newVal, newIndex);
+	//		}
+	//	}	
+
+	//	line += Stringf("0x%x", newVal);
+	//	if (i % 8 == 7)
+	//	{
+	//		line += ",\n";
+	//	}
+	//	else
+	//	{
+	//		line += ", ";
+	//	}
+	//}
+
+	//DebuggerPrintf(line.c_str());
+	//int x = 4;
+	//x = 5;
+	//for (int i = 0; i < 256; ++i)
+	//{
+	//	std::string line = "{ ";
+
+	//	for (int j = 0; j < 16; ++j)
+	//	{
+
+	//		line += Stringf("%i", ConvertToMyEdgeIndex(MarchingCubes::TRI_TABLE[i][j]));
+
+	//		if (j != 15)
+	//		{
+	//			line += ", ";
+	//		}
+	//	}
+
+	//	line += " },\n";
+
+	//	DebuggerPrintf(line.c_str());
+	//}
 }
 
 
@@ -129,25 +260,6 @@ void Game::ProcessInput()
 				m_spawnType = 0;
 			}
 		}
-	}
-
-	if (m_spawnType == 2)
-	{
-		Transform test;
-		test.position = m_gameCamera->GetPosition() + 2.f * m_gameCamera->GetForwardVector();
-		test.scale = Vector3(0.25f, 0.5f, 0.25f);
-
-		Vector3 start = test.TransformPosition(Vector3(0.f, -0.5f, 0.f));
-		Vector3 end = test.TransformPosition(Vector3(0.f, 0.5f, 0.f));
-		Capsule3 cap = Capsule3(start, end, 0.25f);
-		
-		DebugRenderOptions options;
-		options.m_startColor = Rgba::RED;
-		options.m_debugRenderMode = DEBUG_RENDER_MODE_XRAY;
-		options.m_fillMode = FILL_MODE_WIREFRAME;
-		options.m_lifetime = 0.f;
-		
-		DebugDrawCapsule(cap, options);
 	}
 
 	if (mouse.WasButtonJustPressed(MOUSEBUTTON_LEFT))
@@ -422,43 +534,7 @@ void Game::SpawnEntities()
 		m_poly[i].GenerateHalfEdgeStructure();
 	}
 
-	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 1.f, 1.f), Vector3(1.f, 1.f, 0.f));
-	DebugRenderOptions options;
-	options.m_startColor = Rgba::BLUE;
-
-	//DebugDrawTriangle3(tri, options);
-
-	Polygon3 poly;
-	poly.m_vertices.push_back(Vector3(-4.f, 1.f, -1.f));
-	poly.m_vertices.push_back(Vector3(-5.f, 2.f, 0.f));
-	poly.m_vertices.push_back(Vector3(0.f, 3.f, 1.f));
-	poly.m_vertices.push_back(Vector3(2.f, 2.f, 0.f));
-	poly.m_vertices.push_back(Vector3(2.f, 1.f, -1.f));
-
-	for (int i = 0; i < poly.GetNumVertices(); ++i)
-	{
-		DebugRenderOptions options2;
-		options2.m_startColor = Rgba::RED;
-
-		//DebugDrawSphere(poly.GetVertex(i), 0.1f, options2);
-	}
-
-	//DebugDrawPolygon(poly, options);
-
-	//Tetrahedron tetra(Vector3(-4.f, 2.f, 0.f), Vector3(1.f, 2.f, -2.f), Vector3(0.f, 2.f, 1.f), Vector3(0.f, 5.f, 0.f));
-
-	//mb.Clear();
-	//mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
-	//mb.PushTetrahedron(tetra);
-	//mb.FinishBuilding();
-
-	//Mesh* mesh = mb.CreateMesh<VertexLit>();
-
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/surface_normal.material");
-	Renderable rend;
-	rend.AddDraw(m_polyMesh[3], material);
-
-	m_renderScene->AddRenderable(400, rend);
+	MakeScalarField();
 }
 
 
@@ -493,59 +569,6 @@ void Game::PostUpdate(float deltaSeconds)
 	m_ground->transform.position.y = 0.f;
 
 	UpdateRenderables();
-
-	Triangle3 tri(Vector3(-1.f, 1.f, 0.f), Vector3(0.f, 1.f, 1.f), Vector3(1.f, 1.f, 0.f));
-
-	Polygon3 poly;
-	poly.m_vertices.push_back(Vector3(-4.f, 1.f, -1.f));
-	poly.m_vertices.push_back(Vector3(-5.f, 2.f, 0.f));
-	poly.m_vertices.push_back(Vector3(0.f, 3.f, 1.f));
-	poly.m_vertices.push_back(Vector3(2.f, 2.f, 0.f));
-	poly.m_vertices.push_back(Vector3(2.f, 1.f, -1.f));
-
-	//Vector3 closestPt;
-	//float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), tri, closestPt);
-	////float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), poly, closestPt);
-	//ConsolePrintf("Dist: %.2f", dist);
-
-	//DebugRenderOptions options;
-	//options.m_startColor = Rgba::RED;
-	//options.m_lifetime = 0.f;
-
-	//DebugDrawSphere(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), 0.1f, options);
-	//DebugDrawSphere(closestPt, 0.1f, options);
-	//DebugDrawLine(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), closestPt, options);
-
-	Tetrahedron tetra(Vector3(-4.f, 2.f, 0.f), Vector3(1.f, 2.f, -2.f), Vector3(0.f, 2.f, 1.f), Vector3(0.f, 5.f, 0.f));
-	Vector3 closestPt;
-	//float dist = FindNearestPoint(m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector(), tetra, closestPt);
-	float angle = (360.f / 10.f) * 0.5f;
-	//Vector3 input = Vector3(0.3f * CosDegrees(angle), 2.5f, 0.3f * SinDegrees(angle));
-	Vector3 input = m_gameCamera->GetPosition() + m_gameCamera->GetForwardVector();
-	LineSegment3 seg(input - Vector3(0.f, 0.5f, 0.f), input + Vector3(0.f, 0.5f, 0.5f));
-
-	Vector3 closestOnLine, closestOnPoly;
-	float dist = FindNearestPoints(seg, m_poly[3], closestOnLine, closestOnPoly);
-	//float dist = FindNearestPoint(input, m_poly[0], closestPt);
-
-	DebugRenderOptions options;
-	options.m_startColor = Rgba::RED;
-	options.m_lifetime = 0.f;
-
-	//DebugDrawSphere(closestPt, 0.1f, options);
-	//DebugDrawSphere(input, 0.1f, options);
-	//DebugDrawLine(input, closestPt, options);
-
-	DebugDrawSphere(closestOnLine, 0.1f, options);
-	DebugDrawSphere(closestOnPoly, 0.1f, options);
-	DebugDrawLine(closestOnLine, closestOnPoly, options);
-
-	options.m_startColor = Rgba::YELLOW;
-
-	DebugDrawSphere(seg.m_a, 0.1f, options);
-	DebugDrawSphere(seg.m_b, 0.1f, options);
-	DebugDrawLine(seg.m_a, seg.m_b, options);
-
 }
 
 
@@ -815,10 +838,43 @@ void Game::SpawnPolygon2(float inverseMass, const Vector3& position, const Vecto
 	m_collisionScene->AddEntity(entity);
 	m_entities.push_back(entity);
 
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/surface_normal.material");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
 
 	Renderable rend;
 	rend.SetModelMatrix(entity->transform.GetModelMatrix());
 	rend.AddDraw(m_polyMesh[iPoly], material);
 	m_renderScene->AddRenderable(entity->GetId(), rend);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void Game::MakeScalarField()
+{
+	const int dim = 10;
+	float max = (float)(dim * dim * dim);
+
+	ScalarField3 field(IntVector3(dim, dim, dim), 0.f);
+	Vector3 midpoint = Vector3(dim - 1) * 0.5f;
+	float radius = midpoint.GetLength();
+
+	for (int z = 0; z < dim; ++z)
+	{
+		for (int y = 0; y < dim; ++y)
+		{
+			for (int x = 0; x < dim; ++x)
+			{
+				float dist = (Vector3(x, y, z) - midpoint).GetLength();
+
+				float value = 1.f - (dist / radius);
+				field.SetValue(x, y, z, value);
+			}
+		}
+	}
+
+	Mesh* mesh = MarchingCubes::CreateMesh(field, 0.45f);
+
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	Renderable rend;
+	rend.AddDraw(mesh, material);
+	m_renderScene->AddRenderable(800, rend);
 }
