@@ -13,8 +13,11 @@ struct VOut
     float4      color : COLOR;
     float2      uv : UV;
     float3      worldPosition : POSITIONT; // For determining light direction
-    float3      worldNormal : NORMAL;
+    float4x4    TBNTransform : NORMAL;          
 };
+
+Texture2D<float4> tNormal : register(t1);
+SamplerState sNormal : register(s1);
 
 cbuffer cameraConstants : register(b1)
 {
@@ -41,8 +44,13 @@ VOut VertexFunction(VInput input)
     output.color = input.color;
     output.uv = input.uv;
     output.worldPosition = worldPos.xyz;
-    output.worldNormal = mul(MODEL, float4(input.normal, 0.f)).xyz;
 
+    float3 worldNormal = normalize(mul(MODEL, float4(input.normal, 0.f)).xyz);
+    float3 worldTangent = normalize(mul(MODEL , float4(input.tangent.xyz, 0.f)).xyz);
+    float3 worldBitangent = cross(worldTangent, worldNormal) * input.tangent.w;
+    output.TBNTransform = float4x4(float4(worldTangent, 0.f), float4(worldBitangent, 0.f), float4(worldNormal, 0.f), float4(worldPos.xyz, 1.0f));
+    output.TBNTransform = transpose(output.TBNTransform);
+    
     return output;
 }
 
@@ -67,6 +75,14 @@ cbuffer lightContant : register(b3)
     Light   LIGHTS[MAX_LIGHTS];
 };
 
+
+float3 CalculateWorldNormal(float4 color, float4x4 tbnTransform)
+{
+  // Range map the values (Z should be between 0.5 and 1.0 always
+  float3 surfaceNormal = normalize((2.f * color.xyz) - float3(1.f, 1.f, 1.f));
+  return normalize(mul(tbnTransform, float4(surfaceNormal, 0.f)).xyz);
+}
+
 float CalculateAttenuation(float3 lightPosition, float3 worldPosition, float3 attenuationFactors, float intensity)
 {
     float d = length(lightPosition - worldPosition);
@@ -90,6 +106,8 @@ float3 CalculateDot3(float3 directionToLight, float3 normal, float4 lightColor, 
 
 float4 FragmentFunction( VOut input ) : SV_Target0
 {    
+    float4 normalColor = tNormal.Sample(sNormal, input.uv);
+    float3 worldNormal = CalculateWorldNormal(normalColor, input.TBNTransform);
     float3 surfaceLight = float3(0.f, 0.f, 0.f); // No ambient
   
     for (int lightIndex = 0; lightIndex < MAX_LIGHTS; ++lightIndex)
@@ -97,7 +115,7 @@ float4 FragmentFunction( VOut input ) : SV_Target0
         float3 directionToLight = lerp(-LIGHTS[lightIndex].m_direction, normalize(LIGHTS[lightIndex].m_position - input.worldPosition), LIGHTS[lightIndex].m_directionFactor);
         float attenuation = CalculateAttenuation(LIGHTS[lightIndex].m_position, input.worldPosition, LIGHTS[lightIndex].m_attenuationFactors, LIGHTS[lightIndex].m_color.w);
         float coneFactor = CalculateConeFactor(LIGHTS[lightIndex].m_position, input.worldPosition, LIGHTS[lightIndex].m_direction, LIGHTS[lightIndex].m_dotOuterAngle, LIGHTS[lightIndex].m_dotInnerAngle);
-        surfaceLight += CalculateDot3(directionToLight, input.worldNormal, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
+        surfaceLight += CalculateDot3(directionToLight, worldNormal, LIGHTS[lightIndex].m_color, attenuation, coneFactor);
     }
   
     surfaceLight = clamp(surfaceLight, float3(0.f, 0.f, 0.f), float3(1.f, 1.f, 1.f));

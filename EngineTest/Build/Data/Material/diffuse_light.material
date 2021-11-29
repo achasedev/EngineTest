@@ -1,6 +1,5 @@
 <material>
 	<shader file="Data/Shader/diffuse_light.shader"/>
 	<texture>
-		<normal name="flat"/>
 	</texture>
 </material>

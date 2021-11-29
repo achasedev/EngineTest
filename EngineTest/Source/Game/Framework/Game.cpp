@@ -38,6 +38,7 @@
 #include "Engine/Time/Clock.h"
 #include "Engine/Render/Skybox.h"
 #include "Engine/Render/Mesh/MarchingCubes.h"
+#include "ThirdParty/squirrel/SmoothNoise.hpp"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -70,142 +71,7 @@ Game::Game()
 {
 	SetupFramework();
 	SetupRendering();
-
-	//unsigned int table[256][16];
-	//for (unsigned int i = 0; i < 256; ++i)
-	//{
-	//	for (unsigned int j = 0; j < 15; j+=3)
-	//	{
-	//		table[i][j] = MarchingCubes::TRI_TABLE[i][j];
-	//		table[i][j + 1] = MarchingCubes::TRI_TABLE[i][j + 2];
-	//		table[i][j + 2] = MarchingCubes::TRI_TABLE[i][j + 1];
-	//	}
-
-	//	table[i][15] = -1;
-	//}
-
-	//std::string line;
-	//for (int i = 0; i < 256; ++i)
-	//{
-	//	std::string line = "{ ";
-
-	//	for (int j = 0; j < 16; ++j)
-	//	{
-
-	//		line += Stringf("%i", table[i][j]);
-
-	//		if (j != 15)
-	//		{
-	//			line += ", ";
-	//		}
-	//	}
-
-	//	line += " },\n";
-
-	//	DebuggerPrintf(line.c_str());
-	//}
-
-	//int debugpoint = 0;
 	SpawnEntities();
-
-	//unsigned int table[256];
-	//for (unsigned int i = 0; i < 256; ++i)
-	//{
-	//	table[i] = 0xF000;
-	//}
-
-	//for (unsigned int i = 0; i < 256; ++i)
-	//{
-	//	unsigned int newIndex = 0;
-
-	//	for (unsigned int iOldVertex = 0; iOldVertex < 16; ++iOldVertex)
-	//	{
-	//		if (IsBitSet(i, iOldVertex))
-	//		{
-	//			int iNewVertex = ConvertToMyVertexIndex(iOldVertex);
-	//			SetBit(newIndex, iNewVertex);
-	//		}
-	//	}
-
-	//	ASSERT_OR_DIE(newIndex < 256, "oops");
-	//	ASSERT_OR_DIE(table[newIndex] == 0xF000, "oops again");
-	//	table[newIndex] = MarchingCubes::EDGE_TABLE[i];
-	//}
-
-	//for (unsigned int i = 0; i < 256; ++i)
-	//{
-	//	ASSERT_OR_DIE(table[i] < 0xF000, "ah");
-	//}
-
-	//std::string line;
-	//for (unsigned int i = 0; i < 256; ++i)
-	//{
-	//	line += Stringf("0x%x", table[i]);
-	//	if (i % 8 == 7)
-	//	{
-	//		line += ",\n";
-	//	}
-	//	else
-	//	{
-	//		line += ", ";
-	//	}
-	//}
-
-	//DebuggerPrintf(line.c_str());
-
-	//LineSegment2 a(Vector2(1.f, 1.f), Vector2(2.f, 2.f));
-	//LineSegment2 b(Vector2(2.f, 3.f), Vector2(4.f, 1.f));
-
-	//bool intersect = DoLineSegmentsIntersect(a, b);
-	//std::string line;
-
-	//for (int i = 0; i < 256; ++i)
-	//{
-	//	unsigned int val = MarchingCubes::EDGE_TABLE[i];
-	//	unsigned int newVal = 0;
-
-	//	for (int j = 0; j < 16; ++j)
-	//	{
-	//		if (IsBitSet(val, j))
-	//		{
-	//			int newIndex = ConvertToMyEdgeIndex(j);
-	//			SetBit(newVal, newIndex);
-	//		}
-	//	}	
-
-	//	line += Stringf("0x%x", newVal);
-	//	if (i % 8 == 7)
-	//	{
-	//		line += ",\n";
-	//	}
-	//	else
-	//	{
-	//		line += ", ";
-	//	}
-	//}
-
-	//DebuggerPrintf(line.c_str());
-	//int x = 4;
-	//x = 5;
-	//for (int i = 0; i < 256; ++i)
-	//{
-	//	std::string line = "{ ";
-
-	//	for (int j = 0; j < 16; ++j)
-	//	{
-
-	//		line += Stringf("%i", ConvertToMyEdgeIndex(MarchingCubes::TRI_TABLE[i][j]));
-
-	//		if (j != 15)
-	//		{
-	//			line += ", ";
-	//		}
-	//	}
-
-	//	line += " },\n";
-
-	//	DebuggerPrintf(line.c_str());
-	//}
 }
 
 
@@ -392,8 +258,8 @@ void Game::SpawnEntities()
 	//SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 5.f));
 	//SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 3.f));
 	//SpawnBox(Vector3(1.f), (1.f / 1.f),	 Vector3(-10.f, 1.f, 7.f));
-	SpawnBox(Vector3(10.f), (1.f / 2.f), Vector3(10.f, 4.f, 5.f), Vector3(180.f, 0.f, 0.f));
-	SpawnCylinder(5.f, 5.f, 0.f, Vector3(0.f, 2.5f, 20.f), Vector3::ZERO, Vector3::ZERO, Vector3::ZERO, false);
+	//SpawnBox(Vector3(10.f), (1.f / 2.f), Vector3(10.f, 4.f, 5.f), Vector3(180.f, 0.f, 0.f));
+	//SpawnCylinder(5.f, 5.f, 0.f, Vector3(0.f, 2.5f, 20.f), Vector3::ZERO, Vector3::ZERO, Vector3::ZERO, false);
 
 	// Set up ground
 	SpawnGround();
@@ -850,12 +716,10 @@ void Game::SpawnPolygon2(float inverseMass, const Vector3& position, const Vecto
 //-------------------------------------------------------------------------------------------------
 void Game::MakeScalarField()
 {
-	const int dim = 10;
+	const int dim = 33;
 	float max = (float)(dim * dim * dim);
 
 	ScalarField3 field(IntVector3(dim, dim, dim), 0.f);
-	Vector3 midpoint = Vector3(dim - 1) * 0.5f;
-	float radius = midpoint.GetLength();
 
 	for (int z = 0; z < dim; ++z)
 	{
@@ -863,15 +727,18 @@ void Game::MakeScalarField()
 		{
 			for (int x = 0; x < dim; ++x)
 			{
-				float dist = (Vector3(x, y, z) - midpoint).GetLength();
+				float val = 0.5f * ((float)(dim - y - 1) / (float)(dim - 1)) + 0.3f * Compute2dPerlinNoise((float)x, (float)z, 1.0f, 2);
+				if (y > 0)
+				{
+					val += 0.1f;
+				}
 
-				float value = 1.f - (dist / radius);
-				field.SetValue(x, y, z, value);
+				field.SetValue(x, y, z, val);
 			}
 		}
 	}
 
-	Mesh* mesh = MarchingCubes::CreateMesh(field, 0.45f);
+	Mesh* mesh = MarchingCubes::CreateMesh(field, 0.2f);
 
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
 	Renderable rend;

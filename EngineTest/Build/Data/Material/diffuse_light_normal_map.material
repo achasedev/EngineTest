@@ -1,0 +1,6 @@
+<material>
+	<shader file="Data/Shader/diffuse_light_normal_map.shader"/>
+	<texture>
+		<normal name="flat"/>
+	</texture>
+</material>
