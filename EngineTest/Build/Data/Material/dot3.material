@@ -6,7 +6,7 @@
 	<property_blocks>
 		<property_block name="specular">
 			<property name="SPECULAR_POWER" value="5.0"/>
-			<property name="SPECULAR_AMOUNT" value="0.2"/>
+			<property name="SPECULAR_AMOUNT" value="0.1"/>
 		</property_block>
 	</property_blocks>
 </material>

@@ -1,5 +1,5 @@
 <material>
-	<shader file="Data/Shader/default_alpha.shader"/>
+	<shader file="Data/Shader/dot3.shader"/>
 	<texture>
 		<albedo name="Data/Image/debug.png"/>
 	</texture>

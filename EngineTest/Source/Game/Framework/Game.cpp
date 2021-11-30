@@ -505,7 +505,7 @@ void Game::SpawnBox(const Vector3& extents, float inverseMass, const Vector3& po
 	m_entities.push_back(entity);
 
 	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_cube");
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/entity.material");
 
 	Renderable rend;
 	rend.SetModelMatrix(entity->transform.GetModelMatrix());
@@ -567,7 +567,7 @@ void Game::SpawnSphere(float radius, float inverseMass, const Vector3& position,
 	m_entities.push_back(entity);
 
 	Mesh* mesh = g_resourceSystem->CreateOrGetMesh("unit_sphere");
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/entity.material");
 
 	Renderable rend;
 	rend.SetModelMatrix(entity->transform.GetModelMatrix());
@@ -604,7 +604,7 @@ void Game::SpawnCylinder(float height, float radius, float inverseMass, const Ve
 	m_entities.push_back(entity);
 
 	Mesh* cylMesh = g_resourceSystem->CreateOrGetMesh("cylinder");
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/entity.material");
 
 	Renderable rend;
 	rend.SetModelMatrix(entity->transform.GetModelMatrix());
@@ -704,7 +704,7 @@ void Game::SpawnPolygon2(float inverseMass, const Vector3& position, const Vecto
 	m_collisionScene->AddEntity(entity);
 	m_entities.push_back(entity);
 
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/dot3.material");
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/surface_normal.material");
 
 	Renderable rend;
 	rend.SetModelMatrix(entity->transform.GetModelMatrix());
