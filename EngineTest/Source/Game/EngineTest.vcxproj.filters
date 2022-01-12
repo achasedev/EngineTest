@@ -22,13 +22,7 @@
     <ClCompile Include="Framework\GameCommands.cpp">
       <Filter>General</Filter>
     </ClCompile>
-    <ClCompile Include="Entity\Player.cpp">
-      <Filter>General</Filter>
-    </ClCompile>
     <ClCompile Include="Block\Block.cpp">
-      <Filter>General</Filter>
-    </ClCompile>
-    <ClCompile Include="Entity\BlockObject.cpp">
       <Filter>General</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,8 +32,6 @@
     <ClInclude Include="Framework\GameJobs.h" />
     <ClInclude Include="Framework\GameCommon.h" />
     <ClInclude Include="Framework\GameCommands.h" />
-    <ClInclude Include="Entity\Player.h" />
     <ClInclude Include="Block\Block.h" />
-    <ClInclude Include="Entity\BlockObject.h" />
   </ItemGroup>
 </Project>

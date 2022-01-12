@@ -32,4 +32,3 @@
 
 //-------------------------------------------------------------------------------------------------
 void Command_Exit(CommandArgs& args);
-void Command_SetCollisionDebugFlags(CommandArgs& args);
