@@ -1,6 +1,6 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// Author: Andrew Chase
-/// Date Created: October 16th, 2021
+/// Date Created: Jan 17th, 2022
 /// Description: 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #pragma once
@@ -9,6 +9,9 @@
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Engine/Core/EngineCommon.h"
+#include "Engine/Core/Rgba.h"
+#include "Engine/Utility/StringID.h"
+#include <map>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -27,28 +30,41 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-class Block
+class BlockDefinition
 {
 public:
 	//-----Public Methods-----
 
-	uint8 GetBlockDefIndex() const { return m_defIndex; }
+	static void InitializeBuiltInDefs();
 
-	void SetDefinition(const BlockDefinition* def) { m_defIndex = def->m_index; }
-	void SetDefinition(uint8 defIndex) { m_defIndex = defIndex; }
+	static const BlockDefinition* GetDefinition(const StringID& id);
+	static const BlockDefinition* GetDefinition(uint8 index);
 
 
 public:
 	//-----Public Data-----
 
-	static constexpr float BLOCK_SIZE = 0.125f;
+	StringID	m_id = INVALID_STRING_ID;
+	uint8		m_index = INVALID_DEF_INDEX;
+	Rgba		m_color = Rgba::WHITE;
+
+	static constexpr uint8	AIR_DEF_INDEX = 0;
+	static constexpr uint8	INVALID_DEF_INDEX = 255;
+
+
+private:
+	//-----Private Methods-----
+
+	static void AddDef(BlockDefinition& def);
 
 
 private:
 	//-----Private Data-----
 
-	uint8 m_defIndex = 0;
-	uint8 m_flags = 0;
+	static constexpr int				MAX_BLOCK_DEFS = 256;
+	static uint8						s_numDefs;
+	static BlockDefinition				s_definitions[MAX_BLOCK_DEFS];
+	static std::map<StringID, uint8>	s_defNames;
 
 };
 

@@ -7,12 +7,15 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Game/Block/BlockDefinition.h"
+#include "Game/Block/Chunk.h"
 #include "Game/Framework/Game.h"
 #include "Engine/Core/Window.h"
 #include "Engine/IO/InputSystem.h"
 #include "Engine/Render/Camera.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
 #include "Engine/Render/ForwardRenderer.h"
+#include "Engine/Render/Renderable.h"
 #include "Engine/Render/RenderContext.h"
 #include "Engine/Render/RenderScene.h"
 #include "Engine/Resource/ResourceSystem.h"
@@ -45,6 +48,17 @@ Game::Game()
 {
 	SetupFramework();
 	SetupRendering();
+	BlockDefinition::InitializeBuiltInDefs();
+	m_chunk = new Chunk(IntVector3(0,0,0));
+	m_chunk->GenerateWithNoise(16, 10, 12);
+	m_chunk->BuildMesh();
+	
+	Renderable rend;
+	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
+	rend.AddDraw(m_chunk->GetMesh(), material);
+
+	m_renderScene->AddRenderable(400, rend);
+
 }
 
 

@@ -25,6 +25,12 @@
     <ClCompile Include="Block\Block.cpp">
       <Filter>General</Filter>
     </ClCompile>
+    <ClCompile Include="Block\Chunk.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="Block\BlockDefinition.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\App.h" />
@@ -33,5 +39,8 @@
     <ClInclude Include="Framework\GameCommon.h" />
     <ClInclude Include="Framework\GameCommands.h" />
     <ClInclude Include="Block\Block.h" />
+    <ClInclude Include="Block\Chunk.h" />
+    <ClInclude Include="Block\BlockIterator.h" />
+    <ClInclude Include="Block\BlockDefinition.h" />
   </ItemGroup>
 </Project>

@@ -21,6 +21,7 @@
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Camera;
+class Chunk;
 class Clock;
 class Entity;
 class ForwardRenderer;
@@ -71,10 +72,11 @@ private:
 private:
 	//-----Private Data-----
 
-	Clock*										m_gameClock = nullptr;
-	Camera*										m_gameCamera = nullptr;
-	ForwardRenderer*							m_renderer = nullptr;
-	RenderScene*								m_renderScene = nullptr;
+	Clock*				m_gameClock = nullptr;
+	Camera*				m_gameCamera = nullptr;
+	ForwardRenderer*	m_renderer = nullptr;
+	RenderScene*		m_renderScene = nullptr;
+	Chunk*				m_chunk = nullptr;
 
 };
 
