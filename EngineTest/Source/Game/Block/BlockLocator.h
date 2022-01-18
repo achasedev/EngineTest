@@ -8,6 +8,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Engine/Core/EngineCommon.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -16,6 +17,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+class Block;
 class Chunk;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -27,32 +29,32 @@ class Chunk;
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-class BlockIterator
+class BlockLocator
 {
 public:
 	//-----Public Methods-----
 
-	BlockIterator() {}
-	BlockIterator(Chunk* chunk, uint16 blockIndex);
-	BlockIterator(Chunk* chunk, const IntVector3& blockCoords);
+	BlockLocator() {}
+	BlockLocator(Chunk* chunk, uint16 blockIndex);
+	BlockLocator(Chunk* chunk, const IntVector3& blockCoords);
 
-	bool operator==(const IntVector3& other) const;
+	bool operator==(const BlockLocator& other) const;
 
 	// Accessors
 	Block&		GetBlock() const;
-	Chunk*		GetChunk() const;
-	uint16			GetBlockIndex() const;
-	IntVector3& GetBlockCoords() const;
+	IntVector3	GetBlockCoords() const;
+	Chunk*		GetChunk() const { return m_chunk; }
+	uint16		GetBlockIndex() const { return m_blockIndex; }
 	bool		IsValid() const { return m_chunk != nullptr; }
 
 	// Mutators
-	BlockIterator ToEast() const;
-	BlockIterator ToWest() const;
-	BlockIterator ToNorth() const;
-	BlockIterator ToSouth() const;
-	BlockIterator ToAbove() const;
-	BlockIterator ToBelow() const;
-	BlockIterator ToCoords(const IntVector3& offset) const;
+	BlockLocator ToEast() const;
+	BlockLocator ToWest() const;
+	BlockLocator ToNorth() const;
+	BlockLocator ToSouth() const;
+	BlockLocator ToAbove() const;
+	BlockLocator ToBelow() const;
+	BlockLocator ToCoords(const IntVector3& offset) const;
 
 
 

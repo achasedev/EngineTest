@@ -122,7 +122,7 @@ void Chunk::GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevati
 	}
 }
 
-
+#include "Engine/Core/DevConsole.h"
 //-------------------------------------------------------------------------------------------------
 void Chunk::BuildMesh()
 {
@@ -153,6 +153,26 @@ void Chunk::BuildMesh()
 	{
 		mb.UpdateMesh<Vertex3D_PCU>(*m_mesh);
 	}
+
+	int numTris = mb.GetIndexCount() / 3;
+	int numVerts = mb.GetVertexCount();
+
+	ConsolePrintf(Rgba::CYAN, 300.f, "Vertices: %i - Triangles: %i", numVerts, numTris);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+Block& Chunk::GetBlock(const IntVector3& blockCoords)
+{
+	uint16 blockIndex = Chunk::GetBlockIndexForCoords(blockCoords);
+	return GetBlock(blockIndex);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+Block& Chunk::GetBlock(uint16 blockIndex)
+{
+	return m_blocks[blockIndex];
 }
 
 
@@ -197,6 +217,16 @@ void Chunk::SetBlockDefinition(const IntVector3& blockCoords, const BlockDefinit
 
 
 //-------------------------------------------------------------------------------------------------
+bool Chunk::AreBlockCoordsValid(const IntVector3& coords)
+{
+	if (coords.x < 0 || coords.y < 0 || coords.z < 0 || coords.x >= CHUNK_DIMENSIONS_X || coords.y > CHUNK_DIMENSIONS_Y || coords.z > CHUNK_DIMENSIONS_Z)
+		return false;
+
+	return true;
+}
+
+
+//-------------------------------------------------------------------------------------------------
 IntVector3 Chunk::GetBlockCoordsForIndex(uint16 blockIndex)
 {
 	int xCoord = blockIndex & CHUNK_X_MASK;
@@ -204,13 +234,13 @@ IntVector3 Chunk::GetBlockCoordsForIndex(uint16 blockIndex)
 	int yCoord = (blockIndex & CHUNK_Y_MASK) >> CHUNK_BITS_XZ;
 
 	return IntVector3(xCoord, yCoord, zCoord);
-
 }
 
 
 //-------------------------------------------------------------------------------------------------
 uint16 Chunk::GetBlockIndexForCoords(const IntVector3& coords)
 {
+	ASSERT_OR_DIE(AreBlockCoordsValid(coords), "Invalid coords!");
 	return (uint16)(BLOCKS_PER_Y_LAYER * coords.y + BLOCKS_PER_Z_ROW * coords.z + coords.x);
 }
 
@@ -224,8 +254,8 @@ void Chunk::PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefin
 	Vector3 cubeBottomSouthWest = Vector3(worldXOffset + blockCoords.x, worldYOffset + blockCoords.y, blockCoords.z);
 	Vector3 cubeTopNorthEast = cubeBottomSouthWest + Vector3::ONES;
 
-	// For hidden surface removal TODO
-	/*BlockLocator currBlockLocator = BlockLocator(this, blockIndex);
+	// For hidden surface removal
+	BlockLocator currBlockLocator = BlockLocator(this, blockCoords);
 
 	BlockLocator eastBlockLocator = currBlockLocator.ToEast();
 	BlockLocator westBlockLocator = currBlockLocator.ToWest();
@@ -234,62 +264,57 @@ void Chunk::PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefin
 	BlockLocator aboveBlockLocator = currBlockLocator.ToAbove();
 	BlockLocator belowBlockLocator = currBlockLocator.ToBelow();
 
-	bool pushEastFace = !eastBlockLocator.GetBlock().IsFullyOpaque();
-	bool pushWestFace = !westBlockLocator.GetBlock().IsFullyOpaque();
-	bool pushNorthFace = !northBlockLocator.GetBlock().IsFullyOpaque();
-	bool pushSouthFace = !southBlockLocator.GetBlock().IsFullyOpaque();
-	bool pushTopFace = !aboveBlockLocator.GetBlock().IsFullyOpaque();
-	bool pushBottomFace = !belowBlockLocator.GetBlock().IsFullyOpaque();*/
-	bool pushEastFace = true;
-	bool pushWestFace = true;
-	bool pushNorthFace = true;
-	bool pushSouthFace = true;
-	bool pushTopFace = true;
-	bool pushBottomFace = true;
+	bool pushEastFace = !eastBlockLocator.GetBlock().IsOpaque();
+	bool pushWestFace = !westBlockLocator.GetBlock().IsOpaque();
+	bool pushNorthFace = !northBlockLocator.GetBlock().IsOpaque();
+	bool pushSouthFace = !southBlockLocator.GetBlock().IsOpaque();
+	bool pushTopFace = !aboveBlockLocator.GetBlock().IsOpaque();
+	bool pushBottomFace = !belowBlockLocator.GetBlock().IsOpaque();
 
 	float ewScale = 0.9f;
 	float nsScale = 0.8f;
+	float noise = GetRandomFloatInRange(0.8f, 1.0f);
 
 	// East Face
 	if (pushEastFace)
 	{
 		//Rgba lightValues = eastBlockLocator.GetBlock().GetLightingAsRGBChannels();
-		mb.PushQuad3D(cubeTopNorthEast, Vector2::ONES, AABB2::ZERO_TO_ONE, ewScale * def->m_color, Vector3::Z_AXIS, Vector3::Y_AXIS, Vector2(1.f, 1.0f));
+		mb.PushQuad3D(cubeTopNorthEast, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * ewScale * def->m_color, Vector3::Z_AXIS, Vector3::Y_AXIS, Vector2(1.f, 1.0f));
 	}
 
 	// West Face
 	if (pushWestFace)
 	{
 		//Rgba lightValues = westBlockLocator.GetBlock().GetLightingAsRGBChannels();
-		mb.PushQuad3D(cubeBottomSouthWest, Vector2::ONES, AABB2::ZERO_TO_ONE, def->m_color * ewScale, Vector3::MINUS_Z_AXIS, Vector3::Y_AXIS, Vector2(1.0f, 0.f));
+		mb.PushQuad3D(cubeBottomSouthWest, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * def->m_color * ewScale, Vector3::MINUS_Z_AXIS, Vector3::Y_AXIS, Vector2(1.0f, 0.f));
 	}
 
 	// North Face
 	if (pushNorthFace)
 	{
 		//Rgba lightValues = northBlockLocator.GetBlock().GetLightingAsRGBChannels();
-		mb.PushQuad3D(cubeTopNorthEast, Vector2::ONES, AABB2::ZERO_TO_ONE, def->m_color * nsScale, Vector3::MINUS_X_AXIS, Vector3::Y_AXIS, Vector2(0.f, 1.0f));
+		mb.PushQuad3D(cubeTopNorthEast, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * def->m_color * nsScale, Vector3::MINUS_X_AXIS, Vector3::Y_AXIS, Vector2(0.f, 1.0f));
 	}
 
 	// South Face
 	if (pushSouthFace)
 	{
 		//Rgba lightValues = southBlockLocator.GetBlock().GetLightingAsRGBChannels();
-		mb.PushQuad3D(cubeBottomSouthWest, Vector2::ONES, AABB2::ZERO_TO_ONE, nsScale * def->m_color, Vector3::X_AXIS, Vector3::Y_AXIS, Vector2::ZERO);
+		mb.PushQuad3D(cubeBottomSouthWest, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * nsScale * def->m_color, Vector3::X_AXIS, Vector3::Y_AXIS, Vector2::ZERO);
 	}
 
 	// Top Face
 	if (pushTopFace)
 	{
 		//Rgba lightValues = aboveBlockLocator.GetBlock().GetLightingAsRGBChannels();
-		mb.PushQuad3D(cubeTopNorthEast, Vector2::ONES, AABB2::ZERO_TO_ONE, def->m_color, Vector3::X_AXIS, Vector3::Z_AXIS, Vector2(1.0f, 1.0f));
+		mb.PushQuad3D(cubeTopNorthEast, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * def->m_color, Vector3::X_AXIS, Vector3::Z_AXIS, Vector2(1.0f, 1.0f));
 	}
 
 	// Bottom Face
 	if (pushBottomFace)
 	{
 		//Rgba lightValues = belowBlockLocator.GetBlock().GetLightingAsRGBChannels();
-		mb.PushQuad3D(cubeBottomSouthWest, Vector2::ONES, AABB2::ZERO_TO_ONE, def->m_color, Vector3::X_AXIS, Vector3::MINUS_Z_AXIS, Vector2(0.f, 1.0f));
+		mb.PushQuad3D(cubeBottomSouthWest, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * def->m_color, Vector3::X_AXIS, Vector3::MINUS_Z_AXIS, Vector2(0.f, 1.0f));
 	}
 }
 

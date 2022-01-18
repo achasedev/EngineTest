@@ -9,7 +9,7 @@
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Block/Block.h"
-#include "Game/Block/BlockIterator.h"
+#include "Game/Block/BlockLocator.h"
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Math/AABB3.h"
 #include "Engine/Math/IntVector3.h"
@@ -50,15 +50,16 @@ public:
 	Vector3			GetOriginWs() const { return m_worldBounds.mins; }
 	Vector3			GetCenterWs() const { return m_worldBounds.GetCenter(); }
 	AABB3			GetBoundsWs() const { return m_worldBounds; }
-	BlockIterator	GetBlockContainingPosition(const Vector3& worldPosition);
+	BlockLocator	GetBlockContainingPosition(const Vector3& worldPosition);
 	Block&			GetBlock(uint16 blockIndex);
 	Block&			GetBlock(const IntVector3& blockCoords);
 	IntVector3		GetChunkCoords() const { return m_chunkCoords; }
 	Mesh*			GetMesh() const { return m_mesh; }
 
-	void			SetBlockDefinition(uint16 blockIndex, const BlockDefinition* definition);
-	void			SetBlockDefinition(const IntVector3& blockCoords, const BlockDefinition* definition);
+	void				SetBlockDefinition(uint16 blockIndex, const BlockDefinition* definition);
+	void				SetBlockDefinition(const IntVector3& blockCoords, const BlockDefinition* definition);
 
+	static bool			AreBlockCoordsValid(const IntVector3& coords);
 	static IntVector3	GetBlockCoordsForIndex(uint16 blockIndex);
 	static uint16		GetBlockIndexForCoords(const IntVector3& coords);
 

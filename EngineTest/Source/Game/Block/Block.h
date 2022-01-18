@@ -8,6 +8,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+#include "Game/Block/BlockDefinition.h"
 #include "Engine/Core/EngineCommon.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -32,16 +33,22 @@ class Block
 public:
 	//-----Public Methods-----
 
+	Block() {}
+	Block(uint8 blockDefIndex);
+
 	uint8 GetBlockDefIndex() const { return m_defIndex; }
 
 	void SetDefinition(const BlockDefinition* def) { m_defIndex = def->m_index; }
 	void SetDefinition(uint8 defIndex) { m_defIndex = defIndex; }
+
+	bool IsOpaque() const;
 
 
 public:
 	//-----Public Data-----
 
 	static constexpr float BLOCK_SIZE = 0.125f;
+	static Block MISSING_BLOCK;
 
 
 private:

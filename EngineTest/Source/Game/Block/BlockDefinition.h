@@ -47,7 +47,7 @@ public:
 	StringID	m_id = INVALID_STRING_ID;
 	uint8		m_index = INVALID_DEF_INDEX;
 	Rgba		m_color = Rgba::WHITE;
-
+	
 	static constexpr uint8	AIR_DEF_INDEX = 0;
 	static constexpr uint8	INVALID_DEF_INDEX = 255;
 
