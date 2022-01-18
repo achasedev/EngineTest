@@ -16,6 +16,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
+class Chunk;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -31,9 +32,35 @@ class BlockIterator
 public:
 	//-----Public Methods-----
 
+	BlockIterator() {}
+	BlockIterator(Chunk* chunk, uint16 blockIndex);
+	BlockIterator(Chunk* chunk, const IntVector3& blockCoords);
+
+	bool operator==(const IntVector3& other) const;
+
+	// Accessors
+	Block&		GetBlock() const;
+	Chunk*		GetChunk() const;
+	uint16			GetBlockIndex() const;
+	IntVector3& GetBlockCoords() const;
+	bool		IsValid() const { return m_chunk != nullptr; }
+
+	// Mutators
+	BlockIterator ToEast() const;
+	BlockIterator ToWest() const;
+	BlockIterator ToNorth() const;
+	BlockIterator ToSouth() const;
+	BlockIterator ToAbove() const;
+	BlockIterator ToBelow() const;
+	BlockIterator ToCoords(const IntVector3& offset) const;
+
+
 
 private:
 	//-----Private Data-----
+
+	Chunk* m_chunk = nullptr;
+	uint16 m_blockIndex = 0;
 
 };
 

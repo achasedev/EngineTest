@@ -129,7 +129,7 @@ void Chunk::BuildMesh()
 	MeshBuilder mb;
 	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
 
-	for (int blockIndex = 0; blockIndex < BLOCKS_PER_CHUNK; ++blockIndex)
+	for (uint32 blockIndex = 0; blockIndex < BLOCKS_PER_CHUNK; ++blockIndex)
 	{
 		Block& block = m_blocks[blockIndex];
 		uint8 blockDefIndex = block.GetBlockDefIndex();
@@ -140,7 +140,7 @@ void Chunk::BuildMesh()
 		}
 
 		const BlockDefinition* blockDef = BlockDefinition::GetDefinition(blockDefIndex);
-		PushVerticesForBlock(blockIndex, blockDef, mb);
+		PushVerticesForBlock((uint16)blockIndex, blockDef, mb);
 	}
 
 	mb.FinishBuilding();
@@ -157,7 +157,7 @@ void Chunk::BuildMesh()
 
 
 //-------------------------------------------------------------------------------------------------
-void Chunk::SetBlockDefinition(int blockIndex, const BlockDefinition* definition)
+void Chunk::SetBlockDefinition(uint16 blockIndex, const BlockDefinition* definition)
 {
 	Block& block = m_blocks[blockIndex];
 	block.SetDefinition(definition);
@@ -191,13 +191,13 @@ void Chunk::SetBlockDefinition(int blockIndex, const BlockDefinition* definition
 //-------------------------------------------------------------------------------------------------
 void Chunk::SetBlockDefinition(const IntVector3& blockCoords, const BlockDefinition* definition)
 {
-	int blockIndex = GetBlockIndexForCoords(blockCoords);
+	uint16 blockIndex = GetBlockIndexForCoords(blockCoords);
 	SetBlockDefinition(blockIndex, definition);
 }
 
 
 //-------------------------------------------------------------------------------------------------
-IntVector3 Chunk::GetBlockCoordsForIndex(int blockIndex)
+IntVector3 Chunk::GetBlockCoordsForIndex(uint16 blockIndex)
 {
 	int xCoord = blockIndex & CHUNK_X_MASK;
 	int zCoord = (blockIndex & CHUNK_Z_MASK) >> CHUNK_BITS_X;
@@ -209,9 +209,9 @@ IntVector3 Chunk::GetBlockCoordsForIndex(int blockIndex)
 
 
 //-------------------------------------------------------------------------------------------------
-int Chunk::GetBlockIndexForCoords(const IntVector3& coords)
+uint16 Chunk::GetBlockIndexForCoords(const IntVector3& coords)
 {
-	return BLOCKS_PER_Y_LAYER * coords.y + BLOCKS_PER_Z_ROW * coords.z + coords.x;
+	return (uint16)(BLOCKS_PER_Y_LAYER * coords.y + BLOCKS_PER_Z_ROW * coords.z + coords.x);
 }
 
 
@@ -295,7 +295,7 @@ void Chunk::PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefin
 
 
 //-------------------------------------------------------------------------------------------------
-void Chunk::PushVerticesForBlock(int blockIndex, const BlockDefinition* def, MeshBuilder& mb)
+void Chunk::PushVerticesForBlock(uint16 blockIndex, const BlockDefinition* def, MeshBuilder& mb)
 {
 	IntVector3 blockCoords = Chunk::GetBlockCoordsForIndex(blockIndex);
 	PushVerticesForBlock(blockCoords, def, mb);
