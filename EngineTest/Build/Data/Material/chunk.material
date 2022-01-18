@@ -1,5 +1,5 @@
 <material>
-	<shader file="Data/Shader/default_opaque.shader"/>
+	<shader file="Data/Shader/chunk.shader"/>
 	<texture>
 		<albedo name="white"/>
 	</texture>

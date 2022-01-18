@@ -58,7 +58,13 @@ Game::Game()
 	rend.AddDraw(m_chunk->GetMesh(), material);
 
 	m_renderScene->AddRenderable(400, rend);
-
+	DebugRenderOptions options;
+	options.m_startColor = Rgba::RED;
+	options.m_endColor = Rgba::RED;
+	options.m_fillMode = FILL_MODE_WIREFRAME;
+	options.m_debugRenderMode = DEBUG_RENDER_MODE_XRAY;
+	
+	DebugDrawBox(OBB3(m_chunk->GetBoundsWs()), options);
 }
 
 

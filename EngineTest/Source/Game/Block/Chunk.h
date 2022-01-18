@@ -47,8 +47,9 @@ public:
 	void			Update();
 	void			Render();
 
-	void			GetWorldCenter() const;
-	void			GetWorldBounds() const;
+	Vector3			GetOriginWs() const { return m_worldBounds.mins; }
+	Vector3			GetCenterWs() const { return m_worldBounds.GetCenter(); }
+	AABB3			GetBoundsWs() const { return m_worldBounds; }
 	BlockIterator	GetBlockContainingPosition(const Vector3& worldPosition);
 	Block&			GetBlock(int blockIndex);
 	Block&			GetBlock(const IntVector3& blockCoords);
@@ -68,7 +69,7 @@ public:
 	static constexpr uint8	CHUNK_VERSION = 1;
 
 	static constexpr uint8	CHUNK_BITS_X = 5;											// Number of bits in the Block Index to represent the x coordinate
-	static constexpr uint8	CHUNK_BITS_Y = 5;											// Number of bits in the Block Index to represent the y coordinate
+	static constexpr uint8	CHUNK_BITS_Y = 6;											// Number of bits in the Block Index to represent the y coordinate
 	static constexpr uint8	CHUNK_BITS_Z = 5;											// Number of bits in the Block Index to represent the z coordinate
 	static constexpr uint8	CHUNK_BITS_XZ = CHUNK_BITS_X + CHUNK_BITS_Z;				// Number of bits in the Block Index for both x and z
 
