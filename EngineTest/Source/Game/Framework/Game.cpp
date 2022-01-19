@@ -52,7 +52,8 @@ Game::Game()
 	m_chunk = new Chunk(IntVector3(0,0,0));
 	m_chunk->GenerateWithNoise(16, 10, 12);
 	m_chunk->BuildBetterMesh();
-	
+	//m_chunk->BuildMesh();
+
 	Renderable rend;
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
 	rend.AddDraw(m_chunk->GetMesh(), material);

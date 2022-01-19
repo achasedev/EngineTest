@@ -11,6 +11,7 @@
 #include "Game/Block/BlockLocator.h"
 #include "Game/Block/Chunk.h"
 #include "Game/Block/ChunkMeshBuilder.h"
+#include "Engine/Core/DevConsole.h"
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Math/IntVector3.h"
 #include "Engine/Math/MathUtils.h"
@@ -35,6 +36,9 @@
 //-------------------------------------------------------------------------------------------------
 static bool IsBlockFaceVisible(const BlockLocator& loc, ChunkLayerDirection dir)
 {
+	if (loc.GetBlock().GetColor().a == 0)
+		return false;
+
 	BlockLocator frontLoc;
 
 	switch (dir)
@@ -196,6 +200,11 @@ void ChunkMeshBuilder::BuildMesh(Mesh& mesh)
 
 	m_meshBuilder.FinishBuilding();
 	m_meshBuilder.UpdateMesh<Vertex3D_PCU>(mesh);
+
+	int numTris = m_meshBuilder.GetIndexCount() / 3;
+	int numVerts = m_meshBuilder.GetVertexCount();
+
+	ConsolePrintf(Rgba::CYAN, 300.f, "Vertices: %i - Triangles: %i", numVerts, numTris);
 }
 
 
@@ -226,7 +235,7 @@ void ChunkMeshBuilder::InitializeCoverForLayer(ChunkLayerDirection direction, ui
 
 	int numBlocks = m_coverDimensions.x * m_coverDimensions.y;
 	m_cover = (bool*)malloc(numBlocks * sizeof(bool));
-	memset(m_cover, 0, numBlocks * sizeof(bool));
+	memset(m_cover, true, numBlocks * sizeof(bool));
 
 	bool visibleFound = false;
 	for (int coverY = 0; coverY < m_coverDimensions.y; ++coverY)
@@ -240,7 +249,7 @@ void ChunkMeshBuilder::InitializeCoverForLayer(ChunkLayerDirection direction, ui
 			if (IsBlockFaceVisible(blockLoc, m_direction))
 			{
 				int coverIndex = m_coverDimensions.x * coverY + coverX;
-				m_cover[coverIndex] = true;
+				m_cover[coverIndex] = false;
 				visibleFound = true;
 			}
 		}
