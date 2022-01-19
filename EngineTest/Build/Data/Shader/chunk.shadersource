@@ -1,0 +1,75 @@
+
+struct VInput
+{
+	float3 position : POSITION;
+	float4 color : COLOR;
+	float2 uv : UV;
+    float3 normal : NORMAL;
+    float4 tangent : TANGENT;
+};
+
+struct VOut
+{
+	float4 position : SV_POSITION;
+    float4 color : COLOR;
+    float3 normal : NORMAL;
+};
+
+Texture2D<float4> tAlbedo : register(t0);
+SamplerState sAlbedo : register(s0);
+
+cbuffer cameraConstants : register(b1)
+{
+   float4x4 CAMERA;
+   float4x4 VIEW; 
+   float4x4 PROJECTION; 
+};
+
+cbuffer modelConstant : register(b2)
+{
+   float4x4 MODEL; 
+};
+
+VOut VertexFunction(VInput input)
+{
+    float4 localPos = float4(input.position, 1.0f);
+    float4 worldPos = mul( MODEL, localPos );
+    float4 viewPos = mul( VIEW, worldPos ); 
+    float4 clipPos = mul( PROJECTION, viewPos ); 
+
+    VOut output;
+
+    output.position = clipPos;
+    output.color = input.color;
+    output.normal = input.normal;
+
+    return output;
+}
+
+float4 GetAsFloats(uint byteColors)
+{
+    float4 asFloats;
+
+
+    asFloats.x = ((byteColors & 0xFF000000) >> 24) / 255.0;
+    asFloats.y = ((byteColors & 0x00FF0000) >> 16) / 255.0;
+    asFloats.z = ((byteColors & 0x0000FF00) >> 8) / 255.0;
+    asFloats.w = (byteColors & 0x000000FF) / 255.0;
+
+    return asFloats;
+}
+
+float4 FragmentFunction( VOut input ) : SV_Target0
+{
+    float ewScale = 0.9f;
+    float udScale = 1.0f;
+    float nsScale = 0.8f;
+
+    float scale = lerp(0.f, ewScale, abs(input.normal.x)) + lerp(0.f, udScale, abs(input.normal.y)) + lerp(0.f, nsScale, abs(input.normal.z));
+
+    float4 finalColor = input.color;
+    finalColor.xyz = finalColor.xyz * scale;
+
+    // output it; 
+    return finalColor; 
+}

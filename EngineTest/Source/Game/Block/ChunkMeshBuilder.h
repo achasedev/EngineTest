@@ -46,21 +46,24 @@ class ChunkMeshBuilder
 public:
 	//-----Public Methods-----
 
-	ChunkMeshBuilder(Chunk* chunk);
-
-	void BuildMesh(Mesh& mesh);
+	void BuildMeshForChunk(Chunk* chunk, bool reduceTriangles);
 
 
 private:
 	//-----Private Methods-----
 
-	void		InitializeCoverForLayer(ChunkLayerDirection direction, uint16 layerIndex);
-	bool		IsQuadCovered(const IntVector2& coverCoord) const;
-	bool		IsQuadCovered(int coverX, int coverY) const;
-	bool		CanQuadContinueRun(const IntVector2& coverCoord, uint16 layerIndex, const Rgba& runColor) const;
-	IntVector3	GetBlockCoordsForCoverCoords(IntVector2 coverCoords, uint16 layerIndex) const;
-	BlockLocator GetBlockLocatorForCoverCoords(const IntVector2& coverCoords, uint16 layerIndex) const;
-	void		PushFace(const IntVector2& minCoverCoords, const IntVector2& maxCoverCoords, uint16 layerIndex, const Rgba& color);
+	void			BuildStandardMesh(Mesh& mesh);
+	void			PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefinition* def);
+	void			PushVerticesForBlock(uint16 blockIndex, const BlockDefinition* def);
+
+	void			BuildReducedMesh(Mesh& mesh);
+	void			InitializeCoverForLayer(ChunkLayerDirection direction, uint16 layerIndex);
+	bool			IsQuadCovered(const IntVector2& coverCoord) const;
+	bool			IsQuadCovered(int coverX, int coverY) const;
+	bool			CanQuadContinueRun(const IntVector2& coverCoord, uint16 layerIndex, const Rgba& runColor) const;
+	IntVector3		GetBlockCoordsForCoverCoords(IntVector2 coverCoords, uint16 layerIndex) const;
+	BlockLocator	GetBlockLocatorForCoverCoords(const IntVector2& coverCoords, uint16 layerIndex) const;
+	void			PushFace(const IntVector2& minCoverCoords, const IntVector2& maxCoverCoords, uint16 layerIndex, const Rgba& color);
 
 
 private:

@@ -41,21 +41,20 @@ public:
 	Chunk(const IntVector3& chunkCoords);
 	~Chunk();
 
-	void			GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevation, int seaLevel);
-	void			BuildMesh();
-	void			BuildBetterMesh();
+	void				GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevation, int seaLevel);
 
-	void			Update();
-	void			Render();
+	void				Update();
+	void				Render();
 
-	Vector3			GetOriginWs() const { return m_worldBounds.mins; }
-	Vector3			GetCenterWs() const { return m_worldBounds.GetCenter(); }
-	AABB3			GetBoundsWs() const { return m_worldBounds; }
-	BlockLocator	GetBlockContainingPosition(const Vector3& worldPosition);
-	Block&			GetBlock(uint16 blockIndex);
-	Block&			GetBlock(const IntVector3& blockCoords);
-	IntVector3		GetChunkCoords() const { return m_chunkCoords; }
-	Mesh*			GetMesh() const { return m_mesh; }
+	Vector3				GetOriginWs() const { return m_worldBounds.mins; }
+	Vector3				GetCenterWs() const { return m_worldBounds.GetCenter(); }
+	AABB3				GetBoundsWs() const { return m_worldBounds; }
+	BlockLocator		GetBlockContainingPosition(const Vector3& worldPosition);
+	Block&				GetBlock(uint16 blockIndex);
+	Block&				GetBlock(const IntVector3& blockCoords);
+	IntVector3			GetChunkCoords() const { return m_chunkCoords; }
+	Mesh*				GetMesh() const { return m_mesh; }
+	Mesh*				CreateOrGetMesh();
 
 	void				SetBlockDefinition(uint16 blockIndex, const BlockDefinition* definition);
 	void				SetBlockDefinition(const IntVector3& blockCoords, const BlockDefinition* definition);

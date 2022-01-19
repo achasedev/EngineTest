@@ -104,14 +104,37 @@ static uint16 GetNumLayersForDirection(ChunkLayerDirection direction)
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-ChunkMeshBuilder::ChunkMeshBuilder(Chunk* chunk)
-	: m_chunk(chunk)
+void ChunkMeshBuilder::BuildStandardMesh(Mesh& mesh)
 {
+	m_meshBuilder.Clear();
+	m_meshBuilder.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
+
+	for (uint32 blockIndex = 0; blockIndex < Chunk::BLOCKS_PER_CHUNK; ++blockIndex)
+	{
+		Block& block = m_chunk->GetBlock((uint16)blockIndex);
+		uint8 blockDefIndex = block.GetBlockDefIndex();
+
+		if (blockDefIndex == BlockDefinition::AIR_DEF_INDEX || blockDefIndex == BlockDefinition::INVALID_DEF_INDEX)
+		{
+			continue;
+		}
+
+		const BlockDefinition* blockDef = BlockDefinition::GetDefinition(blockDefIndex);
+		PushVerticesForBlock((uint16)blockIndex, blockDef);
+	}
+
+	m_meshBuilder.FinishBuilding();
+	m_meshBuilder.UpdateMesh<VertexLit>(mesh);
+	
+	int numTris = m_meshBuilder.GetIndexCount() / 3;
+	int numVerts = m_meshBuilder.GetVertexCount();
+
+	ConsolePrintf(Rgba::CYAN, 300.f, "Vertices: %i - Triangles: %i", numVerts, numTris);
 }
 
 
 //-------------------------------------------------------------------------------------------------
-void ChunkMeshBuilder::BuildMesh(Mesh& mesh)
+void ChunkMeshBuilder::BuildReducedMesh(Mesh& mesh)
 {
 	m_meshBuilder.Clear();
 	m_meshBuilder.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
@@ -199,12 +222,111 @@ void ChunkMeshBuilder::BuildMesh(Mesh& mesh)
 	} // For each direction
 
 	m_meshBuilder.FinishBuilding();
-	m_meshBuilder.UpdateMesh<Vertex3D_PCU>(mesh);
+	m_meshBuilder.UpdateMesh<VertexLit>(mesh);
 
 	int numTris = m_meshBuilder.GetIndexCount() / 3;
 	int numVerts = m_meshBuilder.GetVertexCount();
 
 	ConsolePrintf(Rgba::CYAN, 300.f, "Vertices: %i - Triangles: %i", numVerts, numTris);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void ChunkMeshBuilder::PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefinition* def)
+{
+	IntVector3 chunkCoords = m_chunk->GetChunkCoords();
+	int worldXOffset = chunkCoords.x * Chunk::CHUNK_DIMENSIONS_X;
+	int worldYOffset = chunkCoords.y * Chunk::CHUNK_DIMENSIONS_Y;
+
+	Vector3 cubeBottomSouthWest = Vector3(worldXOffset + blockCoords.x, worldYOffset + blockCoords.y, blockCoords.z);
+	Vector3 cubeTopNorthEast = cubeBottomSouthWest + Vector3::ONES;
+
+	// For hidden surface removal
+	BlockLocator currBlockLocator = BlockLocator(m_chunk, blockCoords);
+
+	BlockLocator eastBlockLocator = currBlockLocator.ToEast();
+	BlockLocator westBlockLocator = currBlockLocator.ToWest();
+	BlockLocator northBlockLocator = currBlockLocator.ToNorth();
+	BlockLocator southBlockLocator = currBlockLocator.ToSouth();
+	BlockLocator aboveBlockLocator = currBlockLocator.ToAbove();
+	BlockLocator belowBlockLocator = currBlockLocator.ToBelow();
+
+	bool pushEastFace = !eastBlockLocator.GetBlock().IsOpaque();
+	bool pushWestFace = !westBlockLocator.GetBlock().IsOpaque();
+	bool pushNorthFace = !northBlockLocator.GetBlock().IsOpaque();
+	bool pushSouthFace = !southBlockLocator.GetBlock().IsOpaque();
+	bool pushTopFace = !aboveBlockLocator.GetBlock().IsOpaque();
+	bool pushBottomFace = !belowBlockLocator.GetBlock().IsOpaque();
+
+	float ewScale = 0.9f;
+	float nsScale = 0.8f;
+	//float noise = GetRandomFloatInRange(0.8f, 1.0f);
+	float noise = 1.0f;
+
+	// East Face
+	if (pushEastFace)
+	{
+		//Rgba lightValues = eastBlockLocator.GetBlock().GetLightingAsRGBChannels();
+		m_meshBuilder.PushQuad3D(cubeTopNorthEast, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * ewScale * def->m_color, Vector3::Z_AXIS, Vector3::Y_AXIS, Vector2(1.f, 1.0f));
+	}
+
+	// West Face
+	if (pushWestFace)
+	{
+		//Rgba lightValues = westBlockLocator.GetBlock().GetLightingAsRGBChannels();
+		m_meshBuilder.PushQuad3D(cubeBottomSouthWest, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * def->m_color * ewScale, Vector3::MINUS_Z_AXIS, Vector3::Y_AXIS, Vector2(1.0f, 0.f));
+	}
+
+	// North Face
+	if (pushNorthFace)
+	{
+		//Rgba lightValues = northBlockLocator.GetBlock().GetLightingAsRGBChannels();
+		m_meshBuilder.PushQuad3D(cubeTopNorthEast, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * def->m_color * nsScale, Vector3::MINUS_X_AXIS, Vector3::Y_AXIS, Vector2(0.f, 1.0f));
+	}
+
+	// South Face
+	if (pushSouthFace)
+	{
+		//Rgba lightValues = southBlockLocator.GetBlock().GetLightingAsRGBChannels();
+		m_meshBuilder.PushQuad3D(cubeBottomSouthWest, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * nsScale * def->m_color, Vector3::X_AXIS, Vector3::Y_AXIS, Vector2::ZERO);
+	}
+
+	// Top Face
+	if (pushTopFace)
+	{
+		//Rgba lightValues = aboveBlockLocator.GetBlock().GetLightingAsRGBChannels();
+		m_meshBuilder.PushQuad3D(cubeTopNorthEast, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * def->m_color, Vector3::X_AXIS, Vector3::Z_AXIS, Vector2(1.0f, 1.0f));
+	}
+
+	// Bottom Face
+	if (pushBottomFace)
+	{
+		//Rgba lightValues = belowBlockLocator.GetBlock().GetLightingAsRGBChannels();
+		m_meshBuilder.PushQuad3D(cubeBottomSouthWest, Vector2::ONES, AABB2::ZERO_TO_ONE, noise * def->m_color, Vector3::X_AXIS, Vector3::MINUS_Z_AXIS, Vector2(0.f, 1.0f));
+	}
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void ChunkMeshBuilder::PushVerticesForBlock(uint16 blockIndex, const BlockDefinition* def)
+{
+	IntVector3 blockCoords = Chunk::GetBlockCoordsForIndex(blockIndex);
+	PushVerticesForBlock(blockCoords, def);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void ChunkMeshBuilder::BuildMeshForChunk(Chunk* chunk, bool reduceTriangles)
+{
+	m_chunk = chunk;
+	Mesh* mesh = m_chunk->CreateOrGetMesh();
+
+	if (reduceTriangles)
+	{
+		return BuildReducedMesh(*mesh);
+	}
+
+	return BuildStandardMesh(*mesh);
 }
 
 

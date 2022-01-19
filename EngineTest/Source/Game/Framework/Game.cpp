@@ -9,6 +9,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Block/BlockDefinition.h"
 #include "Game/Block/Chunk.h"
+#include "Game/Block/ChunkMeshBuilder.h"
 #include "Game/Framework/Game.h"
 #include "Engine/Core/Window.h"
 #include "Engine/IO/InputSystem.h"
@@ -51,7 +52,10 @@ Game::Game()
 	BlockDefinition::InitializeBuiltInDefs();
 	m_chunk = new Chunk(IntVector3(0,0,0));
 	m_chunk->GenerateWithNoise(16, 10, 12);
-	m_chunk->BuildBetterMesh();
+	
+	ChunkMeshBuilder cmb;
+	cmb.BuildMeshForChunk(m_chunk, true);
+
 	//m_chunk->BuildMesh();
 
 	Renderable rend;
