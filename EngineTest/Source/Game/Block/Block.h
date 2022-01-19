@@ -42,12 +42,13 @@ public:
 	void SetDefinition(uint8 defIndex) { m_defIndex = defIndex; }
 
 	bool IsOpaque() const;
+	Rgba GetColor() const;
 
 
 public:
 	//-----Public Data-----
 
-	static constexpr float BLOCK_SIZE = 0.125f;
+	static constexpr float BLOCK_SIZE = 1.0f;
 	static Block MISSING_BLOCK;
 
 

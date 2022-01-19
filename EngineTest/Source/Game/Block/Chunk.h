@@ -43,6 +43,7 @@ public:
 
 	void			GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevation, int seaLevel);
 	void			BuildMesh();
+	void			BuildBetterMesh();
 
 	void			Update();
 	void			Render();

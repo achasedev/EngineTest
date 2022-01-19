@@ -34,6 +34,9 @@
     <ClCompile Include="Block\BlockLocator.cpp">
       <Filter>General</Filter>
     </ClCompile>
+    <ClCompile Include="Block\ChunkMeshBuilder.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\App.h" />
@@ -45,5 +48,6 @@
     <ClInclude Include="Block\Chunk.h" />
     <ClInclude Include="Block\BlockDefinition.h" />
     <ClInclude Include="Block\BlockLocator.h" />
+    <ClInclude Include="Block\ChunkMeshBuilder.h" />
   </ItemGroup>
 </Project>

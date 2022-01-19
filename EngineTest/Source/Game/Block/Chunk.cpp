@@ -9,6 +9,7 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Block/BlockDefinition.h"
 #include "Game/Block/Chunk.h"
+#include "Game/Block/ChunkMeshBuilder.h"
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Math/Vector2.h"
@@ -162,6 +163,19 @@ void Chunk::BuildMesh()
 
 
 //-------------------------------------------------------------------------------------------------
+void Chunk::BuildBetterMesh()
+{
+	if (m_mesh == nullptr)
+	{
+		m_mesh = new Mesh();
+	}
+
+	ChunkMeshBuilder mb(this);
+	mb.BuildMesh(*m_mesh);
+}
+
+
+//-------------------------------------------------------------------------------------------------
 Block& Chunk::GetBlock(const IntVector3& blockCoords)
 {
 	uint16 blockIndex = Chunk::GetBlockIndexForCoords(blockCoords);
@@ -273,7 +287,8 @@ void Chunk::PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefin
 
 	float ewScale = 0.9f;
 	float nsScale = 0.8f;
-	float noise = GetRandomFloatInRange(0.8f, 1.0f);
+	//float noise = GetRandomFloatInRange(0.8f, 1.0f);
+	float noise = 1.0f;
 
 	// East Face
 	if (pushEastFace)

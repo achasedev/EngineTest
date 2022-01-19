@@ -51,7 +51,7 @@ Game::Game()
 	BlockDefinition::InitializeBuiltInDefs();
 	m_chunk = new Chunk(IntVector3(0,0,0));
 	m_chunk->GenerateWithNoise(16, 10, 12);
-	m_chunk->BuildMesh();
+	m_chunk->BuildBetterMesh();
 	
 	Renderable rend;
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
