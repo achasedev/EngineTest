@@ -11,6 +11,7 @@
 #include "Engine/Math/Transform.h"
 #include "Engine/Collision/BoundingVolumeHierarchy/BoundingVolume.h"
 #include "Engine/Collision/CollisionScene.h"
+#include "Engine/Render/Renderable.h"
 #include <vector>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -77,7 +78,7 @@ private:
 	ForwardRenderer*	m_renderer = nullptr;
 	RenderScene*		m_renderScene = nullptr;
 	Chunk*				m_chunk = nullptr;
-
+	RenderSceneId		m_chunkSceneId = INVALID_RENDER_SCENE_ID;
 };
 
 

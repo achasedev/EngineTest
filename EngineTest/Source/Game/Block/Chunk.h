@@ -44,7 +44,6 @@ public:
 	void				GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevation, int seaLevel);
 
 	void				Update();
-	void				Render();
 
 	Vector3				GetOriginWs() const { return m_worldBounds.mins; }
 	Vector3				GetCenterWs() const { return m_worldBounds.GetCenter(); }
@@ -85,13 +84,6 @@ public:
 	static constexpr uint32	BLOCKS_PER_Z_ROW = CHUNK_DIMENSIONS_X;
 	static constexpr uint32	BLOCKS_PER_Y_LAYER = CHUNK_DIMENSIONS_X * CHUNK_DIMENSIONS_Z;
 	static constexpr uint32	BLOCKS_PER_CHUNK = CHUNK_DIMENSIONS_X * CHUNK_DIMENSIONS_Y * CHUNK_DIMENSIONS_Z;
-
-
-private:
-	//-----Private Methods-----
-
-	void PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefinition* def, MeshBuilder& mb);
-	void PushVerticesForBlock(uint16 blockIndex, const BlockDefinition* def, MeshBuilder& mb);
 
 
 private:

@@ -62,7 +62,7 @@ Game::Game()
 	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
 	rend.AddDraw(m_chunk->GetMesh(), material);
 
-	m_renderScene->AddRenderable(400, rend);
+	m_chunkSceneId = m_renderScene->AddRenderable(rend);
 	DebugRenderOptions options;
 	options.m_startColor = Rgba::RED;
 	options.m_endColor = Rgba::RED;
@@ -127,7 +127,7 @@ void Game::ProcessInput()
 		static bool showDebug = false;
 		showDebug = !showDebug;
 
-		Renderable* rend = m_renderScene->GetRenderable(400);
+		Renderable* rend = m_renderScene->GetRenderable(m_chunkSceneId);
 
 		if (showDebug)
 		{
