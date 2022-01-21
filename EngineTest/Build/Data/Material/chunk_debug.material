@@ -1,0 +1,6 @@
+<material>
+	<shader file="Data/Shader/chunk_debug.shader"/>
+	<texture>
+		<albedo name="white"/>
+	</texture>
+</material>

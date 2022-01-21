@@ -121,6 +121,25 @@ void Game::ProcessInput()
 
 	Vector3 cameraDegrees = m_gameCamera->GetRotationAsEulerAnglesDegrees() + Vector3(deltaDegrees.x, deltaDegrees.y, 0.f);
 	m_gameCamera->SetRotationEulerAnglesDegrees(cameraDegrees);
+
+	if (g_inputSystem->WasKeyJustPressed('I'))
+	{
+		static bool showDebug = false;
+		showDebug = !showDebug;
+
+		Renderable* rend = m_renderScene->GetRenderable(400);
+
+		if (showDebug)
+		{
+			Material* debugMat = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk_debug.material");
+
+			rend->AddDraw(rend->GetDraw(0).m_mesh, debugMat);
+		}
+		else
+		{
+			rend->RemoveDraw(1);
+		}
+	}
 }
 
 

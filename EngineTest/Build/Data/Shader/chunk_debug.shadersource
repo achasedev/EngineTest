@@ -1,0 +1,43 @@
+
+struct VInput
+{
+	float3 position : POSITION;
+};
+
+struct VOut
+{
+	float4 position : SV_POSITION;
+};
+
+Texture2D<float4> tAlbedo : register(t0);
+SamplerState sAlbedo : register(s0);
+
+cbuffer cameraConstants : register(b1)
+{
+   float4x4 CAMERA;
+   float4x4 VIEW; 
+   float4x4 PROJECTION; 
+};
+
+cbuffer modelConstant : register(b2)
+{
+   float4x4 MODEL; 
+};
+
+VOut VertexFunction(VInput input)
+{
+    float4 localPos = float4(input.position, 1.0f);
+    float4 worldPos = mul( MODEL, localPos );
+    float4 viewPos = mul( VIEW, worldPos ); 
+    float4 clipPos = mul( PROJECTION, viewPos ); 
+
+    VOut output;
+    output.position = clipPos;
+
+    return output;
+}
+
+float4 FragmentFunction( VOut input ) : SV_Target0
+{
+    return float4(0.0f, 0.0f, 0.0f, 1.0f); // Black
+}
