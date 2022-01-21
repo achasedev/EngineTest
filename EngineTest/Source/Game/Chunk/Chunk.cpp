@@ -8,8 +8,8 @@
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Block/BlockDefinition.h"
-#include "Game/Block/Chunk.h"
-#include "Game/Block/ChunkMeshBuilder.h"
+#include "Game/Chunk/Chunk.h"
+#include "Game/Chunk/ChunkMeshBuilder.h"
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Math/MathUtils.h"
 #include "Engine/Math/Vector2.h"

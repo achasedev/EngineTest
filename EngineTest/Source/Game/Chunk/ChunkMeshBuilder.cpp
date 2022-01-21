@@ -9,8 +9,8 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Block/Block.h"
 #include "Game/Block/BlockLocator.h"
-#include "Game/Block/Chunk.h"
-#include "Game/Block/ChunkMeshBuilder.h"
+#include "Game/Chunk/Chunk.h"
+#include "Game/Chunk/ChunkMeshBuilder.h"
 #include "Engine/Core/DevConsole.h"
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Math/IntVector3.h"

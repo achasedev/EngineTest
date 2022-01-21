@@ -25,16 +25,16 @@
     <ClCompile Include="Block\Block.cpp">
       <Filter>General</Filter>
     </ClCompile>
-    <ClCompile Include="Block\Chunk.cpp">
-      <Filter>General</Filter>
-    </ClCompile>
     <ClCompile Include="Block\BlockDefinition.cpp">
       <Filter>General</Filter>
     </ClCompile>
     <ClCompile Include="Block\BlockLocator.cpp">
       <Filter>General</Filter>
     </ClCompile>
-    <ClCompile Include="Block\ChunkMeshBuilder.cpp">
+    <ClCompile Include="Chunk\Chunk.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
+    <ClCompile Include="Chunk\ChunkMeshBuilder.cpp">
       <Filter>General</Filter>
     </ClCompile>
   </ItemGroup>
@@ -45,9 +45,9 @@
     <ClInclude Include="Framework\GameCommon.h" />
     <ClInclude Include="Framework\GameCommands.h" />
     <ClInclude Include="Block\Block.h" />
-    <ClInclude Include="Block\Chunk.h" />
     <ClInclude Include="Block\BlockDefinition.h" />
     <ClInclude Include="Block\BlockLocator.h" />
-    <ClInclude Include="Block\ChunkMeshBuilder.h" />
+    <ClInclude Include="Chunk\ChunkMeshBuilder.h" />
+    <ClInclude Include="Chunk\Chunk.h" />
   </ItemGroup>
 </Project>

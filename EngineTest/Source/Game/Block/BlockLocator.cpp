@@ -8,7 +8,7 @@
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Block/BlockLocator.h"
-#include "Game/Block/Chunk.h"
+#include "Game/Chunk/Chunk.h"
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Math/MathUtils.h"
 
