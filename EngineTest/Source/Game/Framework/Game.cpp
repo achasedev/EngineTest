@@ -11,6 +11,7 @@
 #include "Game/Chunk/Chunk.h"
 #include "Game/Chunk/ChunkMeshBuilder.h"
 #include "Game/Framework/Game.h"
+#include "Game/Framework/World.h"
 #include "Engine/Core/Window.h"
 #include "Engine/IO/InputSystem.h"
 #include "Engine/Render/Camera.h"
@@ -47,29 +48,19 @@ Game* g_game = nullptr;
 //-------------------------------------------------------------------------------------------------
 Game::Game()
 {
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void Game::StartUp()
+{
 	SetupFramework();
 	SetupRendering();
+
 	BlockDefinition::InitializeBuiltInDefs();
-	m_chunk = new Chunk(IntVector3(0,0,0));
-	m_chunk->GenerateWithNoise(16, 10, 12);
-	
-	ChunkMeshBuilder cmb;
-	cmb.BuildMeshForChunk(m_chunk, true);
 
-	//m_chunk->BuildMesh();
-
-	Renderable rend;
-	Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
-	rend.AddDraw(m_chunk->GetMesh(), material);
-
-	m_chunkSceneId = m_renderScene->AddRenderable(rend);
-	DebugRenderOptions options;
-	options.m_startColor = Rgba::RED;
-	options.m_endColor = Rgba::RED;
-	options.m_fillMode = FILL_MODE_WIREFRAME;
-	options.m_debugRenderMode = DEBUG_RENDER_MODE_XRAY;
-	
-	DebugDrawBox(OBB3(m_chunk->GetBoundsWs()), options);
+	m_world = new World();
+	m_world->Initialize();
 }
 
 
@@ -78,8 +69,8 @@ Game::~Game()
 {
 	g_debugRenderSystem->SetCamera(nullptr);
 
+	SAFE_DELETE(m_world);
 	SAFE_DELETE(m_renderer);
-	SAFE_DELETE(m_renderScene);
 	SAFE_DELETE(m_gameCamera);
 	SAFE_DELETE(m_gameClock);
 }
@@ -122,37 +113,23 @@ void Game::ProcessInput()
 	Vector3 cameraDegrees = m_gameCamera->GetRotationAsEulerAnglesDegrees() + Vector3(deltaDegrees.x, deltaDegrees.y, 0.f);
 	m_gameCamera->SetRotationEulerAnglesDegrees(cameraDegrees);
 
-	if (g_inputSystem->WasKeyJustPressed('I'))
-	{
-		static bool showDebug = false;
-		showDebug = !showDebug;
-
-		Renderable* rend = m_renderScene->GetRenderable(m_chunkSceneId);
-
-		if (showDebug)
-		{
-			Material* debugMat = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk_debug.material");
-
-			rend->AddDraw(rend->GetDraw(0).m_mesh, debugMat);
-		}
-		else
-		{
-			rend->RemoveDraw(1);
-		}
-	}
+	m_world->ProcessInput();
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void Game::Update()
 {	
+	float deltaSeconds = m_gameClock->GetDeltaSeconds();
+	m_world->Update(deltaSeconds);
 }
 
 
 //-------------------------------------------------------------------------------------------------
 void Game::Render()
 {
-	m_renderer->Render(m_renderScene);
+	RenderScene* scene = m_world->GetRenderScene();
+	m_renderer->Render(scene);
 }
 
 
@@ -178,19 +155,6 @@ void Game::SetupRendering()
 	m_gameCamera->SetColorTargetView(g_renderContext->GetDefaultColorTargetView());
 	m_gameCamera->SetDepthStencilView(g_renderContext->GetDefaultDepthStencilView());
 	g_debugRenderSystem->SetCamera(m_gameCamera);
-
-	m_renderScene = new RenderScene("World");
-	m_renderScene->AddCamera(m_gameCamera);
-
-	Skybox* skybox = new Skybox(g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material"));
-	m_renderScene->SetSkybox(skybox);
-	m_renderScene->SetAmbience(Rgba(255, 255, 255, 200));
 	
-	Light* dirLight = Light::CreateDirectionalLight(Vector3::ZERO, Vector3(0.f, -1.f, 1.f).GetNormalized(), Rgba(255, 255, 220, 255));
-	dirLight->SetIsShadowCasting(true);
-	m_renderScene->AddLight(dirLight);
-
 	m_renderer = new ForwardRenderer();
-
-	DebugDrawBox(Vector3::ZERO, Vector3(0.5f), Quaternion::IDENTITY);
 }

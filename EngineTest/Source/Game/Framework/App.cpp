@@ -125,6 +125,8 @@ void App::Initialize()
 	DebugRenderSystem::Initialize();
 
 	g_game = new Game();
+	g_game->StartUp();
+
 	g_app->RegisterGameCommands();
 }
 

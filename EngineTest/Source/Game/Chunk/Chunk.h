@@ -13,6 +13,7 @@
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/Math/AABB3.h"
 #include "Engine/Math/IntVector3.h"
+#include "Engine/Render/Renderable.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -43,7 +44,7 @@ public:
 
 	void				GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevation, int seaLevel);
 
-	void				Update();
+	void				Update(float deltaSeconds);
 
 	Vector3				GetOriginWs() const { return m_worldBounds.mins; }
 	Vector3				GetCenterWs() const { return m_worldBounds.GetCenter(); }
@@ -53,8 +54,10 @@ public:
 	Block&				GetBlock(const IntVector3& blockCoords);
 	IntVector3			GetChunkCoords() const { return m_chunkCoords; }
 	Mesh*				GetMesh() const { return m_mesh; }
+	RenderSceneId		GetRenderSceneId() const { return m_renderSceneId; }
 	Mesh*				CreateOrGetMesh();
 
+	void				SetRenderSceneId(RenderSceneId id) { m_renderSceneId = id; }
 	void				SetBlockDefinition(uint16 blockIndex, const BlockDefinition* definition);
 	void				SetBlockDefinition(const IntVector3& blockCoords, const BlockDefinition* definition);
 
@@ -89,11 +92,12 @@ public:
 private:
 	//-----Private Data-----
 
-	IntVector3	m_chunkCoords = IntVector3::ZERO;
-	AABB3		m_worldBounds = AABB3(Vector3::ZERO, Vector3::ZERO);
-	Block		m_blocks[BLOCKS_PER_CHUNK];
+	IntVector3		m_chunkCoords = IntVector3::ZERO;
+	AABB3			m_worldBounds = AABB3(Vector3::ZERO, Vector3::ZERO);
+	Block			m_blocks[BLOCKS_PER_CHUNK];
 
-	Mesh*		m_mesh = nullptr;
+	Mesh*			m_mesh = nullptr;
+	RenderSceneId	m_renderSceneId = INVALID_RENDER_SCENE_ID;
 
 };
 

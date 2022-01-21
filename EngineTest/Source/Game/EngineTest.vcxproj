@@ -210,6 +210,7 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
     <ClCompile Include="Framework\GameJobs.cpp" />
     <ClCompile Include="Framework\Game.cpp" />
     <ClCompile Include="Framework\Main_Win.cpp" />
+    <ClCompile Include="Framework\World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\MechroEngine\Source\Engine\MechroEngine.vcxproj">
@@ -227,6 +228,7 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
     <ClInclude Include="Framework\GameCommands.h" />
     <ClInclude Include="Framework\GameCommon.h" />
     <ClInclude Include="Framework\GameJobs.h" />
+    <ClInclude Include="Framework\World.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

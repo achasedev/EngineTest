@@ -125,6 +125,13 @@ void Chunk::GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevati
 
 
 //-------------------------------------------------------------------------------------------------
+void Chunk::Update(float deltaSeconds)
+{
+	UNUSED(deltaSeconds);
+}
+
+
+//-------------------------------------------------------------------------------------------------
 Block& Chunk::GetBlock(const IntVector3& blockCoords)
 {
 	uint16 blockIndex = Chunk::GetBlockIndexForCoords(blockCoords);

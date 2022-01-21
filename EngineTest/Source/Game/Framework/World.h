@@ -1,6 +1,6 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// Author: Andrew Chase
-/// Date Created: December 14th, 2019
+/// Date Created: Jan 21st, 2022
 /// Description: 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #pragma once
@@ -8,10 +8,9 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-#include "Engine/Math/Transform.h"
-#include "Engine/Collision/BoundingVolumeHierarchy/BoundingVolume.h"
-#include "Engine/Collision/CollisionScene.h"
-#include <vector>
+#include "Engine/Math/IntVector2.h"
+#include "Engine/Render/Renderable.h"
+#include <map>
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -20,12 +19,8 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-class Camera;
 class Chunk;
-class Clock;
-class ForwardRenderer;
 class RenderScene;
-class World;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -36,46 +31,46 @@ class World;
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-class Game
+class World
 {
-	friend class App;
-
 public:
 	//-----Public Methods-----
 
-	Camera* GetGameCamera() const { return m_gameCamera; }
+	World();
+	~World();
 
+	void Initialize();
 
-private:
-	//-----Private Methods-----
-
-	Game();
-	~Game();
-	Game(const Game& copy) = delete;
-
-	void StartUp();
 	void ProcessInput();
-	void Update();
-	void Render();
+	void Update(float deltaSeconds);
+
+	RenderScene* GetRenderScene() const { return m_renderScene; }
 
 
 private:
 	//-----Private Methods-----
 
-	void SetupFramework();
-	void SetupRendering();
+	void CheckToActivateChunks();
+	void CheckToDeactivateChunks();
+
+	void AddChunkToActiveList(Chunk* chunk);
 
 
 private:
 	//-----Private Data-----
 
-	Clock*				m_gameClock = nullptr;
-	Camera*				m_gameCamera = nullptr;
-	ForwardRenderer*	m_renderer = nullptr;
-	World*				m_world = nullptr;
+	// Chunks
+	std::map<IntVector3, Chunk*>	m_activeChunks;
+
+	// Rendering
+	RenderScene*					m_renderScene = nullptr;
+
+	// Static constants
+	static constexpr int			SEA_LEVEL = 12;
+	static constexpr int			BASE_ELEVATION = 16;
+	static constexpr int			NOISE_MAX_DEVIATION_FROM_BASE_ELEVATION = 10;
 
 };
-
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// C FUNCTIONS
