@@ -309,17 +309,24 @@ void ChunkMeshBuilder::PushVerticesForBlock(uint16 blockIndex, const BlockDefini
 
 
 //-------------------------------------------------------------------------------------------------
-void ChunkMeshBuilder::BuildMeshForChunk(Chunk* chunk, bool reduceTriangles)
+bool ChunkMeshBuilder::BuildMeshForChunk(Chunk* chunk, bool reduceTriangles)
 {
+	if (chunk->IsAllAir())
+		return false;
+
 	m_chunk = chunk;
 	Mesh* mesh = m_chunk->CreateOrGetMesh();
 
 	if (reduceTriangles)
 	{
-		return BuildReducedMesh(*mesh);
+		BuildReducedMesh(*mesh);
+	}
+	else
+	{
+		BuildStandardMesh(*mesh);
 	}
 
-	return BuildStandardMesh(*mesh);
+	return true;
 }
 
 

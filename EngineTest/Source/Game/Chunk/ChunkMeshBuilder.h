@@ -46,7 +46,7 @@ class ChunkMeshBuilder
 public:
 	//-----Public Methods-----
 
-	void BuildMeshForChunk(Chunk* chunk, bool reduceTriangles);
+	bool			BuildMeshForChunk(Chunk* chunk, bool reduceTriangles);
 
 
 private:

@@ -71,12 +71,12 @@ private:
 	RenderScene*					m_renderScene = nullptr;
 
 	// Static constants
-	static constexpr int			SEA_LEVEL = 12;
-	static constexpr int			BASE_ELEVATION = 16;
-	static constexpr int			NOISE_MAX_DEVIATION_FROM_BASE_ELEVATION = 10;
+	static constexpr int			SEA_LEVEL = 96;
+	static constexpr int			BASE_ELEVATION = 128;
+	static constexpr int			NOISE_MAX_DEVIATION_FROM_BASE_ELEVATION = 64;
 	static constexpr int			WORLD_MAX_CHUNK_HEIGHT = 4;
-	static constexpr float			DEFAULT_CHUNK_ACTIVATION_RANGE = 50.f;
-	static constexpr float			DEFAULT_CHUNK_DEACTIVATION_OFFSET = 8.f; // A chunk's worth
+	static constexpr float			DEFAULT_CHUNK_ACTIVATION_RANGE = 100.f;
+	static constexpr float			DEFAULT_CHUNK_DEACTIVATION_OFFSET = 32.f; // A chunk's worth
 
 };
 

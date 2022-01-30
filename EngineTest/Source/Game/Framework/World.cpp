@@ -78,29 +78,6 @@ void World::Initialize()
 	Skybox* skybox = new Skybox(g_resourceSystem->CreateOrGetMaterial("Data/Material/skybox.material"));
 	m_renderScene->SetSkybox(skybox);
 	m_renderScene->SetAmbience(Rgba(255, 255, 255, 200));
-
-	//// TODO: Remove
-	//Chunk* chunk = new Chunk(IntVector3(0, 0, 0));
-	//chunk->GenerateWithNoise(16, 10, 12);
-	//AddChunkToActiveList(chunk);
-
-	//ChunkMeshBuilder cmb;
-	//cmb.BuildMeshForChunk(chunk, true);
-
-	//Renderable rend;
-	//Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
-	//rend.AddDraw(chunk->GetMesh(), material);
-
-	//RenderSceneId chunkSceneId = m_renderScene->AddRenderable(rend);
-	//chunk->SetRenderSceneId(chunkSceneId);
-
-	//DebugRenderOptions options;
-	//options.m_startColor = Rgba::RED;
-	//options.m_endColor = Rgba::RED;
-	//options.m_fillMode = FILL_MODE_WIREFRAME;
-	//options.m_debugRenderMode = DEBUG_RENDER_MODE_XRAY;
-
-	//DebugDrawBox(OBB3(chunk->GetBoundsWs()), options);
 }
 
 
@@ -116,6 +93,10 @@ void World::ProcessInput()
 		for (itr; itr != m_activeChunks.end(); itr++)
 		{
 			Chunk* chunk = itr->second;
+			
+			if (chunk->IsAllAir())
+				continue;
+
 			Renderable* rend = m_renderScene->GetRenderable(chunk->GetRenderSceneId());
 
 			if (showDebug)
@@ -192,14 +173,17 @@ void World::CheckToActivateChunks()
 		chunk->GenerateWithNoise(BASE_ELEVATION, NOISE_MAX_DEVIATION_FROM_BASE_ELEVATION, SEA_LEVEL);
 
 		ChunkMeshBuilder cmb;
-		cmb.BuildMeshForChunk(chunk, false);
+		bool meshBuilt = cmb.BuildMeshForChunk(chunk, true);
 
-		Renderable rend;
-		Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
-		rend.AddDraw(chunk->GetMesh(), material);
+		if (meshBuilt)
+		{
+			Renderable rend;
+			Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
+			rend.AddDraw(chunk->GetMesh(), material);
 
-		RenderSceneId chunkSceneId = m_renderScene->AddRenderable(rend);
-		chunk->SetRenderSceneId(chunkSceneId);
+			RenderSceneId chunkSceneId = m_renderScene->AddRenderable(rend);
+			chunk->SetRenderSceneId(chunkSceneId);
+		}
 
 		// Add to the list
 		AddChunkToActiveList(chunk);
@@ -226,10 +210,10 @@ bool World::GetClosestInactiveChunkWithinActivationRange(IntVector3& out_closest
 	// Clamp to world chunk Z bounds
 	startChunk.y = Clamp(startChunk.y, 0, WORLD_MAX_CHUNK_HEIGHT);
 
-	startChunk.x = 0;
-	startChunk.z = 0;
-	endChunk.x = 1;
-	endChunk.z = 1;
+	//startChunk.x = 0;
+	//startChunk.z = 0;
+	//endChunk.x = 1;
+	//endChunk.z = 1;
 
 	float minDistanceSoFar = activationRangeSquared;
 	bool foundInactiveChunk = false;

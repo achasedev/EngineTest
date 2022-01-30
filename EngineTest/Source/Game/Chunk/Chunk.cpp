@@ -73,24 +73,24 @@ void Chunk::GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevati
 			// Get the height of the chunk at these coordinates
 			float noise = Compute2dPerlinNoise(blockCenterWs.x, blockCenterWs.y, 50.f);
 			int elevationFromNoise = RoundToNearestInt(noise * maxDeviationFromBaseElevation) + baseElevation;
-
 			int maxHeightForThisColumn = Max(elevationFromNoise, seaLevel);
 
 			for (int yIndex = 0; yIndex < CHUNK_DIMENSIONS_Y; ++yIndex)
 			{
 				const BlockDefinition* typeToUse = nullptr;
+				int worldYIndex = yIndex + (m_chunkCoords.y * CHUNK_DIMENSIONS_Y);
 
-				if (yIndex > maxHeightForThisColumn - 1)
+				if (worldYIndex > maxHeightForThisColumn - 1)
 				{
 					typeToUse = airDef;
 				}
 				else if (elevationFromNoise >= seaLevel)
 				{
-					if (yIndex == elevationFromNoise - 1)
+					if (worldYIndex == elevationFromNoise - 1)
 					{
 						typeToUse = grassDef;
 					}
-					else if (yIndex > elevationFromNoise - 4) // Dirt for 3 blocks below the grass height
+					else if (worldYIndex > elevationFromNoise - 8) // Dirt for 3 blocks below the grass height
 					{
 						typeToUse = dirtDef;
 					}
@@ -101,11 +101,11 @@ void Chunk::GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevati
 				}
 				else
 				{
-					if (yIndex >= elevationFromNoise)
+					if (worldYIndex >= elevationFromNoise)
 					{
 						typeToUse = waterDef;
 					}
-					else if (yIndex > seaLevel - 4)
+					else if (worldYIndex > seaLevel - 4)
 					{
 						typeToUse = dirtDef;
 					}
@@ -114,7 +114,6 @@ void Chunk::GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevati
 						typeToUse = stoneDef;
 					}
 				}
-
 
 				IntVector3 blockCoords = IntVector3(xIndex, yIndex, zIndex);
 				SetBlockDefinition(blockCoords, typeToUse);
@@ -155,6 +154,19 @@ Mesh* Chunk::CreateOrGetMesh()
 	}
 
 	return m_mesh;
+}
+
+
+//-------------------------------------------------------------------------------------------------
+bool Chunk::IsAllAir() const
+{
+	for (int iBlock = 0; iBlock < BLOCKS_PER_CHUNK; ++iBlock)
+	{
+		if (m_blocks[iBlock].GetBlockDefIndex() != BlockDefinition::AIR_DEF_INDEX)
+			return false;
+	}
+
+	return true;
 }
 
 

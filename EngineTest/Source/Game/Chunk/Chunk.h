@@ -62,6 +62,7 @@ public:
 	Chunk*				GetSouthNeighbor() const { return m_southNeighborChunk; }
 	Chunk*				GetAboveNeighbor() const { return m_aboveNeighborChunk; }
 	Chunk*				GetBelowNeighbor() const { return m_belowNeighborChunk; }
+	bool				IsAllAir() const;
 
 	void				SetRenderSceneId(RenderSceneId id) { m_renderSceneId = id; }
 	void				SetBlockDefinition(uint16 blockIndex, const BlockDefinition* definition);
