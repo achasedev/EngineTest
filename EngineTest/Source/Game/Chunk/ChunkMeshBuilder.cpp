@@ -229,11 +229,9 @@ void ChunkMeshBuilder::BuildReducedMesh(Mesh& mesh)
 //-------------------------------------------------------------------------------------------------
 void ChunkMeshBuilder::PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefinition* def)
 {
-	IntVector3 chunkCoords = m_chunk->GetChunkCoords();
-	int worldXOffset = chunkCoords.x * Chunk::CHUNK_DIMENSIONS_X;
-	int worldYOffset = chunkCoords.y * Chunk::CHUNK_DIMENSIONS_Y;
+	Vector3 chunkOffset = m_chunk->GetOriginWs();
 
-	Vector3 cubeBottomSouthWest = Vector3(worldXOffset + blockCoords.x, worldYOffset + blockCoords.y, blockCoords.z);
+	Vector3 cubeBottomSouthWest = chunkOffset + Vector3(blockCoords);
 	Vector3 cubeTopNorthEast = cubeBottomSouthWest + Vector3::ONES;
 
 	// For hidden surface removal

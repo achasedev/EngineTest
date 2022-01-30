@@ -129,6 +129,21 @@ void World::ProcessInput()
 			}
 		}
 	}
+
+	if (g_inputSystem->WasKeyJustPressed('B'))
+	{
+		ConsolePrintf("Rebuilding chunks...");
+		std::map<IntVector3, Chunk*>::iterator itr = m_activeChunks.begin();
+		int numChunksRebuilt = 0;
+		for (itr; itr != m_activeChunks.end(); itr++)
+		{
+			ChunkMeshBuilder cmb;
+			cmb.BuildMeshForChunk(itr->second, true);
+			numChunksRebuilt++;
+		}
+
+		ConsolePrintf(Rgba::GREEN, 5.f, "Finished rebuilding. Chunks rebuilt: %i", numChunksRebuilt);
+	}
 }
 
 
@@ -177,7 +192,7 @@ void World::CheckToActivateChunks()
 		chunk->GenerateWithNoise(BASE_ELEVATION, NOISE_MAX_DEVIATION_FROM_BASE_ELEVATION, SEA_LEVEL);
 
 		ChunkMeshBuilder cmb;
-		cmb.BuildMeshForChunk(chunk, true);
+		cmb.BuildMeshForChunk(chunk, false);
 
 		Renderable rend;
 		Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
