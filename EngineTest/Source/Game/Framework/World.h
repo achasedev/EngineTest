@@ -39,21 +39,26 @@ public:
 	World();
 	~World();
 
-	void Initialize();
+	void			Initialize();
 
-	void ProcessInput();
-	void Update(float deltaSeconds);
+	void			ProcessInput();
+	void			Update(float deltaSeconds);
 
-	RenderScene* GetRenderScene() const { return m_renderScene; }
+	Chunk*			GetActiveChunkContainingPosition(const Vector3& position) const;
+	RenderScene*	GetRenderScene() const { return m_renderScene; }
 
 
 private:
 	//-----Private Methods-----
 
-	void CheckToActivateChunks();
-	void CheckToDeactivateChunks();
+	// Chunk activation
+	void			CheckToActivateChunks();
+	bool			GetClosestInactiveChunkWithinActivationRange(IntVector3& out_closestInactiveChunkCoords) const;
+	void			AddChunkToActiveList(Chunk* chunk);
 
-	void AddChunkToActiveList(Chunk* chunk);
+	// Chunk deactivation
+	void			CheckToDeactivateChunks();
+
 
 
 private:
@@ -69,6 +74,9 @@ private:
 	static constexpr int			SEA_LEVEL = 12;
 	static constexpr int			BASE_ELEVATION = 16;
 	static constexpr int			NOISE_MAX_DEVIATION_FROM_BASE_ELEVATION = 10;
+	static constexpr int			WORLD_MAX_CHUNK_HEIGHT = 4;
+	static constexpr float			DEFAULT_CHUNK_ACTIVATION_RANGE = 50.f;
+	static constexpr float			DEFAULT_CHUNK_DEACTIVATION_OFFSET = 8.f; // A chunk's worth
 
 };
 

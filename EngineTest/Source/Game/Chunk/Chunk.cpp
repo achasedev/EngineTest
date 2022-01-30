@@ -225,3 +225,14 @@ uint16 Chunk::GetBlockIndexForCoords(const IntVector3& coords)
 	ASSERT_OR_DIE(AreBlockCoordsValid(coords), "Invalid coords!");
 	return (uint16)(BLOCKS_PER_Y_LAYER * coords.y + BLOCKS_PER_Z_ROW * coords.z + coords.x);
 }
+
+
+//-------------------------------------------------------------------------------------------------
+IntVector3 Chunk::GetChunkCoordsContainingPosition(const Vector3& position)
+{
+	int x = Floor(position.x / (float)Chunk::CHUNK_DIMENSIONS_X);
+	int y = Floor(position.y / (float)Chunk::CHUNK_DIMENSIONS_Y);
+	int z = Floor(position.z / (float)Chunk::CHUNK_DIMENSIONS_Z);
+
+	return IntVector3(x, y, z);
+}

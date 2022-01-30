@@ -223,11 +223,6 @@ void ChunkMeshBuilder::BuildReducedMesh(Mesh& mesh)
 
 	m_meshBuilder.FinishBuilding();
 	m_meshBuilder.UpdateMesh<VertexLit>(mesh);
-
-	int numTris = m_meshBuilder.GetIndexCount() / 3;
-	int numVerts = m_meshBuilder.GetVertexCount();
-
-	ConsolePrintf(Rgba::CYAN, 300.f, "Vertices: %i - Triangles: %i", numVerts, numTris);
 }
 
 
@@ -519,6 +514,13 @@ void ChunkMeshBuilder::PushFace(const IntVector2& minCoverCoords, const IntVecto
 		ERROR_AND_DIE("Bad direction!");
 		break;
 	}
+
+	// Account for the chunk coords
+	Vector3 chunkOffset = m_chunk->GetOriginWs();
+	bottomLeft += chunkOffset;
+	topLeft += chunkOffset;
+	topRight += chunkOffset;
+	bottomRight += chunkOffset;
 
 	m_meshBuilder.PushQuad3D(bottomLeft, topLeft, topRight, bottomRight, AABB2::ZERO_TO_ONE, color);
 }

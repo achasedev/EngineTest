@@ -61,6 +61,15 @@ void Game::StartUp()
 
 	m_world = new World();
 	m_world->Initialize();
+
+	DebugDrawBox(Vector3::ZERO, Vector3::ONES, Quaternion::IDENTITY);
+	DebugDrawBox(Vector3((float)Chunk::CHUNK_DIMENSIONS_X, 0.f, 0.f), Vector3::ONES, Quaternion::IDENTITY);
+	DebugDrawBox(Vector3((float)Chunk::CHUNK_DIMENSIONS_X, (float)Chunk::CHUNK_DIMENSIONS_Y, 0.f), Vector3::ONES, Quaternion::IDENTITY);
+	DebugDrawBox(Vector3(0.f, (float)Chunk::CHUNK_DIMENSIONS_Y, 0.f), Vector3::ONES, Quaternion::IDENTITY);
+	DebugDrawBox(Vector3(0.f, 0.f, (float)Chunk::CHUNK_DIMENSIONS_Z), Vector3::ONES, Quaternion::IDENTITY);
+	DebugDrawBox(Vector3(0.f, (float)Chunk::CHUNK_DIMENSIONS_Y, (float)Chunk::CHUNK_DIMENSIONS_Z), Vector3::ONES, Quaternion::IDENTITY);
+	DebugDrawBox(Vector3((float)Chunk::CHUNK_DIMENSIONS_X, 0.f, (float)Chunk::CHUNK_DIMENSIONS_Z), Vector3::ONES, Quaternion::IDENTITY);
+	DebugDrawBox(Vector3((float)Chunk::CHUNK_DIMENSIONS_X, (float)Chunk::CHUNK_DIMENSIONS_Y, (float)Chunk::CHUNK_DIMENSIONS_Z), Vector3::ONES, Quaternion::IDENTITY);
 }
 
 
@@ -150,7 +159,7 @@ void Game::SetupRendering()
 {
 	// Cameras
 	m_gameCamera = new Camera();
-	m_gameCamera->SetProjectionPerspective(90.f, g_window->GetClientAspect(), 0.1f, 100.f);
+	m_gameCamera->SetProjectionPerspective(90.f, g_window->GetClientAspect(), 0.1f, 1000.f);
 	m_gameCamera->LookAt(Vector3(0.f, 1.f, -1.f), Vector3(0.f, 0.f, 0.f));
 	m_gameCamera->SetColorTargetView(g_renderContext->GetDefaultColorTargetView());
 	m_gameCamera->SetDepthStencilView(g_renderContext->GetDefaultDepthStencilView());
