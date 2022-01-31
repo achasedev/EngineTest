@@ -412,13 +412,13 @@ static Vector3 FindIntersection(int edgeIndex, const IntVector3& blockCoords, co
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
+bool ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 {
 	IntVector3 dimensions = IntVector3(Chunk::CHUNK_DIMENSIONS_X, Chunk::CHUNK_DIMENSIONS_Y, Chunk::CHUNK_DIMENSIONS_Z);
 	Vector3 chunkOrigin = chunk->GetOriginWs();
-	Maybe<Vector3> vertices[12];
+
 	MeshBuilder mb;
-	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, false);
+	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
 
 	for (int z = 0; z < dimensions.z; ++z)
 	{
@@ -427,6 +427,8 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 			for (int x = 0; x < dimensions.x; ++x)
 			{
 				int tableIndex = 0;
+				Maybe<Vector3> vertices[12];
+				Rgba colors[12];
 
 				BlockLocator wbs = BlockLocator(chunk, IntVector3(x, y, z));
 				BlockLocator wts = wbs.ToAbove();
@@ -453,17 +455,19 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 					if (EDGE_TABLE[tableIndex] & 8)
 					{
 						vertices[3].Set(FindIntersection(3, blockCoordOffset, chunkOrigin));
+						colors[3] = Interpolate(wbs.GetBlock().GetColor(), ebs.GetBlock().GetColor(), 0.5f);
 					}
 
 					if (EDGE_TABLE[tableIndex] & 1)
 					{
 						vertices[0].Set(FindIntersection(0, blockCoordOffset, chunkOrigin));
+						colors[0] = Interpolate(wbs.GetBlock().GetColor(), wts.GetBlock().GetColor(), 0.5f);
 					}
 
 					if (EDGE_TABLE[tableIndex] & 256)
 					{
 						vertices[8].Set(FindIntersection(8, blockCoordOffset, chunkOrigin));
-
+						colors[8] = Interpolate(wbs.GetBlock().GetColor(), wbn.GetBlock().GetColor(), 0.5f);
 					}
 
 					//if (x == numSteps.x - 1)
@@ -471,11 +475,13 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 						if (EDGE_TABLE[tableIndex] & 4)
 						{
 							vertices[2].Set(FindIntersection(2, blockCoordOffset, chunkOrigin));
+							colors[2] = Interpolate(ets.GetBlock().GetColor(), ebs.GetBlock().GetColor(), 0.5f);
 						}
 
 						if (EDGE_TABLE[tableIndex] & 2048)
 						{
 							vertices[11].Set(FindIntersection(11, blockCoordOffset, chunkOrigin));
+							colors[11] = Interpolate(ebs.GetBlock().GetColor(), ebn.GetBlock().GetColor(), 0.5f);
 						}
 					}
 
@@ -484,11 +490,13 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 						if (EDGE_TABLE[tableIndex] & 2)
 						{
 							vertices[1].Set(FindIntersection(1, blockCoordOffset, chunkOrigin));
+							colors[1] = Interpolate(wts.GetBlock().GetColor(), ets.GetBlock().GetColor(), 0.5f);
 						}
 
 						if (EDGE_TABLE[tableIndex] & 512)
 						{
 							vertices[9].Set(FindIntersection(9, blockCoordOffset, chunkOrigin));
+							colors[9] = Interpolate(wts.GetBlock().GetColor(), wtn.GetBlock().GetColor(), 0.5f);
 						}
 					}
 
@@ -497,11 +505,13 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 						if (EDGE_TABLE[tableIndex] & 16)
 						{
 							vertices[4].Set(FindIntersection(4, blockCoordOffset, chunkOrigin));
+							colors[4] = Interpolate(ebn.GetBlock().GetColor(), etn.GetBlock().GetColor(), 0.5f);
 						}
 
 						if (EDGE_TABLE[tableIndex] & 128)
 						{
 							vertices[7].Set(FindIntersection(7, blockCoordOffset, chunkOrigin));
+							colors[7] = Interpolate(wbn.GetBlock().GetColor(), ebn.GetBlock().GetColor(), 0.5f);
 						}
 					}
 
@@ -510,6 +520,7 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 						if (EDGE_TABLE[tableIndex] & 1024)
 						{
 							vertices[10].Set(FindIntersection(10, blockCoordOffset, chunkOrigin));
+							colors[10] = Interpolate(ets.GetBlock().GetColor(), etn.GetBlock().GetColor(), 0.5f);
 						}
 					}
 
@@ -518,6 +529,7 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 						if (EDGE_TABLE[tableIndex] & 64)
 						{
 							vertices[6].Set(FindIntersection(6, blockCoordOffset, chunkOrigin));
+							colors[6] = Interpolate(wtn.GetBlock().GetColor(), wbn.GetBlock().GetColor(), 0.5f);
 						}
 					}
 
@@ -526,6 +538,7 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 						if (EDGE_TABLE[tableIndex] & 32)
 						{
 							vertices[5].Set(FindIntersection(5, blockCoordOffset, chunkOrigin));
+							colors[5] = Interpolate(etn.GetBlock().GetColor(), wtn.GetBlock().GetColor(), 0.5f);
 						}
 					}
 
@@ -545,7 +558,11 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 						if (AreMostlyEqual(a, b) || AreMostlyEqual(a, c) || AreMostlyEqual(b, c))
 							continue;
 
-						mb.PushTriangle3(a, b, c, Rgba(25, 140, 255, 255));
+						Rgba aColor = colors[iA];
+						Rgba bColor = colors[iB];
+						Rgba cColor = colors[iC];
+
+						mb.PushTriangle3(a, b, c, aColor, bColor, cColor);
 					}
 				}
 			}
@@ -553,5 +570,13 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 	}
 
 	mb.FinishBuilding();
-	mb.UpdateMesh<VertexLit>(out_mesh);
+
+	if (mb.GetIndexCount() > 0)
+	{
+		mb.UpdateMesh<VertexLit>(out_mesh);
+		return true;
+	}
+
+	out_mesh.Clear();
+	return false;
 }

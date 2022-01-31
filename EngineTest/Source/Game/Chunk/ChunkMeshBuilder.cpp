@@ -113,6 +113,12 @@ void ChunkMeshBuilder::BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType)
 
 	for (uint32 blockIndex = 0; blockIndex < Chunk::BLOCKS_PER_CHUNK; ++blockIndex)
 	{
+		if ((blockIndex & Chunk::CHUNK_Z_MASK) == Chunk::CHUNK_Z_MASK)
+		{
+			int x = 0;
+			x = 4;
+		}
+
 		Block& block = m_chunk->GetBlock((uint16)blockIndex);
 		uint8 blockDefIndex = block.GetBlockDefIndex();
 

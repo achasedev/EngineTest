@@ -210,13 +210,6 @@ bool World::GetClosestInactiveChunkWithinActivationRange(IntVector3& out_closest
 	// Clamp to world chunk Z bounds
 	startChunk.y = Clamp(startChunk.y, 0, WORLD_MAX_CHUNK_HEIGHT);
 
-	startChunk.y = 0;
-	startChunk.x = 0;
-	startChunk.z = 0;
-	endChunk.x = 1;
-	endChunk.z = 1;
-	endChunk.y = 1;
-
 	float minDistanceSoFar = activationRangeSquared;
 	bool foundInactiveChunk = false;
 
@@ -268,10 +261,10 @@ void World::AddChunkToActiveList(Chunk* chunk)
 	// Hook up the references to the neighbors
 	IntVector3 eastCoords = chunkCoords + IntVector3(1, 0, 0);
 	IntVector3 westCoords = chunkCoords + IntVector3(-1, 0, 0);
-	IntVector3 northCoords = chunkCoords + IntVector3(0, 1, 0);
-	IntVector3 southCoords = chunkCoords + IntVector3(0, -1, 0);
-	IntVector3 aboveCoords = chunkCoords + IntVector3(0, 0, 1);
-	IntVector3 belowCoords = chunkCoords + IntVector3(0, 0, -1);
+	IntVector3 northCoords = chunkCoords + IntVector3(0, 0, 1);
+	IntVector3 southCoords = chunkCoords + IntVector3(0, 0, -1);
+	IntVector3 aboveCoords = chunkCoords + IntVector3(0, 1, 0);
+	IntVector3 belowCoords = chunkCoords + IntVector3(0, -1, 0);
 
 	bool eastExists = m_activeChunks.find(eastCoords) != m_activeChunks.end();
 	bool westExists = m_activeChunks.find(westCoords) != m_activeChunks.end();
@@ -316,15 +309,15 @@ void World::AddChunkToActiveList(Chunk* chunk)
 	{
 		Chunk* aboveChunk = m_activeChunks[aboveCoords];
 
-		chunk->SetSouthNeighbor(aboveChunk);
-		aboveChunk->SetNorthNeighbor(chunk);
+		chunk->SetAboveNeighbor(aboveChunk);
+		aboveChunk->SetBelowNeighbor(chunk);
 	}
 
 	if (belowExists)
 	{
 		Chunk* belowChunk = m_activeChunks[belowCoords];
 
-		chunk->SetSouthNeighbor(belowChunk);
-		belowChunk->SetNorthNeighbor(chunk);
+		chunk->SetBelowNeighbor(belowChunk);
+		belowChunk->SetAboveNeighbor(chunk);
 	}
 }

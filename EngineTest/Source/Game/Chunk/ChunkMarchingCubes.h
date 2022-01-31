@@ -33,7 +33,7 @@ class ChunkMarchingCubes
 public:
 	//-----Public Methods-----
 
-	static void CreateMesh(Chunk* chunk, Mesh& out_mesh);
+	static bool CreateMesh(Chunk* chunk, Mesh& out_mesh);
 
 
 public:
