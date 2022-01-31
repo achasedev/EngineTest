@@ -119,7 +119,7 @@ void World::ProcessInput()
 		for (itr; itr != m_activeChunks.end(); itr++)
 		{
 			ChunkMeshBuilder cmb;
-			cmb.BuildMeshForChunk(itr->second, true);
+			cmb.BuildMeshForChunk(itr->second, m_chunkMeshType);
 			numChunksRebuilt++;
 		}
 
@@ -173,7 +173,7 @@ void World::CheckToActivateChunks()
 		chunk->GenerateWithNoise(BASE_ELEVATION, NOISE_MAX_DEVIATION_FROM_BASE_ELEVATION, SEA_LEVEL);
 
 		ChunkMeshBuilder cmb;
-		bool meshBuilt = cmb.BuildMeshForChunk(chunk, true);
+		bool meshBuilt = cmb.BuildMeshForChunk(chunk, m_chunkMeshType);
 
 		if (meshBuilt)
 		{
@@ -210,10 +210,12 @@ bool World::GetClosestInactiveChunkWithinActivationRange(IntVector3& out_closest
 	// Clamp to world chunk Z bounds
 	startChunk.y = Clamp(startChunk.y, 0, WORLD_MAX_CHUNK_HEIGHT);
 
-	//startChunk.x = 0;
-	//startChunk.z = 0;
-	//endChunk.x = 1;
-	//endChunk.z = 1;
+	startChunk.y = 0;
+	startChunk.x = 0;
+	startChunk.z = 0;
+	endChunk.x = 1;
+	endChunk.z = 1;
+	endChunk.y = 1;
 
 	float minDistanceSoFar = activationRangeSquared;
 	bool foundInactiveChunk = false;

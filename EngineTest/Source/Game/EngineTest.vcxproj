@@ -204,6 +204,7 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
     <ClCompile Include="Block\BlockDefinition.cpp" />
     <ClCompile Include="Block\BlockLocator.cpp" />
     <ClCompile Include="Chunk\Chunk.cpp" />
+    <ClCompile Include="Chunk\ChunkMarchingCubes.cpp" />
     <ClCompile Include="Chunk\ChunkMeshBuilder.cpp" />
     <ClCompile Include="Framework\App.cpp" />
     <ClCompile Include="Framework\GameCommands.cpp" />
@@ -222,6 +223,7 @@ ren "$(SolutionDir)Build\$(ProjectName).exe" "$(ProjectName)_$(PlatformName).exe
     <ClInclude Include="Block\BlockDefinition.h" />
     <ClInclude Include="Block\BlockLocator.h" />
     <ClInclude Include="Chunk\Chunk.h" />
+    <ClInclude Include="Chunk\ChunkMarchingCubes.h" />
     <ClInclude Include="Chunk\ChunkMeshBuilder.h" />
     <ClInclude Include="Framework\App.h" />
     <ClInclude Include="Framework\Game.h" />

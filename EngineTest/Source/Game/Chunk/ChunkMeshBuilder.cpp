@@ -10,6 +10,7 @@
 #include "Game/Block/Block.h"
 #include "Game/Block/BlockLocator.h"
 #include "Game/Chunk/Chunk.h"
+#include "Game/Chunk/ChunkMarchingCubes.h"
 #include "Game/Chunk/ChunkMeshBuilder.h"
 #include "Engine/Core/DevConsole.h"
 #include "Engine/Core/EngineCommon.h"
@@ -104,10 +105,11 @@ static uint16 GetNumLayersForDirection(ChunkLayerDirection direction)
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-void ChunkMeshBuilder::BuildStandardMesh(Mesh& mesh)
+void ChunkMeshBuilder::BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType)
 {
 	m_meshBuilder.Clear();
 	m_meshBuilder.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
+	bool removeHiddenSurfaces = (meshType == CHUNK_MESH_SURFACE_REMOVAL);
 
 	for (uint32 blockIndex = 0; blockIndex < Chunk::BLOCKS_PER_CHUNK; ++blockIndex)
 	{
@@ -120,7 +122,7 @@ void ChunkMeshBuilder::BuildStandardMesh(Mesh& mesh)
 		}
 
 		const BlockDefinition* blockDef = BlockDefinition::GetDefinition(blockDefIndex);
-		PushVerticesForBlock((uint16)blockIndex, blockDef);
+		PushVerticesForBlock((uint16)blockIndex, blockDef, removeHiddenSurfaces);
 	}
 
 	m_meshBuilder.FinishBuilding();
@@ -227,7 +229,7 @@ void ChunkMeshBuilder::BuildReducedMesh(Mesh& mesh)
 
 
 //-------------------------------------------------------------------------------------------------
-void ChunkMeshBuilder::PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefinition* def)
+void ChunkMeshBuilder::PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefinition* def, bool removeHiddenSurfaces)
 {
 	Vector3 chunkOffset = m_chunk->GetOriginWs();
 
@@ -244,12 +246,12 @@ void ChunkMeshBuilder::PushVerticesForBlock(const IntVector3& blockCoords, const
 	BlockLocator aboveBlockLocator = currBlockLocator.ToAbove();
 	BlockLocator belowBlockLocator = currBlockLocator.ToBelow();
 
-	bool pushEastFace = !eastBlockLocator.GetBlock().IsOpaque();
-	bool pushWestFace = !westBlockLocator.GetBlock().IsOpaque();
-	bool pushNorthFace = !northBlockLocator.GetBlock().IsOpaque();
-	bool pushSouthFace = !southBlockLocator.GetBlock().IsOpaque();
-	bool pushTopFace = !aboveBlockLocator.GetBlock().IsOpaque();
-	bool pushBottomFace = !belowBlockLocator.GetBlock().IsOpaque();
+	bool pushEastFace = (removeHiddenSurfaces && !eastBlockLocator.GetBlock().IsOpaque());
+	bool pushWestFace = (removeHiddenSurfaces && !westBlockLocator.GetBlock().IsOpaque());
+	bool pushNorthFace = (removeHiddenSurfaces && !northBlockLocator.GetBlock().IsOpaque());
+	bool pushSouthFace = (removeHiddenSurfaces && !southBlockLocator.GetBlock().IsOpaque());
+	bool pushTopFace = (removeHiddenSurfaces && !aboveBlockLocator.GetBlock().IsOpaque());
+	bool pushBottomFace = (removeHiddenSurfaces && !belowBlockLocator.GetBlock().IsOpaque());
 
 	float ewScale = 0.9f;
 	float nsScale = 0.8f;
@@ -301,15 +303,15 @@ void ChunkMeshBuilder::PushVerticesForBlock(const IntVector3& blockCoords, const
 
 
 //-------------------------------------------------------------------------------------------------
-void ChunkMeshBuilder::PushVerticesForBlock(uint16 blockIndex, const BlockDefinition* def)
+void ChunkMeshBuilder::PushVerticesForBlock(uint16 blockIndex, const BlockDefinition* def, bool removeHiddenSurfaces)
 {
 	IntVector3 blockCoords = Chunk::GetBlockCoordsForIndex(blockIndex);
-	PushVerticesForBlock(blockCoords, def);
+	PushVerticesForBlock(blockCoords, def, removeHiddenSurfaces);
 }
 
 
 //-------------------------------------------------------------------------------------------------
-bool ChunkMeshBuilder::BuildMeshForChunk(Chunk* chunk, bool reduceTriangles)
+bool ChunkMeshBuilder::BuildMeshForChunk(Chunk* chunk, ChunkMeshType meshType)
 {
 	if (chunk->IsAllAir())
 		return false;
@@ -317,13 +319,21 @@ bool ChunkMeshBuilder::BuildMeshForChunk(Chunk* chunk, bool reduceTriangles)
 	m_chunk = chunk;
 	Mesh* mesh = m_chunk->CreateOrGetMesh();
 
-	if (reduceTriangles)
+	switch (meshType)
 	{
+	case CHUNK_MESH_SIMPLE:
+	case CHUNK_MESH_SURFACE_REMOVAL:
+		BuildStandardMesh(*mesh, meshType); // Intentional fallthrough
+		break;
+	case CHUNK_MESH_OPTIMIZED:
 		BuildReducedMesh(*mesh);
-	}
-	else
-	{
-		BuildStandardMesh(*mesh);
+		break;
+	case CHUNK_MESH_MARCHING_CUBES:
+		BuildMarchingCubeMesh(*mesh);
+		break;
+	default:
+		ERROR_AND_DIE("Bad mesh type!");
+		break;
 	}
 
 	return true;
@@ -528,4 +538,11 @@ void ChunkMeshBuilder::PushFace(const IntVector2& minCoverCoords, const IntVecto
 	bottomRight += chunkOffset;
 
 	m_meshBuilder.PushQuad3D(bottomLeft, topLeft, topRight, bottomRight, AABB2::ZERO_TO_ONE, color);
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void ChunkMeshBuilder::BuildMarchingCubeMesh(Mesh& mesh)
+{
+	ChunkMarchingCubes::CreateMesh(m_chunk, mesh);
 }

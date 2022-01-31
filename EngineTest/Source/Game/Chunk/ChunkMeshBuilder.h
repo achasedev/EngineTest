@@ -32,6 +32,15 @@ enum ChunkLayerDirection
 	NUM_CHUNK_LAYER_DIRECTIONS
 };
 
+enum ChunkMeshType
+{
+	CHUNK_MESH_SIMPLE = 0,
+	CHUNK_MESH_SURFACE_REMOVAL,
+	CHUNK_MESH_OPTIMIZED,
+	CHUNK_MESH_MARCHING_CUBES,
+	NUM_CHUNK_MESH_TYPES
+};
+
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
@@ -46,15 +55,15 @@ class ChunkMeshBuilder
 public:
 	//-----Public Methods-----
 
-	bool			BuildMeshForChunk(Chunk* chunk, bool reduceTriangles);
+	bool			BuildMeshForChunk(Chunk* chunk, ChunkMeshType meshType);
 
 
 private:
 	//-----Private Methods-----
 
-	void			BuildStandardMesh(Mesh& mesh);
-	void			PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefinition* def);
-	void			PushVerticesForBlock(uint16 blockIndex, const BlockDefinition* def);
+	void			BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType);
+	void			PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefinition* def, bool removeHiddenSurfaces);
+	void			PushVerticesForBlock(uint16 blockIndex, const BlockDefinition* def, bool removeHiddenSurfaces);
 
 	void			BuildReducedMesh(Mesh& mesh);
 	void			InitializeCoverForLayer(ChunkLayerDirection direction, uint16 layerIndex);
@@ -64,6 +73,8 @@ private:
 	IntVector3		GetBlockCoordsForCoverCoords(IntVector2 coverCoords, uint16 layerIndex) const;
 	BlockLocator	GetBlockLocatorForCoverCoords(const IntVector2& coverCoords, uint16 layerIndex) const;
 	void			PushFace(const IntVector2& minCoverCoords, const IntVector2& maxCoverCoords, uint16 layerIndex, const Rgba& color);
+
+	void			BuildMarchingCubeMesh(Mesh& mesh);
 
 
 private:
