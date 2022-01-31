@@ -420,7 +420,7 @@ void ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 	MeshBuilder mb;
 	mb.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, false);
 
-	for (int z = 0; z <= dimensions.z; ++z)
+	for (int z = 0; z < dimensions.z; ++z)
 	{
 		for (int y = 0; y < dimensions.y; ++y)
 		{
