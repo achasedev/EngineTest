@@ -571,12 +571,11 @@ bool ChunkMarchingCubes::CreateMesh(Chunk* chunk, Mesh& out_mesh)
 
 	mb.FinishBuilding();
 
-	if (mb.GetIndexCount() > 0)
+	if (mb.GetVertexCount() > 0)
 	{
 		mb.UpdateMesh<VertexLit>(out_mesh);
 		return true;
 	}
 
-	out_mesh.Clear();
 	return false;
 }

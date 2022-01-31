@@ -105,7 +105,7 @@ static uint16 GetNumLayersForDirection(ChunkLayerDirection direction)
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-void ChunkMeshBuilder::BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType)
+bool ChunkMeshBuilder::BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType)
 {
 	m_meshBuilder.Clear();
 	m_meshBuilder.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
@@ -132,17 +132,19 @@ void ChunkMeshBuilder::BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType)
 	}
 
 	m_meshBuilder.FinishBuilding();
-	m_meshBuilder.UpdateMesh<VertexLit>(mesh);
-	
-	int numTris = m_meshBuilder.GetIndexCount() / 3;
-	int numVerts = m_meshBuilder.GetVertexCount();
 
-	ConsolePrintf(Rgba::CYAN, 300.f, "Vertices: %i - Triangles: %i", numVerts, numTris);
+	if (m_meshBuilder.GetVertexCount() > 0)
+	{
+		m_meshBuilder.UpdateMesh<VertexLit>(mesh);
+		return true;
+	}
+
+	return false;
 }
 
 
 //-------------------------------------------------------------------------------------------------
-void ChunkMeshBuilder::BuildReducedMesh(Mesh& mesh)
+bool ChunkMeshBuilder::BuildReducedMesh(Mesh& mesh)
 {
 	m_meshBuilder.Clear();
 	m_meshBuilder.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
@@ -230,7 +232,14 @@ void ChunkMeshBuilder::BuildReducedMesh(Mesh& mesh)
 	} // For each direction
 
 	m_meshBuilder.FinishBuilding();
-	m_meshBuilder.UpdateMesh<VertexLit>(mesh);
+
+	if (m_meshBuilder.GetVertexCount() > 0)
+	{
+		m_meshBuilder.UpdateMesh<VertexLit>(mesh);
+		return true;
+	}
+
+	return false;
 }
 
 
@@ -325,24 +334,26 @@ bool ChunkMeshBuilder::BuildMeshForChunk(Chunk* chunk, ChunkMeshType meshType)
 	m_chunk = chunk;
 	Mesh* mesh = m_chunk->CreateOrGetMesh();
 
+	bool builtChunk = false;
+
 	switch (meshType)
 	{
 	case CHUNK_MESH_SIMPLE:
 	case CHUNK_MESH_SURFACE_REMOVAL:
-		BuildStandardMesh(*mesh, meshType); // Intentional fallthrough
+		builtChunk = BuildStandardMesh(*mesh, meshType); // Intentional fallthrough
 		break;
 	case CHUNK_MESH_OPTIMIZED:
-		BuildReducedMesh(*mesh);
+		builtChunk = BuildReducedMesh(*mesh);
 		break;
 	case CHUNK_MESH_MARCHING_CUBES:
-		BuildMarchingCubeMesh(*mesh);
+		builtChunk = BuildMarchingCubeMesh(*mesh);
 		break;
 	default:
 		ERROR_AND_DIE("Bad mesh type!");
 		break;
 	}
 
-	return true;
+	return builtChunk;
 }
 
 
@@ -548,7 +559,7 @@ void ChunkMeshBuilder::PushFace(const IntVector2& minCoverCoords, const IntVecto
 
 
 //-------------------------------------------------------------------------------------------------
-void ChunkMeshBuilder::BuildMarchingCubeMesh(Mesh& mesh)
+bool ChunkMeshBuilder::BuildMarchingCubeMesh(Mesh& mesh)
 {
-	ChunkMarchingCubes::CreateMesh(m_chunk, mesh);
+	return ChunkMarchingCubes::CreateMesh(m_chunk, mesh);
 }

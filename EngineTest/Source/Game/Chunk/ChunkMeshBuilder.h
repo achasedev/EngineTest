@@ -61,11 +61,11 @@ public:
 private:
 	//-----Private Methods-----
 
-	void			BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType);
+	bool			BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType);
 	void			PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefinition* def, bool removeHiddenSurfaces);
 	void			PushVerticesForBlock(uint16 blockIndex, const BlockDefinition* def, bool removeHiddenSurfaces);
 
-	void			BuildReducedMesh(Mesh& mesh);
+	bool			BuildReducedMesh(Mesh& mesh);
 	void			InitializeCoverForLayer(ChunkLayerDirection direction, uint16 layerIndex);
 	bool			IsQuadCovered(const IntVector2& coverCoord) const;
 	bool			IsQuadCovered(int coverX, int coverY) const;
@@ -74,7 +74,7 @@ private:
 	BlockLocator	GetBlockLocatorForCoverCoords(const IntVector2& coverCoords, uint16 layerIndex) const;
 	void			PushFace(const IntVector2& minCoverCoords, const IntVector2& maxCoverCoords, uint16 layerIndex, const Rgba& color);
 
-	void			BuildMarchingCubeMesh(Mesh& mesh);
+	bool			BuildMarchingCubeMesh(Mesh& mesh);
 
 
 private:

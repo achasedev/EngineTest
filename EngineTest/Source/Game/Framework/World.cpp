@@ -99,14 +99,17 @@ void World::ProcessInput()
 
 			Renderable* rend = m_renderScene->GetRenderable(chunk->GetRenderSceneId());
 
-			if (showDebug)
+			if (rend != nullptr)
 			{
-				Material* debugMat = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk_debug.material");
-				rend->AddDraw(rend->GetDraw(0).m_mesh, debugMat);
-			}
-			else
-			{
-				rend->RemoveDraw(1);
+				if (showDebug)
+				{
+					Material* debugMat = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk_debug.material");
+					rend->AddDraw(rend->GetDraw(0).m_mesh, debugMat);
+				}
+				else
+				{
+					rend->RemoveDraw(1);
+				}
 			}
 		}
 	}
@@ -119,7 +122,27 @@ void World::ProcessInput()
 		for (itr; itr != m_activeChunks.end(); itr++)
 		{
 			ChunkMeshBuilder cmb;
-			cmb.BuildMeshForChunk(itr->second, m_chunkMeshType);
+			bool meshValid = cmb.BuildMeshForChunk(itr->second, m_chunkMeshType);
+
+			if (!meshValid)
+			{
+				Renderable* rend = m_renderScene->GetRenderable(itr->second->GetRenderSceneId());
+
+				if (rend != nullptr)
+				{
+					m_renderScene->RemoveRenderable(itr->second->GetRenderSceneId());
+				}
+			}
+			else if (itr->second->GetRenderSceneId() == INVALID_RENDER_SCENE_ID)
+			{
+				Renderable rend;
+				Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
+				rend.AddDraw(itr->second->GetMesh(), material);
+
+				RenderSceneId chunkSceneId = m_renderScene->AddRenderable(rend);
+				itr->second->SetRenderSceneId(chunkSceneId);
+			}
+
 			numChunksRebuilt++;
 		}
 
@@ -139,6 +162,8 @@ void World::Update(float deltaSeconds)
 		Chunk* chunk = itr->second;
 		chunk->Update(deltaSeconds);
 	}
+
+	ConsolePrintf(Rgba::YELLOW, 0.f, "Active Chunks: %i", m_activeChunks.size());
 }
 
 
