@@ -43,6 +43,9 @@
     <ClCompile Include="Chunk\ChunkMarchingCubes.cpp">
       <Filter>General</Filter>
     </ClCompile>
+    <ClCompile Include="Chunk\ChunkMeshBuildJob.cpp">
+      <Filter>General</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Framework\App.h" />
@@ -57,5 +60,6 @@
     <ClInclude Include="Chunk\Chunk.h" />
     <ClInclude Include="Framework\World.h" />
     <ClInclude Include="Chunk\ChunkMarchingCubes.h" />
+    <ClInclude Include="Chunk\ChunkMeshBuildJob.h" />
   </ItemGroup>
 </Project>

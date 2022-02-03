@@ -14,6 +14,7 @@
 #include "Game/Framework/World.h"
 #include "Engine/Core/Window.h"
 #include "Engine/IO/InputSystem.h"
+#include "Engine/Job/JobSystem.h"
 #include "Engine/Render/Camera.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
 #include "Engine/Render/ForwardRenderer.h"
@@ -151,6 +152,10 @@ void Game::SetupFramework()
 	mouse.SetCursorMode(CURSORMODE_RELATIVE);
 
 	m_gameClock = new Clock(nullptr);
+
+	g_jobSystem->CreateWorkerThread("Chunk 1", WORKER_FLAGS_ALL);
+	g_jobSystem->CreateWorkerThread("Chunk 2", WORKER_FLAGS_ALL);
+	g_jobSystem->CreateWorkerThread("Chunk 3", WORKER_FLAGS_ALL);
 }
 
 

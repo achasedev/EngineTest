@@ -66,9 +66,9 @@ float4 FragmentFunction( VOut input ) : SV_Target0
     float nsScale = 0.8f;
 
     //float scale = lerp(0.f, ewScale, abs(input.normal.x)) + lerp(0.f, udScale, abs(input.normal.y)) + lerp(0.f, nsScale, abs(input.normal.z));
-    float scale = 1.0f;
+    //float scale = 1.0f;
     float4 finalColor = input.color;
-    finalColor.xyz = finalColor.xyz * scale;
+    //finalColor.xyz = finalColor.xyz * scale;
 
     // output it; 
     return finalColor; 

@@ -1,6 +1,6 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// Author: Andrew Chase
-/// Date Created: Jan 21st, 2022
+/// Date Created: Feb 3rd, 2022
 /// Description: 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #pragma once
@@ -8,9 +8,8 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// INCLUDES
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
-#include "Engine/Math/IntVector2.h"
-#include "Engine/Render/Renderable.h"
-#include <map>
+#include "Game/Chunk/ChunkMeshBuilder.h"
+#include "Engine/Job/Job.h"
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// DEFINES
@@ -20,7 +19,7 @@
 /// ENUMS, TYPEDEFS, STRUCTS, FORWARD DECLARATIONS
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 class Chunk;
-class RenderScene;
+class World;
 
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 /// GLOBALS AND STATICS
@@ -31,53 +30,32 @@ class RenderScene;
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-class World
+class ChunkMeshBuildJob : public Job
 {
 public:
 	//-----Public Methods-----
 
-	World();
-	~World();
+	ChunkMeshBuildJob(Chunk* chunk, ChunkMeshType meshType, World* world);
+	~ChunkMeshBuildJob();
 
-	void			Initialize();
-
-	void			ProcessInput();
-	void			Update(float deltaSeconds);
-
-	Chunk*			GetActiveChunkContainingPosition(const Vector3& position) const;
-	RenderScene*	GetRenderScene() const { return m_renderScene; }
+	virtual void Execute() override;
+	virtual void Finalize() override;
 
 
-private:
-	//-----Private Methods-----
+public:
+	//-----Public Data-----
 
-	// Chunk activation
-	void			CheckToActivateChunks();
-	bool			GetClosestInactiveChunkWithinActivationRange(IntVector3& out_closestInactiveChunkCoords) const;
-	void			AddChunkToActiveList(Chunk* chunk);
-
-	// Chunk deactivation
-	void			CheckToDeactivateChunks();
-
+	static constexpr int JOB_TYPE_INDEX = 5;
 
 
 private:
 	//-----Private Data-----
 
-	// Chunks
-	std::map<IntVector3, Chunk*>	m_activeChunks;
-
-	// Rendering
-	RenderScene*					m_renderScene = nullptr;
-	ChunkMeshType					m_chunkMeshType = CHUNK_MESH_OPTIMIZED;
-
-	// Static constants
-	static constexpr int			SEA_LEVEL = 0;
-	static constexpr int			BASE_ELEVATION = 64;
-	static constexpr int			NOISE_MAX_DEVIATION_FROM_BASE_ELEVATION = 0;
-	static constexpr int			WORLD_MAX_CHUNK_HEIGHT = 4;
-	static constexpr float			DEFAULT_CHUNK_ACTIVATION_RANGE = 256.f;
-	static constexpr float			DEFAULT_CHUNK_DEACTIVATION_OFFSET = 64.f; // 2 chunk's worth
+	Chunk*				m_chunk = nullptr;
+	World*				m_world = nullptr;
+	bool				m_meshBuilt = false;
+	ChunkMeshType		m_meshType = CHUNK_MESH_OPTIMIZED;
+	ChunkMeshBuilder	m_meshBuilder;
 
 };
 

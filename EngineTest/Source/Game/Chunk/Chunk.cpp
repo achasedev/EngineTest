@@ -75,6 +75,8 @@ void Chunk::GenerateWithNoise(int baseElevation, int maxDeviationFromBaseElevati
 			int elevationFromNoise = RoundToNearestInt(noise * maxDeviationFromBaseElevation) + baseElevation;
 			int maxHeightForThisColumn = Max(elevationFromNoise, seaLevel);
 
+			maxHeightForThisColumn = 64;
+
 			for (int yIndex = 0; yIndex < CHUNK_DIMENSIONS_Y; ++yIndex)
 			{
 				const BlockDefinition* typeToUse = nullptr;

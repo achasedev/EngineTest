@@ -105,7 +105,7 @@ static uint16 GetNumLayersForDirection(ChunkLayerDirection direction)
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------------------------
-bool ChunkMeshBuilder::BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType)
+bool ChunkMeshBuilder::BuildStandardMesh(ChunkMeshType meshType)
 {
 	m_meshBuilder.Clear();
 	m_meshBuilder.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
@@ -132,19 +132,12 @@ bool ChunkMeshBuilder::BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType)
 	}
 
 	m_meshBuilder.FinishBuilding();
-
-	if (m_meshBuilder.GetVertexCount() > 0)
-	{
-		m_meshBuilder.UpdateMesh<VertexLit>(mesh);
-		return true;
-	}
-
-	return false;
+	return (m_meshBuilder.GetVertexCount() > 0);
 }
 
 
 //-------------------------------------------------------------------------------------------------
-bool ChunkMeshBuilder::BuildReducedMesh(Mesh& mesh)
+bool ChunkMeshBuilder::BuildReducedMesh()
 {
 	m_meshBuilder.Clear();
 	m_meshBuilder.BeginBuilding(TOPOLOGY_TRIANGLE_LIST, true);
@@ -232,14 +225,7 @@ bool ChunkMeshBuilder::BuildReducedMesh(Mesh& mesh)
 	} // For each direction
 
 	m_meshBuilder.FinishBuilding();
-
-	if (m_meshBuilder.GetVertexCount() > 0)
-	{
-		m_meshBuilder.UpdateMesh<VertexLit>(mesh);
-		return true;
-	}
-
-	return false;
+	return (m_meshBuilder.GetVertexCount() > 0);
 }
 
 
@@ -328,6 +314,8 @@ void ChunkMeshBuilder::PushVerticesForBlock(uint16 blockIndex, const BlockDefini
 //-------------------------------------------------------------------------------------------------
 bool ChunkMeshBuilder::BuildMeshForChunk(Chunk* chunk, ChunkMeshType meshType)
 {
+	m_meshBuilder.Clear();
+
 	if (chunk->IsAllAir())
 		return false;
 
@@ -340,10 +328,10 @@ bool ChunkMeshBuilder::BuildMeshForChunk(Chunk* chunk, ChunkMeshType meshType)
 	{
 	case CHUNK_MESH_SIMPLE:
 	case CHUNK_MESH_SURFACE_REMOVAL:
-		builtChunk = BuildStandardMesh(*mesh, meshType); // Intentional fallthrough
+		builtChunk = BuildStandardMesh(meshType); // Intentional fallthrough
 		break;
 	case CHUNK_MESH_OPTIMIZED:
-		builtChunk = BuildReducedMesh(*mesh);
+		builtChunk = BuildReducedMesh();
 		break;
 	case CHUNK_MESH_MARCHING_CUBES:
 		builtChunk = BuildMarchingCubeMesh(*mesh);
@@ -354,6 +342,13 @@ bool ChunkMeshBuilder::BuildMeshForChunk(Chunk* chunk, ChunkMeshType meshType)
 	}
 
 	return builtChunk;
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void ChunkMeshBuilder::UpdateMesh(Mesh* mesh)
+{
+	m_meshBuilder.UpdateMesh<VertexLit>(*mesh);
 }
 
 
@@ -561,5 +556,7 @@ void ChunkMeshBuilder::PushFace(const IntVector2& minCoverCoords, const IntVecto
 //-------------------------------------------------------------------------------------------------
 bool ChunkMeshBuilder::BuildMarchingCubeMesh(Mesh& mesh)
 {
-	return ChunkMarchingCubes::CreateMesh(m_chunk, mesh);
+	UNUSED(mesh);
+	UNIMPLEMENTED();
+	//return ChunkMarchingCubes::CreateMesh(m_chunk, mesh);
 }

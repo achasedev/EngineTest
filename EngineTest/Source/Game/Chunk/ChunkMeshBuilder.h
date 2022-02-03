@@ -56,16 +56,17 @@ public:
 	//-----Public Methods-----
 
 	bool			BuildMeshForChunk(Chunk* chunk, ChunkMeshType meshType);
+	void			UpdateMesh(Mesh* mesh);
 
 
 private:
 	//-----Private Methods-----
 
-	bool			BuildStandardMesh(Mesh& mesh, ChunkMeshType meshType);
+	bool			BuildStandardMesh(ChunkMeshType meshType);
 	void			PushVerticesForBlock(const IntVector3& blockCoords, const BlockDefinition* def, bool removeHiddenSurfaces);
 	void			PushVerticesForBlock(uint16 blockIndex, const BlockDefinition* def, bool removeHiddenSurfaces);
 
-	bool			BuildReducedMesh(Mesh& mesh);
+	bool			BuildReducedMesh();
 	void			InitializeCoverForLayer(ChunkLayerDirection direction, uint16 layerIndex);
 	bool			IsQuadCovered(const IntVector2& coverCoord) const;
 	bool			IsQuadCovered(int coverX, int coverY) const;

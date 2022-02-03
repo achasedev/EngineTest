@@ -9,11 +9,13 @@
 ///--------------------------------------------------------------------------------------------------------------------------------------------------
 #include "Game/Chunk/Chunk.h"
 #include "Game/Chunk/ChunkMeshBuilder.h"
+#include "Game/Chunk/ChunkMeshBuildJob.h"
 #include "Game/Framework/Game.h"
 #include "Game/Framework/GameCommon.h"
 #include "Game/Framework/World.h"
 #include "Engine/Core/EngineCommon.h"
 #include "Engine/IO/InputSystem.h"
+#include "Engine/Job/JobSystem.h"
 #include "Engine/Math/OBB3.h"
 #include "Engine/Render/Camera.h"
 #include "Engine/Render/Debug/DebugRenderSystem.h"
@@ -49,6 +51,9 @@ World::World()
 //-------------------------------------------------------------------------------------------------
 World::~World()
 {
+	g_jobSystem->AbortAllQueuedJobsOfType(ChunkMeshBuildJob::JOB_TYPE_INDEX);
+	g_jobSystem->BlockUntilAllJobsOfTypeAreFinalized(ChunkMeshBuildJob::JOB_TYPE_INDEX);
+
 	// Delete all active chunks
 	std::map<IntVector3, Chunk*>::iterator chunkItr = m_activeChunks.begin();
 
@@ -121,32 +126,14 @@ void World::ProcessInput()
 		int numChunksRebuilt = 0;
 		for (itr; itr != m_activeChunks.end(); itr++)
 		{
-			ChunkMeshBuilder cmb;
-			bool meshValid = cmb.BuildMeshForChunk(itr->second, m_chunkMeshType);
-
-			if (!meshValid)
-			{
-				Renderable* rend = m_renderScene->GetRenderable(itr->second->GetRenderSceneId());
-
-				if (rend != nullptr)
-				{
-					m_renderScene->RemoveRenderable(itr->second->GetRenderSceneId());
-				}
-			}
-			else if (itr->second->GetRenderSceneId() == INVALID_RENDER_SCENE_ID)
-			{
-				Renderable rend;
-				Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
-				rend.AddDraw(itr->second->GetMesh(), material);
-
-				RenderSceneId chunkSceneId = m_renderScene->AddRenderable(rend);
-				itr->second->SetRenderSceneId(chunkSceneId);
-			}
+			// Kick off meshbuild
+			ChunkMeshBuildJob* job = new ChunkMeshBuildJob(itr->second, m_chunkMeshType, this);
+			g_jobSystem->QueueJob(job);
 
 			numChunksRebuilt++;
 		}
 
-		ConsolePrintf(Rgba::GREEN, 5.f, "Finished rebuilding. Chunks rebuilt: %i", numChunksRebuilt);
+		ConsolePrintf(Rgba::GREEN, 5.f, "Kicked off %i build jobs.", numChunksRebuilt);
 	}
 }
 
@@ -154,6 +141,8 @@ void World::ProcessInput()
 //-------------------------------------------------------------------------------------------------
 void World::Update(float deltaSeconds)
 {
+	g_jobSystem->FinalizeAllFinishedJobsOfType(ChunkMeshBuildJob::JOB_TYPE_INDEX);
+
 	CheckToActivateChunks();
 
 	std::map<IntVector3, Chunk*>::iterator itr = m_activeChunks.begin();
@@ -197,21 +186,12 @@ void World::CheckToActivateChunks()
 		Chunk* chunk = new Chunk(closestInactiveChunkCoords);
 		chunk->GenerateWithNoise(BASE_ELEVATION, NOISE_MAX_DEVIATION_FROM_BASE_ELEVATION, SEA_LEVEL);
 
-		ChunkMeshBuilder cmb;
-		bool meshBuilt = cmb.BuildMeshForChunk(chunk, m_chunkMeshType);
-
-		if (meshBuilt)
-		{
-			Renderable rend;
-			Material* material = g_resourceSystem->CreateOrGetMaterial("Data/Material/chunk.material");
-			rend.AddDraw(chunk->GetMesh(), material);
-
-			RenderSceneId chunkSceneId = m_renderScene->AddRenderable(rend);
-			chunk->SetRenderSceneId(chunkSceneId);
-		}
-
-		// Add to the list
+		// Add to the list first
 		AddChunkToActiveList(chunk);
+
+		// Kick off meshbuild
+		ChunkMeshBuildJob* job = new ChunkMeshBuildJob(chunk, m_chunkMeshType, this);
+		g_jobSystem->QueueJob(job);
 	}
 }
 
