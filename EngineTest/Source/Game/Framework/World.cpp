@@ -144,6 +144,7 @@ void World::Update(float deltaSeconds)
 	g_jobSystem->FinalizeAllFinishedJobsOfType(ChunkMeshBuildJob::JOB_TYPE_INDEX);
 
 	CheckToActivateChunks();
+	CheckToDeactivateChunks();
 
 	std::map<IntVector3, Chunk*>::iterator itr = m_activeChunks.begin();
 	for (itr; itr != m_activeChunks.end(); itr++)
@@ -324,5 +325,127 @@ void World::AddChunkToActiveList(Chunk* chunk)
 
 		chunk->SetBelowNeighbor(belowChunk);
 		belowChunk->SetAboveNeighbor(chunk);
+	}
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void World::CheckToDeactivateChunks()
+{
+	Chunk* chunkToDeactivate = GetFurthestActiveChunkOutsideActivationRange();
+
+	if (chunkToDeactivate != nullptr)
+	{
+		RemoveChunkFromActiveList(chunkToDeactivate);
+
+		Renderable* rend = m_renderScene->GetRenderable(chunkToDeactivate->GetRenderSceneId());
+
+		if (rend != nullptr)
+		{
+			m_renderScene->RemoveRenderable(chunkToDeactivate->GetRenderSceneId());
+		}
+
+		SAFE_DELETE(chunkToDeactivate);
+	}
+}
+
+
+//-------------------------------------------------------------------------------------------------
+Chunk* World::GetFurthestActiveChunkOutsideActivationRange() const
+{
+	Vector3 camPos = g_game->GetGameCamera()->GetPosition();
+	float deactivationRangeSqr = (DEFAULT_CHUNK_ACTIVATION_RANGE + DEFAULT_CHUNK_DEACTIVATION_OFFSET) * (DEFAULT_CHUNK_ACTIVATION_RANGE + DEFAULT_CHUNK_DEACTIVATION_OFFSET);
+	Chunk* furthestChunk = nullptr;
+	float furthestDistSqr = deactivationRangeSqr;
+
+	std::map<IntVector3, Chunk*>::const_iterator itr = m_activeChunks.begin();
+	for (itr; itr != m_activeChunks.end(); itr++)
+	{
+		Chunk* chunk = itr->second;
+		Vector3 chunkCenter = chunk->GetCenterWs();
+
+		Vector3 camToChunk = chunkCenter - camPos;
+		float distSqr = camToChunk.GetLengthSquared();
+
+		if (distSqr > furthestDistSqr)
+		{
+			furthestChunk = chunk;
+			furthestDistSqr = distSqr;
+		}
+	}
+
+	return furthestChunk;
+}
+
+
+//-------------------------------------------------------------------------------------------------
+void World::RemoveChunkFromActiveList(Chunk* chunk)
+{
+	// Remove it from the map
+	IntVector3 chunkCoords = chunk->GetChunkCoords();
+	ASSERT_OR_DIE(m_activeChunks.find(chunkCoords) != m_activeChunks.end(), "Tried to remove a chunk that isn't active!");
+	m_activeChunks.erase(chunkCoords);
+
+	// Hook up the references to the neighbors
+	IntVector3 eastCoords = chunkCoords + IntVector3(1, 0, 0);
+	IntVector3 westCoords = chunkCoords + IntVector3(-1, 0, 0);
+	IntVector3 northCoords = chunkCoords + IntVector3(0, 0, 1);
+	IntVector3 southCoords = chunkCoords + IntVector3(0, 0, -1);
+	IntVector3 aboveCoords = chunkCoords + IntVector3(0, 1, 0);
+	IntVector3 belowCoords = chunkCoords + IntVector3(0, -1, 0);
+
+	bool eastExists = m_activeChunks.find(eastCoords) != m_activeChunks.end();
+	bool westExists = m_activeChunks.find(westCoords) != m_activeChunks.end();
+	bool northExists = m_activeChunks.find(northCoords) != m_activeChunks.end();
+	bool southExists = m_activeChunks.find(southCoords) != m_activeChunks.end();
+	bool aboveExists = m_activeChunks.find(aboveCoords) != m_activeChunks.end();
+	bool belowExists = m_activeChunks.find(belowCoords) != m_activeChunks.end();
+
+	if (eastExists)
+	{
+		Chunk* eastChunk = m_activeChunks[eastCoords];
+
+		chunk->SetEastNeighbor(nullptr);
+		eastChunk->SetWestNeighbor(nullptr);
+	}
+
+	if (westExists)
+	{
+		Chunk* westChunk = m_activeChunks[westCoords];
+
+		chunk->SetWestNeighbor(nullptr);
+		westChunk->SetEastNeighbor(nullptr);
+	}
+
+	if (northExists)
+	{
+		Chunk* northChunk = m_activeChunks[northCoords];
+
+		chunk->SetNorthNeighbor(nullptr);
+		northChunk->SetSouthNeighbor(nullptr);
+	}
+
+	if (southExists)
+	{
+		Chunk* southChunk = m_activeChunks[southCoords];
+
+		chunk->SetSouthNeighbor(nullptr);
+		southChunk->SetNorthNeighbor(nullptr);
+	}
+
+	if (aboveExists)
+	{
+		Chunk* aboveChunk = m_activeChunks[aboveCoords];
+
+		chunk->SetAboveNeighbor(nullptr);
+		aboveChunk->SetBelowNeighbor(nullptr);
+	}
+
+	if (belowExists)
+	{
+		Chunk* belowChunk = m_activeChunks[belowCoords];
+
+		chunk->SetBelowNeighbor(nullptr);
+		belowChunk->SetAboveNeighbor(nullptr);
 	}
 }

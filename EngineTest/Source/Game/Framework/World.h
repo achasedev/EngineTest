@@ -58,7 +58,8 @@ private:
 
 	// Chunk deactivation
 	void			CheckToDeactivateChunks();
-
+	Chunk*			GetFurthestActiveChunkOutsideActivationRange() const;
+	void			RemoveChunkFromActiveList(Chunk* chunk);
 
 
 private:
@@ -76,8 +77,8 @@ private:
 	static constexpr int			BASE_ELEVATION = 64;
 	static constexpr int			NOISE_MAX_DEVIATION_FROM_BASE_ELEVATION = 0;
 	static constexpr int			WORLD_MAX_CHUNK_HEIGHT = 4;
-	static constexpr float			DEFAULT_CHUNK_ACTIVATION_RANGE = 256.f;
-	static constexpr float			DEFAULT_CHUNK_DEACTIVATION_OFFSET = 64.f; // 2 chunk's worth
+	static constexpr float			DEFAULT_CHUNK_ACTIVATION_RANGE = 128.f;
+	static constexpr float			DEFAULT_CHUNK_DEACTIVATION_OFFSET = 32.f; // 1 chunk's worth
 
 };
 
